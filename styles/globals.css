@@ -1,0 +1,79 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------
+   If you use next/font, you do NOT need @import of Google fonts here.
+   next/font will create CSS variables for the families.
+----------------------------------------------------------*/
+
+@theme {
+    /* Map next/font variables to Tailwind font tokens */
+    --font-inter: var(--font-inter);
+    /* next/font -> our token */
+    --font-manrope: var(--font-manrope);
+    --font-montserrat: var(--font-montserrat);
+    --font-sourcecodepro: var(--font-sourcecodepro);
+    --font-baskervville: var(--font-baskervville);
+    --font-playfair: var(--font-playfair);
+
+    /* Set your defaults (so utilities like font-sans work) */
+    --font-sans: var(--font-inter), ui-sans-serif, system-ui, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    --font-serif: var(--font-playfair), ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+    --font-mono: var(--font-sourcecodepro), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
+    /* Named families so you can do `font-montserrat`, `font-sourcecodepro`, etc. */
+    --font-montserrat: var(--font-montserrat);
+    --font-sourcecodepro: var(--font-sourcecodepro);
+    --font-baskervville: var(--font-baskervville);
+    --font-playfair: var(--font-playfair);
+    --font-inter: var(--font-inter);
+    --font-manrope: var(--font-manrope);
+
+    /* ----- Your colors (unchanged) ----- */
+    --color-primary: #EB1A52;
+    --color-secondary: #1465F5;
+    --color-brand-black: #1A1A1A;
+    --color-brand-white: #F1F2F2;
+
+    --color-brand-1-50: #fdedf1;
+    --color-brand-1-100: #f9bece;
+    --color-brand-1-200: #f58faa;
+    --color-brand-1-300: #f16087;
+    --color-brand-1-400: #ed3a6a;
+    --color-brand-1-500: #ea1a52;
+    --color-brand-1-600: #cf1244;
+    --color-brand-1-700: #a90e38;
+    --color-brand-1-800: #7a0a28;
+    --color-brand-1-900: #4b0619;
+    --color-brand-1-950: #1c0209;
+
+    --color-brand-2-50: #f0f5fe;
+    --color-brand-2-100: #bfd5fc;
+    --color-brand-2-200: #8eb5fa;
+    --color-brand-2-300: #5d95f8;
+    --color-brand-2-400: #367bf6;
+    --color-brand-2-500: #1465f5;
+    --color-brand-2-600: #0955db;
+    --color-brand-2-700: #0746b4;
+    --color-brand-2-800: #053383;
+    --color-brand-2-900: #032052;
+    --color-brand-2-950: #010d22;
+
+    /* Gradients & shadows (deduped a bit) */
+    --color-linear-gradient-1: linear-gradient(180deg, #270015 0%, #4c0b1b 100%);
+    --color-linear-gradient-2: linear-gradient(94deg, #fff -15.14%, rgba(255, 255, 255, 0.3) 128.27%);
+    --color-linear-gradient-3: linear-gradient(94deg, #FFF -15.14%, rgba(255, 255, 255, 0.30) 128.27%);
+    --color-linear-gradient-4: linear-gradient(90deg, #EB1A52 0%, #1465F5 100%);
+    --color-linear-gradient-5: linear-gradient(177deg, #1C0209 8.9%, #7A0A28 52.08%, #4B0619 95.26%);
+    --color-radial-gradient-1: radial-gradient(131.11% 61.3% at 48.62% 46.15%, #bb1b73 0%, #b62048 46.53%, #4f082e 100%);
+    --color-radial-gradient-2: radial-gradient(51.99% 67.19% at 50% 96.88%, rgba(76, 11, 27, 0.8) 0%, rgba(76, 11, 27, 0) 100%, rgba(76, 11, 27, 0.12) 100%), #270015;
+
+    --shadow-custom-lg: 0px 4px 14px 0px rgba(0, 0, 0, 0.18);
+    --shadow-inner-sm: 0px 1px 3px 3px rgba(0, 0, 0, 0.24) inset;
+    --shadow-inner-md: 0px 2px 3px 2px rgba(0, 0, 0, 0.24) inset;
+    --shadow-inner-lg: 0px 4px 4px 4px rgba(0, 0, 0, 0.24) inset;
+
+    /* Custom aspect ratios */
+    --aspect-ratio-custom-lg: 4 / 3;
+    --aspect-ratio-custom-md: 3 / 1;
+    --aspect-ratio-custom-sm: 2 / 1;
+}
