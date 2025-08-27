@@ -1,3 +1,4 @@
+import WhiteButton from "../Buttons/WhiteBtn";
 import React from "react";
 
 const CardType1: React.FC = () => {
@@ -19,7 +20,7 @@ const CardType1: React.FC = () => {
             </div>
 
             <div className="mt-4 mb-7 font-semibold font-family-sourcecodepro transition-all duration-500 ease-in-out">
-              <button className="btn btn-white py-2.5 inline-flex items-center gap-2">
+              <WhiteButton>
                 Learn more
                 <svg
                   className="text-gray-600 hidden size-3.5 transition-all duration-500 ease-in-out group-hover:block group-focus:block"
@@ -44,7 +45,7 @@ const CardType1: React.FC = () => {
                     strokeLinejoin="round"
                   />
                 </svg>
-              </button>
+              </WhiteButton>
             </div>
           </div>
 

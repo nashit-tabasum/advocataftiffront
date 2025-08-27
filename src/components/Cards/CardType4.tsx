@@ -1,10 +1,17 @@
 import React from "react";
+import WhiteButton from "../Buttons/WhiteBtn";
 
 const CardType4: React.FC = () => {
   return (
     <div className="my-20">
       <a href="#" className="group">
-        <div className="relative flex flex-col h-full overflow-hidden rounded-lg border border-slate-400 text-slate-950 bg-white hover:shadow-lg hover:-translate-y-1.5">
+        <div
+          className="relative flex flex-col h-full overflow-hidden rounded-lg 
+                     border border-slate-400 text-slate-950 bg-white 
+                     cursor-pointer transition-all duration-500 ease-in-out
+                     hover:border-gray-300 hover:shadow-lg hover:-translate-y-1.5 
+                     focus:border-brand-2-100 focus:shadow-inner-lg"
+        >
           <div className="flex flex-col justify-between xl:px-12 xl:pt-12 md:px-9 md:pt-9 px-6 pt-6">
             <div className="flex-1">
               <h2 className="text-2xl md:text-3xl xl:text-4xl font-bold font-family-montserrat pb-2">
@@ -17,10 +24,10 @@ const CardType4: React.FC = () => {
             </div>
 
             <div className="mt-4 mb-7 font-semibold font-family-sourcecodepro">
-              <button className="btn btn-white py-2.5 inline-flex items-center gap-2">
+              <WhiteButton>
                 Learn more
                 <svg
-                  className="text-gray-600 hidden size-3.5 group-hover:block"
+                  className="text-gray-600 hidden size-3.5 group-hover:block group-focus:block"
                   xmlns="http://www.w3.org/2000/svg"
                   width="20"
                   height="20"
@@ -42,7 +49,7 @@ const CardType4: React.FC = () => {
                     strokeLinejoin="round"
                   />
                 </svg>
-              </button>
+              </WhiteButton>
             </div>
           </div>
 

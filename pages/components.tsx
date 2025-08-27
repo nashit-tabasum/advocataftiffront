@@ -5,12 +5,18 @@ import ButtonGroup from "@/src/components/ButtonGroups/ButtonGroup";
 import Buttons from "@/src/components/Buttons/Buttons";
 import Cards from "@/src/components/Cards/Cards";
 import DownloadCards from "@/src/components/DownloadCards/DownloadCards";
-import FilterCarousel from "@/src/components/FilterCarousel";
 import HeroBlocks from "@/src/components/HeroBlocks/HeroBlocks";
 import InputFields from "@/src/components/InputFields/InputFields";
 import Pagination from "@/src/components/Pagination";
 import TextBlock from "@/src/components/TextBlock";
+import dynamic from "next/dynamic";
 
+const FilterCarousel = dynamic(
+  () => import("@/src/components/FilterCarousel"),
+  {
+    ssr: false,
+  }
+);
 const items: AccordionItem[] = [
   {
     title: "Lorem ipsum dolor sit amet?",
@@ -34,6 +40,15 @@ export default function Components() {
           Alert
         </h2>
         <Alerts />
+        <div className="bg-gray-50">
+          <h2 className="text-2xl font-bold text-black text-center py-10 mb-14 border-b border-b-black">
+            Filter Carousel
+          </h2>
+          <div className="flex justify-center items-center max-w-full mx-auto px-6">
+            <FilterCarousel />
+          </div>
+        </div>
+        <Cards />
         <ButtonGroup />
         <Buttons />
         <Breadcrumbs
@@ -41,7 +56,6 @@ export default function Components() {
         />
         <Cards />
         <DownloadCards />
-        <FilterCarousel />
         <HeroBlocks />
         <InputFields />
         <h2 className="text-2xl font-bold text-black text-center py-10 mb-14 border-b border-b-black">

@@ -6,17 +6,19 @@ const CardType7Loading: React.FC = () => {
     <div className="my-20">
       <a
         href="#"
-        className="relative block rounded-xl bg-white border border-slate-400 hover:border-gray-300 hover:shadow-lg hover:-translate-y-1.5 transition-all duration-500 ease-in-out"
+        className="relative block rounded-xl overflow-hidden 
+             bg-white border border-slate-400 
+             transition-all duration-500 ease-in-out cursor-pointer
+             hover:border-gray-300 hover:shadow-lg hover:-translate-y-1.5 
+             focus:border-brand-2-100 focus:shadow-inner-lg"
       >
-        <div className="flex flex-1 flex-col justify-between bg-white p-5">
-          <div className="flex-1">
-            <h2 className="text-2xl leading-snug font-semibold font-family-montserrat text-slate-800">
-              PDF
-            </h2>
-            <p className="mt-2 text-sm leading-tight font-normal font-family-sourcecodepro text-slate-950">
-              You can access your file via PDF
-            </p>
-          </div>
+        <div className="flex flex-col p-5">
+          <h2 className="text-2xl font-semibold font-family-montserrat text-slate-800">
+            PDF
+          </h2>
+          <p className="mt-2 text-sm font-family-sourcecodepro text-slate-950">
+            You can access your file via PDF
+          </p>
 
           <div className="absolute right-5 top-[30%] -translate-y-[30%] md:top-[35%] md:-translate-y-[35%]">
             <img

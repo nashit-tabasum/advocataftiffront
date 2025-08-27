@@ -5,9 +5,13 @@ const CardType7: React.FC = () => {
     <div className="my-20">
       <a
         href="#"
-        className="relative block rounded-xl bg-white border border-slate-400 hover:shadow-lg hover:-translate-y-1.5"
+        className="relative block rounded-xl overflow-hidden 
+             bg-white border border-slate-400 
+             transition-all duration-500 ease-in-out cursor-pointer
+             hover:border-gray-300 hover:shadow-lg hover:-translate-y-1.5 
+             focus:border-brand-2-100 focus:shadow-inner-lg"
       >
-        <div className="flex flex-col bg-white p-5">
+        <div className="flex flex-col p-5">
           <h2 className="text-2xl font-semibold font-family-montserrat text-slate-800">
             PDF
           </h2>

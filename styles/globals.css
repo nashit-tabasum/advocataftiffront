@@ -4,6 +4,98 @@
    If you use next/font, you do NOT need @import of Google fonts here.
    next/font will create CSS variables for the families.
 ----------------------------------------------------------*/
+/* =========================================================================== 
+ *  COMPONENTS + GLOBAL STYLES (no @apply)
+ *=========================================================================== */
+
+/* ----------------------------------------------------------------------- 
+ *  General resets 
+ * --------------------------------------------------------------------- */
+a:where(:not(.wp-element-button)) {
+    text-decoration: none !important;
+}
+
+button {
+    cursor: pointer;
+}
+
+/* ----------------------------------------------------------------------- 
+ *  Scroll container (table wrapper) 
+ * --------------------------------------------------------------------- */
+#table-wrapper {
+    background-clip: content-box;
+    /* keeps table background intact */
+    scrollbar-gutter: stable both-edges;
+    /* Chrome/Edge/Firefox */
+}
+
+#table-wrapper::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+#table-wrapper::-webkit-scrollbar-track {
+    background: #F1F2F2 !important;
+    /* track color */
+    border-radius: 9999px;
+}
+
+#table-wrapper::-webkit-scrollbar-thumb {
+    background-color: #1A1A1A !important;
+    /* brand-slate-blue or brand color */
+    border-radius: 9999px;
+}
+
+#table-wrapper::-webkit-scrollbar-thumb:hover {
+    background-color: #163a46 !important;
+    /* darker shade on hover */
+}
+
+/* ----------------------------------------------------------------------- 
+ *  Tailwind component-like overrides (manual expansion of @apply)
+ * --------------------------------------------------------------------- */
+
+/* prose link override */
+.prose a:not(.wp-element-button) {
+    text-decoration: none;
+}
+
+/* responsive table helper (expands @apply max-w-[9rem] sm:max-w-none whitespace-normal sm:whitespace-nowrap break-words;) */
+.mobile-col {
+    max-width: 9rem;
+    white-space: normal;
+    word-break: break-word;
+}
+
+@media (min-width: 640px) {
+    .mobile-col {
+        max-width: none;
+        white-space: nowrap;
+    }
+}
+
+/* ----------------------------------------------------------------------- 
+ *  Utility classes (manual expansion of @apply)
+ * --------------------------------------------------------------------- */
+
+/* hide scrollbar (cross-browser) */
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+    /* Chrome/Safari/Edge */
+}
+
+.no-scrollbar {
+    -ms-overflow-style: none;
+    /* IE */
+    scrollbar-width: none;
+    /* Firefox */
+}
+
+/* iOS + smooth scrolling */
+.momentum {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+}
 
 @theme {
     /* Map next/font variables to Tailwind font tokens */
@@ -76,4 +168,28 @@
     --aspect-ratio-custom-lg: 4 / 3;
     --aspect-ratio-custom-md: 3 / 1;
     --aspect-ratio-custom-sm: 2 / 1;
+}
+
+/* ----------------------------------------------------------------------- 
+ *  Font family utility aliases (to match existing classnames in components)
+ *  Maps `font-family-*` classes to Tailwind font tokens / next/font vars
+ * --------------------------------------------------------------------- */
+.font-family-montserrat {
+    font-family: var(--font-montserrat, var(--font-sans));
+}
+
+.font-family-sourcecodepro {
+    font-family: var(--font-sourcecodepro, var(--font-mono));
+}
+
+.font-family-baskervville {
+    font-family: var(--font-baskervville, var(--font-serif));
+}
+
+.font-family-playfair {
+    font-family: var(--font-playfair, var(--font-serif));
+}
+
+.font-family-manrope {
+    font-family: var(--font-manrope, var(--font-sans));
 }

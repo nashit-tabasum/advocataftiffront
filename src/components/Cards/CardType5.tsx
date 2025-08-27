@@ -2,11 +2,14 @@ import React from "react";
 
 const CardType5: React.FC = () => {
   return (
-    <div className="mt-20">
-      <a
-        href="#"
-        className="relative flex h-full overflow-hidden rounded-lg border border-gray-300 hover:-translate-y-1.5 hover:shadow-[0_0_40px_0_rgba(79,8,46,0.40)]"
-      >
+    <div
+      className="relative h-full overflow-hidden rounded-lg border border-gray-300 
+                 cursor-pointer transition-all duration-500 ease-in-out
+                 hover:-translate-y-1.5 hover:border-brand-2-100 
+                 hover:shadow-[0_0_40px_0_rgba(79,8,46,0.40)] 
+                 focus:border-brand-2-100 focus:shadow-inner-lg"
+    >
+      <a href="#">
         <div>
           <img
             className="shrink-0 w-full h-64 object-cover aspect-[4/3]"

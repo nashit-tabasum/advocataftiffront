@@ -27,7 +27,11 @@ export default function HeroBlocks({
         <h2 className="text-white text-2xl text-center border-b mb-6 pb-3 border-white">
           Hero Blocks (Basic)
         </h2>
-        <HeroBasic bgUrl={heroBasicBgUrl} />
+        <HeroBasic
+          bgUrl={heroBasicBgUrl}
+          title={"Sample"}
+          paragraph={"Sample"}
+        />
 
         {/* Hero Blocks (White) */}
         <h2 className="text-white text-2xl text-center border-b mb-6 mt-14 pb-3 border-white">

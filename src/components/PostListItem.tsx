@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { FeaturedImage } from "./FeaturedImage";
 
-
 interface PostListItemProps {
   post: {
     id: string;
@@ -31,8 +30,8 @@ export default function PostListItem({ post }: PostListItemProps) {
 
   return (
     <article className="mb-8 p-4 border border-gray-200 rounded-lg">
-      <time className="text-sm text-gray-500" dateTime={post.date || ''}>
-        {new Date(post.date || '').toLocaleDateString(undefined, {
+      <time className="text-sm text-gray-500" dateTime={post.date || ""}>
+        {new Date(post.date || "").toLocaleDateString(undefined, {
           year: "numeric",
           month: "long",
           day: "numeric",
@@ -40,7 +39,11 @@ export default function PostListItem({ post }: PostListItemProps) {
       </time>
 
       <h2 className="text-xl font-semibold mt-2">
-        <Link href={uri || ''} title={title} className="text-blue-600 hover:underline">
+        <Link
+          href={uri || ""}
+          title={title}
+          className="text-blue-600 hover:underline"
+        >
           {title}
         </Link>
       </h2>
@@ -60,10 +63,14 @@ export default function PostListItem({ post }: PostListItemProps) {
 
       <div
         className="mt-4 text-gray-700"
-        dangerouslySetInnerHTML={{ __html: excerpt || '' }}
+        dangerouslySetInnerHTML={{ __html: excerpt || "" }}
       />
 
-      <Link href={uri || ''} title="Read more" className="inline-block mt-4 text-blue-600 hover:underline">
+      <Link
+        href={uri || ""}
+        title="Read more"
+        className="inline-block mt-4 text-blue-600 hover:underline"
+      >
         Read more
       </Link>
     </article>

@@ -1,7 +1,6 @@
 import { gql } from "@apollo/client";
 import Head from "next/head";
 import { GetStaticPropsContext } from "next";
-import Layout from "../src/components/Layout";
 import EntryHeader from "../src/components/EntryHeader";
 
 export const PAGE_QUERY = gql`
@@ -33,18 +32,17 @@ export default function SinglePage({ data, loading }: SinglePageProps) {
   }
 
   const page = data?.page;
-  if (!page) {
-    return <p>No page data returned.</p>;
-  }
+  if (!page) return <p>No page data returned.</p>;
 
   const { title, content = "" } = page;
-  const safeTitle: string = title ?? "";
+  const safeTitle = title ?? "";
 
   return (
     <>
       <Head>
         <title>{safeTitle}</title>
       </Head>
+
       <main className="max-w-6xl mx-auto px-4">
         <EntryHeader title={title ?? undefined} />
         <div

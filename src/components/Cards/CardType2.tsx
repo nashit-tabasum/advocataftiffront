@@ -1,4 +1,5 @@
 import React from "react";
+import WhiteButton from "../Buttons/WhiteBtn";
 
 const CardType2: React.FC = () => {
   return (
@@ -8,21 +9,21 @@ const CardType2: React.FC = () => {
           <div className="flex flex-col justify-between xl:px-12 xl:pt-12 md:px-9 md:pt-9 px-6 pt-6">
             <div className="flex-1">
               <div className="mt-1 block max-w-2xl">
-                <h2 className="text-2xl md:text-3xl xl:text-4xl leading-snug font-bold font-family-montserrat pb-2">
+                <h2 className="text-2xl md:text-3xl xl:text-4xl leading-snug font-bold font-family-montserrat pb-2 transition-colors duration-500 ease-in-out line-clamp-3">
                   Government Fiscal Operations
                 </h2>
-                <p className="text-base/6 font-normal font-family-sourcecodepro">
+                <p className="text-base/6 font-normal font-family-sourcecodepro transition-colors duration-500 ease-in-out">
                   Transparency in government institutions refers to the open and
                   accessible sharing of information about financial activities.
                 </p>
               </div>
             </div>
 
-            <div className="mt-4 mb-7 font-semibold font-family-sourcecodepro">
-              <button className="btn btn-white py-2.5 inline-flex items-center gap-2">
+            <div className="mt-4 mb-7 font-semibold font-family-sourcecodepro transition-all duration-500 ease-in-out">
+              <WhiteButton>
                 Learn more
                 <svg
-                  className="text-gray-600 hidden size-3.5 group-hover:block group-focus:block"
+                  className="text-gray-600 hidden size-3.5 transition-all duration-500 ease-in-out group-hover:block group-focus:block"
                   xmlns="http://www.w3.org/2000/svg"
                   width="20"
                   height="20"
@@ -44,13 +45,13 @@ const CardType2: React.FC = () => {
                     strokeLinejoin="round"
                   />
                 </svg>
-              </button>
+              </WhiteButton>
             </div>
           </div>
 
           <div className="flex-shrink-0">
             <img
-              className="relative w-full h-full object-cover rounded-xl xl:left-12 md:left-9 left-6 top-4"
+              className="relative w-full h-full object-cover rounded-xl xl:left-12 md:left-9 left-6 top-4 transition-all duration-500 ease-in-out group-focus-within:rounded-none"
               src="/assets/images/card-imgs/card-img-2.jpg"
               width={300}
               height={200}
