@@ -22,6 +22,10 @@ const PAGE_QUERY = gql`
     page(id: $databaseId, idType: DATABASE_ID, asPreview: $asPreview) {
       title
       content
+      homeAiSection {
+        aiTitle
+        aiDescription
+      }
     }
     dataSets(first: 6) {
       nodes {
@@ -58,7 +62,14 @@ const PAGE_QUERY = gql`
 
 interface HomePageProps {
   data?: {
-    page?: { title?: string | null; content?: string | null } | null;
+    page?: {
+      title?: string | null;
+      content?: string | null;
+      homeAiSection?: {
+        aiTitle?: string | null;
+        aiDescription?: string | null;
+      } | null;
+    } | null;
     dataSets?: {
       nodes?: Array<{
         id: string;
@@ -201,12 +212,16 @@ export default function PageHome({ data }: HomePageProps): JSX.Element {
             <div className="lg:pt-4 lg:pr-4 lg:w-2xl">
               <div className="max-w-lg lg:max-w-none">
                 <span className="text-xs font-semibold text-white bg-white/25 py-2 px-3 rounded-full uppercase font-manrope">
-                  advanced AI
+                  {data?.page?.homeAiSection?.aiTitle || "Default AI Title"}
                 </span>
-                <h2 className="mt-5 xl:text-6xl sm:text-5xl text-3xl leading-9 md:leading-14 xl:leading-16 font-normal font-playfair text-pretty text-white">
-                  Discover meaningful connections with the power of Advocata's
-                  advanced AI technology.
-                </h2>
+                <h2
+                  className="mt-5 xl:text-6xl sm:text-5xl text-3xl leading-9 md:leading-14 xl:leading-16 font-normal font-playfair text-pretty text-white"
+                  dangerouslySetInnerHTML={{
+                    __html:
+                      data?.page?.homeAiSection?.aiDescription ||
+                      "Default AI description text.",
+                  }}
+                />
               </div>
             </div>
           </div>
@@ -241,7 +256,7 @@ export default function PageHome({ data }: HomePageProps): JSX.Element {
             ))}
           </div>
           <div className="mx-auto max-w-7xl text-center">
-            <PrimaryButton>View data catalog</PrimaryButton>
+            <PrimaryButton href="/datasets">View data catalog</PrimaryButton>
           </div>
         </div>
       </div>
@@ -269,7 +284,7 @@ export default function PageHome({ data }: HomePageProps): JSX.Element {
             ))}
           </div>
           <div className="mx-auto max-w-7xl text-center">
-            <PrimaryButton>Explore more</PrimaryButton>
+            <PrimaryButton href="/insights">Explore more</PrimaryButton>
           </div>
         </div>
       </div>
