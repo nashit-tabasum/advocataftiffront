@@ -1,8 +1,7 @@
 import React, { JSX } from "react";
-import Link from "next/link";
 import { gql } from "@apollo/client";
 import type { GetStaticPropsContext } from "next";
-
+import { useRouter } from "next/router";
 import CardType1 from "@/src/components/Cards/CardType1";
 import CardType2 from "@/src/components/Cards/CardType2";
 import CardType3 from "@/src/components/Cards/CardType3";
@@ -16,6 +15,44 @@ import {
   PageTitleText,
 } from "@/src/components/Typography";
 import SearchFieldHome from "@/src/components/InputFields/SearchFieldHome";
+
+interface HomePageProps {
+  data?: {
+    page?: {
+      title?: string | null;
+      content?: string | null;
+      homeAiSection?: {
+        aiTitle?: string | null;
+        aiDescription?: string | null;
+      } | null;
+    } | null;
+    dataSets?: {
+      nodes?: Array<{
+        id: string;
+        uri?: string | null;
+        title?: string | null;
+        excerpt?: string | null;
+        date?: string | null;
+        dataSetFields?: {
+          dataSetFile?: {
+            node?: { mediaItemUrl?: string | null } | null;
+          } | null;
+        } | null;
+      }> | null;
+    } | null;
+    insights?: {
+      nodes?: Array<{
+        id: string;
+        uri?: string | null;
+        title?: string | null;
+        excerpt?: string | null;
+        date?: string | null;
+        featuredImage?: { node?: { sourceUrl?: string | null } | null } | null;
+      }> | null;
+    } | null;
+  };
+  loading?: boolean;
+}
 
 const PAGE_QUERY = gql`
   query GetHomePage($databaseId: ID!, $asPreview: Boolean = false) {
@@ -60,51 +97,15 @@ const PAGE_QUERY = gql`
   }
 `;
 
-interface HomePageProps {
-  data?: {
-    page?: {
-      title?: string | null;
-      content?: string | null;
-      homeAiSection?: {
-        aiTitle?: string | null;
-        aiDescription?: string | null;
-      } | null;
-    } | null;
-    dataSets?: {
-      nodes?: Array<{
-        id: string;
-        uri?: string | null;
-        title?: string | null;
-        excerpt?: string | null;
-        date?: string | null;
-        dataSetFields?: {
-          dataSetFile?: {
-            node?: { mediaItemUrl?: string | null } | null;
-          } | null;
-        } | null;
-      }> | null;
-    } | null;
-    insights?: {
-      nodes?: Array<{
-        id: string;
-        uri?: string | null;
-        title?: string | null;
-        excerpt?: string | null;
-        date?: string | null;
-        featuredImage?: { node?: { sourceUrl?: string | null } | null } | null;
-      }> | null;
-    } | null;
-  };
-  loading?: boolean;
-}
-
 export default function PageHome({ data }: HomePageProps): JSX.Element {
+  const router = useRouter();
   const homeHeroBg = "/assets/images/patterns/home-hero-bg.jpg";
   const imageSectionSrc = "/assets/images/home-img.jpg";
 
   return (
     <div className="bg-gray-400 overflow-x-hidden">
       {/* Hero Section Start */}
+
       <div className="home-hero relative bg-cover bg-center bg-no-repeat text-white">
         {/* Background Image */}
         <div>
@@ -182,15 +183,19 @@ export default function PageHome({ data }: HomePageProps): JSX.Element {
             </PageTitleText>
           </div>
           <div className="mt-10 grid grid-cols-1 gap-6 md:gap-8 xl:gap-10 sm:mt-16 xl:grid-cols-7 xl:grid-rows-2">
+            {/* card-1 */}
             <div className="flex p-px xl:col-span-4">
               <CardType1 />
             </div>
+            {/* card-2 */}
             <div className="flex p-px xl:col-span-3">
               <CardType2 />
             </div>
+            {/* card-3 */}
             <div className="flex p-px xl:col-span-3">
               <CardType3 />
             </div>
+            {/* card-4 */}
             <div className="flex p-px xl:col-span-4">
               <CardType4 />
             </div>
@@ -212,16 +217,12 @@ export default function PageHome({ data }: HomePageProps): JSX.Element {
             <div className="lg:pt-4 lg:pr-4 lg:w-2xl">
               <div className="max-w-lg lg:max-w-none">
                 <span className="text-xs font-semibold text-white bg-white/25 py-2 px-3 rounded-full uppercase font-manrope">
-                  {data?.page?.homeAiSection?.aiTitle || "Default AI Title"}
+                  {data?.page?.homeAiSection?.aiTitle ?? "advanced AI"}
                 </span>
-                <h2
-                  className="mt-5 xl:text-6xl sm:text-5xl text-3xl leading-9 md:leading-14 xl:leading-16 font-normal font-playfair text-pretty text-white"
-                  dangerouslySetInnerHTML={{
-                    __html:
-                      data?.page?.homeAiSection?.aiDescription ||
-                      "Default AI description text.",
-                  }}
-                />
+                <h2 className="mt-5 xl:text-6xl sm:text-5xl text-3xl leading-9 md:leading-14 xl:leading-16 font-normal font-playfair text-pretty text-white">
+                  {data?.page?.homeAiSection?.aiDescription ??
+                    "Discover meaningful connections with the power of Advocata's advanced AI technology."}
+                </h2>
               </div>
             </div>
           </div>
@@ -229,7 +230,7 @@ export default function PageHome({ data }: HomePageProps): JSX.Element {
       </div>
       {/* Introduction of AI Section End */}
 
-      {/* Dataset Section Start */}
+      {/* Dataset Card Section Start */}
       <div className="bg-white py-12 md:py-16 xl:py-20">
         <div className="mx-auto max-w-7xl px-5 md:px-10 xl:px-16">
           <div className="mx-auto max-w-2xl text-center">
@@ -241,9 +242,9 @@ export default function PageHome({ data }: HomePageProps): JSX.Element {
               </>
             </PageTitle>
           </div>
-          <div className="mx-auto my-8 md:my-11 grid max-w-2xl grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 xl:gap-8 lg:max-w-none">
+          <div className="mx-auto my-8 md:my-11 grid max-w-2xl grid-cols-1 gap-6 xl:gap-8 lg:mx-0 lg:max-w-none lg:grid-cols-3 md:grid-cols-2">
             {(data?.dataSets?.nodes ?? []).map((c) => (
-              <Link href={c.uri ?? "#"} key={c.id} className="block h-full">
+              <div key={c.id} className="h-full">
                 <CardType6
                   title={c.title ?? ""}
                   excerpt={c.excerpt ?? ""}
@@ -252,17 +253,21 @@ export default function PageHome({ data }: HomePageProps): JSX.Element {
                   }
                   postDate={c.date ?? ""}
                 />
-              </Link>
+              </div>
             ))}
           </div>
+
+          {/* Button */}
           <div className="mx-auto max-w-7xl text-center">
-            <PrimaryButton href="/datasets">View data catalog</PrimaryButton>
+            <PrimaryButton onClick={() => router.push("/datasets")}>
+              View data catalog
+            </PrimaryButton>
           </div>
         </div>
       </div>
-      {/* Dataset Section End */}
+      {/* Dataset Card Section Start */}
 
-      {/* Insights Section Start */}
+      {/* Insight Card Section Start */}
       <div className="bg-pink-100 py-12 md:py-16 xl:py-24">
         <div className="mx-auto max-w-7xl px-5 md:px-10 xl:px-16">
           <div className="mx-auto max-w-2xl text-center">
@@ -271,28 +276,35 @@ export default function PageHome({ data }: HomePageProps): JSX.Element {
               Up to date with our latest news and updates
             </PageTitle>
           </div>
-          <div className="mx-auto my-8 md:my-11 grid max-w-2xl grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 xl:gap-8 lg:max-w-none">
+          <div className="mx-auto my-8 md:my-11 grid max-w-2xl grid-cols-1 gap-6 xl:gap-8 lg:mx-0 lg:max-w-none lg:grid-cols-3 md:grid-cols-2">
             {(data?.insights?.nodes ?? []).map((c) => (
-              <Link href={c.uri ?? "#"} key={c.id} className="block h-full">
+              <div key={c.id} className="h-full">
                 <CardType5
                   title={c.title ?? ""}
                   excerpt={c.excerpt ?? ""}
                   imageUrl={c.featuredImage?.node?.sourceUrl ?? ""}
                   postDate={c.date ?? ""}
+                  uri={c.uri ?? undefined}
                 />
-              </Link>
+              </div>
             ))}
           </div>
+
+          {/* Button */}
           <div className="mx-auto max-w-7xl text-center">
-            <PrimaryButton href="/insights">Explore more</PrimaryButton>
+            <PrimaryButton onClick={() => router.push("/insights")}>
+              Explore more
+            </PrimaryButton>
           </div>
         </div>
       </div>
-      {/* Insights Section End */}
+      {/* Insight Card Section Start */}
     </div>
   );
 }
 
+// Attach Faust query/variables so this template fetches its data
+// at build-time and preview.
 (PageHome as any).query = PAGE_QUERY;
 (PageHome as any).variables = (
   _seedNode: { databaseId?: number | string } = {},
