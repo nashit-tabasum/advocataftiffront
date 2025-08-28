@@ -1,17 +1,67 @@
+// src/components/Cards/CardType6.tsx
 import React from "react";
 
-const CardType6: React.FC = () => {
+interface CardType6Props {
+  title: string;
+  excerpt: string;
+  fileUrl: string;
+  postDate?: string;
+}
+
+const stripParagraphTags = (html: string) => {
+  return html.replace(/<\/?p>/g, "");
+};
+
+// Helper to format date as YYYY-MM-DD only
+const formatDate = (dateStr?: string) => {
+  if (!dateStr) return "";
+  return dateStr.split("T")[0];
+};
+
+// Extract the filename (without query params) from a URL
+const getFileNameFromUrl = (url: string) => {
+  try {
+    const cleanUrl = url.split("?")[0];
+    const segments = cleanUrl.split("/");
+    return segments[segments.length - 1] || "download";
+  } catch {
+    return "download";
+  }
+};
+
+// Required fixed label per spec
+const FIXED_DOWNLOAD_LABEL = "csv,json,xml,excel";
+
+// Force browser to download the file using a blob URL. Works even if the
+// server doesn't set Content-Disposition.
+const triggerDownload = async (url: string) => {
+  try {
+    const filename = getFileNameFromUrl(url);
+    const apiUrl = `/api/download?url=${encodeURIComponent(url)}&filename=${encodeURIComponent(filename)}`;
+    const anchor = document.createElement("a");
+    anchor.href = apiUrl;
+    anchor.setAttribute("download", filename);
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+  } catch (error) {
+    // eslint-disable-next-line no-alert
+    alert("Could not download the file. Please try again.");
+  }
+};
+
+const CardType6: React.FC<CardType6Props> = ({
+  title,
+  excerpt,
+  fileUrl,
+  postDate,
+}) => {
   return (
-    <div>
-      <a
-        href="#"
+    <div className="h-full">
+      <div
         className={[
           // .card
-          "relative flex flex-col h-full overflow-hidden cursor-pointer",
-          // transition & hover effects
-          "transition-all duration-500 ease-in-out",
-          "hover:-translate-y-1.5 hover:shadow-lg hover:border-brand-2-100",
-          "focus:border-brand-2-100 focus:shadow-inner-lg",
+          "relative flex flex-col h-full overflow-hidden transition-all duration-500 ease-in-out",
           // .card-type-6
           "rounded-lg bg-white border border-slate-300",
           "card card-type-6",
@@ -21,23 +71,18 @@ const CardType6: React.FC = () => {
           <div className="flex-1">
             <div>
               <h2 className="mt-2 text-2xl leading-snug font-semibold font-family-montserrat text-slate-800 transition-colors duration-500 ease-in-out">
-                Pre-Trained Model
+                {title}
               </h2>
-              <p className="mt-2 text-base/6 font-normal font-family-sourcecodepro text-slate-600 line-clamp-3 transition-colors duration-500 ease-in-out">
-                By comparison, just before the nation’s independence nearly 250
-                years ago, the 13 colonies had about 2.5 million residents. The
-                projected world population on January 1, 2025, is 8,092,034,511,
-                up 71,178,087 (0.89%) from New Year’s Day 2024. During January
-                2025, 4.2 births and 2.0 deaths are expected worldwide every
-                second.
-              </p>
+              <div className="mt-2 text-base/6 font-normal font-family-sourcecodepro text-slate-600 line-clamp-3 transition-colors duration-500 ease-in-out">
+                {stripParagraphTags(excerpt)}
+              </div>
             </div>
           </div>
 
           <div className="card-footer mt-6 flex items-center justify-between">
             <div className="date-info flex justify-between w-full items-center space-x-1 text-xs/tight font-medium font-family-sourcecodepro text-slate-600">
               {/* Left section */}
-              <div className="pdf-btn flex items-start md:items-center space-x-1.5 text-sm leading-snug font-medium font-family-sourcecodepro text-slate-600">
+              <div className="pdf-btn flex items-start md:items-center space-x-1.5 text-sm leading-snug font-medium font-family-sourcecodepro text-slate-600 cursor-pointer">
                 <svg
                   className="pdf-icon mt-1 md:mt-0 size-6 fill-slate-600"
                   xmlns="http://www.w3.org/2000/svg"
@@ -51,17 +96,27 @@ const CardType6: React.FC = () => {
                     fill="currentColor"
                   />
                 </svg>
-                <span>csv,json,xml,excel</span>
+                {fileUrl ? (
+                  <button
+                    type="button"
+                    onClick={() => triggerDownload(fileUrl)}
+                    className="underline font-medium font-family-sourcecodepro text-slate-600 cursor-pointer"
+                  >
+                    {FIXED_DOWNLOAD_LABEL}
+                  </button>
+                ) : (
+                  <span>{FIXED_DOWNLOAD_LABEL}</span>
+                )}
               </div>
 
               {/* Right section */}
               <time className="text-xs/tight font-medium font-family-sourcecodepro text-slate-600">
-                2024-08-18
+                {formatDate(postDate)}
               </time>
             </div>
           </div>
         </div>
-      </a>
+      </div>
     </div>
   );
 };

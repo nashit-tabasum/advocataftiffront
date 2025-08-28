@@ -1,4 +1,8 @@
 import React, { JSX } from "react";
+import Link from "next/link";
+import { gql } from "@apollo/client";
+import type { GetStaticPropsContext } from "next";
+
 import CardType1 from "@/src/components/Cards/CardType1";
 import CardType2 from "@/src/components/Cards/CardType2";
 import CardType3 from "@/src/components/Cards/CardType3";
@@ -13,14 +17,83 @@ import {
 } from "@/src/components/Typography";
 import SearchFieldHome from "@/src/components/InputFields/SearchFieldHome";
 
-export default function PageHome(): JSX.Element {
+const PAGE_QUERY = gql`
+  query GetHomePage($databaseId: ID!, $asPreview: Boolean = false) {
+    page(id: $databaseId, idType: DATABASE_ID, asPreview: $asPreview) {
+      title
+      content
+    }
+    dataSets(first: 6) {
+      nodes {
+        id
+        uri
+        title
+        excerpt
+        date
+        dataSetFields {
+          dataSetFile {
+            node {
+              mediaItemUrl
+            }
+          }
+        }
+      }
+    }
+    insights(first: 3) {
+      nodes {
+        id
+        uri
+        title
+        excerpt
+        date
+        featuredImage {
+          node {
+            sourceUrl
+          }
+        }
+      }
+    }
+  }
+`;
+
+interface HomePageProps {
+  data?: {
+    page?: { title?: string | null; content?: string | null } | null;
+    dataSets?: {
+      nodes?: Array<{
+        id: string;
+        uri?: string | null;
+        title?: string | null;
+        excerpt?: string | null;
+        date?: string | null;
+        dataSetFields?: {
+          dataSetFile?: {
+            node?: { mediaItemUrl?: string | null } | null;
+          } | null;
+        } | null;
+      }> | null;
+    } | null;
+    insights?: {
+      nodes?: Array<{
+        id: string;
+        uri?: string | null;
+        title?: string | null;
+        excerpt?: string | null;
+        date?: string | null;
+        featuredImage?: { node?: { sourceUrl?: string | null } | null } | null;
+      }> | null;
+    } | null;
+  };
+  loading?: boolean;
+}
+
+export default function PageHome({ data }: HomePageProps): JSX.Element {
   const homeHeroBg = "/assets/images/patterns/home-hero-bg.jpg";
   const imageSectionSrc = "/assets/images/home-img.jpg";
 
   return (
     <div className="bg-gray-400 overflow-x-hidden">
       {/* Hero Section Start */}
-
       <div className="home-hero relative bg-cover bg-center bg-no-repeat text-white">
         {/* Background Image */}
         <div>
@@ -98,19 +171,15 @@ export default function PageHome(): JSX.Element {
             </PageTitleText>
           </div>
           <div className="mt-10 grid grid-cols-1 gap-6 md:gap-8 xl:gap-10 sm:mt-16 xl:grid-cols-7 xl:grid-rows-2">
-            {/* card-1 */}
             <div className="flex p-px xl:col-span-4">
               <CardType1 />
             </div>
-            {/* card-2 */}
             <div className="flex p-px xl:col-span-3">
               <CardType2 />
             </div>
-            {/* card-3 */}
             <div className="flex p-px xl:col-span-3">
               <CardType3 />
             </div>
-            {/* card-4 */}
             <div className="flex p-px xl:col-span-4">
               <CardType4 />
             </div>
@@ -145,7 +214,7 @@ export default function PageHome(): JSX.Element {
       </div>
       {/* Introduction of AI Section End */}
 
-      {/* Dataset Card Section Start */}
+      {/* Dataset Section Start */}
       <div className="bg-white py-12 md:py-16 xl:py-20">
         <div className="mx-auto max-w-7xl px-5 md:px-10 xl:px-16">
           <div className="mx-auto max-w-2xl text-center">
@@ -157,36 +226,28 @@ export default function PageHome(): JSX.Element {
               </>
             </PageTitle>
           </div>
-          <div className="mx-auto my-8 md:my-11 grid max-w-2xl grid-cols-1 gap-6 xl:gap-8 lg:mx-0 lg:max-w-none lg:grid-cols-3 md:grid-cols-2">
-            <div>
-              <CardType6 />
-            </div>
-            <div>
-              <CardType6 />
-            </div>
-            <div>
-              <CardType6 />
-            </div>
-            <div>
-              <CardType6 />
-            </div>
-            <div>
-              <CardType6 />
-            </div>
-            <div>
-              <CardType6 />
-            </div>
+          <div className="mx-auto my-8 md:my-11 grid max-w-2xl grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 xl:gap-8 lg:max-w-none">
+            {(data?.dataSets?.nodes ?? []).map((c) => (
+              <Link href={c.uri ?? "#"} key={c.id} className="block h-full">
+                <CardType6
+                  title={c.title ?? ""}
+                  excerpt={c.excerpt ?? ""}
+                  fileUrl={
+                    c.dataSetFields?.dataSetFile?.node?.mediaItemUrl ?? ""
+                  }
+                  postDate={c.date ?? ""}
+                />
+              </Link>
+            ))}
           </div>
-
-          {/* Button */}
           <div className="mx-auto max-w-7xl text-center">
             <PrimaryButton>View data catalog</PrimaryButton>
           </div>
         </div>
       </div>
-      {/* Dataset Card Section Start */}
+      {/* Dataset Section End */}
 
-      {/* Insight Card Section Start */}
+      {/* Insights Section Start */}
       <div className="bg-pink-100 py-12 md:py-16 xl:py-24">
         <div className="mx-auto max-w-7xl px-5 md:px-10 xl:px-16">
           <div className="mx-auto max-w-2xl text-center">
@@ -195,26 +256,38 @@ export default function PageHome(): JSX.Element {
               Up to date with our latest news and updates
             </PageTitle>
           </div>
-          <div className="mx-auto my-8 md:my-11 grid max-w-2xl grid-cols-1 gap-6 xl:gap-8 lg:mx-0 lg:max-w-none lg:grid-cols-3 md:grid-cols-2">
-            {/* Repeat CardType5 as examples */}
-            <div>
-              <CardType5 />
-            </div>
-            <div>
-              <CardType5 />
-            </div>
-            <div>
-              <CardType5 />
-            </div>
+          <div className="mx-auto my-8 md:my-11 grid max-w-2xl grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 xl:gap-8 lg:max-w-none">
+            {(data?.insights?.nodes ?? []).map((c) => (
+              <Link href={c.uri ?? "#"} key={c.id} className="block h-full">
+                <CardType5
+                  title={c.title ?? ""}
+                  excerpt={c.excerpt ?? ""}
+                  imageUrl={c.featuredImage?.node?.sourceUrl ?? ""}
+                  postDate={c.date ?? ""}
+                />
+              </Link>
+            ))}
           </div>
-
-          {/* Button */}
           <div className="mx-auto max-w-7xl text-center">
             <PrimaryButton>Explore more</PrimaryButton>
           </div>
         </div>
       </div>
-      {/* Insight Card Section Start */}
+      {/* Insights Section End */}
     </div>
   );
 }
+
+(PageHome as any).query = PAGE_QUERY;
+(PageHome as any).variables = (
+  _seedNode: { databaseId?: number | string } = {},
+  ctx: GetStaticPropsContext
+) => {
+  if (!_seedNode?.databaseId) {
+    throw new Error("PageHome.variables: missing databaseId from seed node.");
+  }
+  return {
+    databaseId: String(_seedNode.databaseId),
+    asPreview: !!ctx?.preview,
+  };
+};
