@@ -1,23 +1,37 @@
 "use client";
 
 import { useState, FormEvent, JSX } from "react";
+import { useQuery } from "@apollo/client";
+import { FOOTER_MENU_QUERY } from "@/queries/MenuQueries";
+
+type FooterMenuItem = {
+  id: string;
+  label: string;
+  uri?: string | null;
+  parentId?: string | null;
+};
 
 export default function Footer(): JSX.Element {
   const [openQuick, setOpenQuick] = useState(false);
   const [openDashboards, setOpenDashboards] = useState(false);
 
-  const quickLinks = [
-    { label: "About", href: "#" },
-    { label: "Insights", href: "#" },
-    { label: "Dataset", href: "#" },
-  ];
+  const { data } = useQuery(FOOTER_MENU_QUERY);
+  const allItems: FooterMenuItem[] = data?.menu?.menuItems?.nodes ?? [];
 
-  const dashboards = [
-    { label: "Macro economy", href: "#" },
-    { label: "Government fiscale", href: "#" },
-    { label: "Fiscal Operations", href: "#" },
-    { label: "Transparency", href: "#" },
-  ];
+  // Find top-level grouping items by label
+  const quickLinksParent = allItems.find(
+    (n) => !n.parentId && n.label?.toLowerCase?.().includes("quick")
+  );
+  const dashboardsParent = allItems.find(
+    (n) => !n.parentId && n.label?.toLowerCase?.().includes("dashboard")
+  );
+
+  const quickLinks = quickLinksParent
+    ? allItems.filter((n) => n.parentId === quickLinksParent.id)
+    : [];
+  const dashboards = dashboardsParent
+    ? allItems.filter((n) => n.parentId === dashboardsParent.id)
+    : [];
 
   function onSubscribe(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -47,9 +61,9 @@ export default function Footer(): JSX.Element {
               </h3>
               <ul role="list" className="mt-6 space-y-4">
                 {quickLinks.map((item) => (
-                  <li key={item.label}>
+                  <li key={item.id}>
                     <a
-                      href={item.href}
+                      href={item.uri ?? "#"}
                       className="footer-link text-base/6 text-brand-white/80 font-normal font-family-sourcecodepro transform transition-all duration-300 ease-in-out hover:underline hover:[text-decoration-thickness:6%] hover:[text-underline-offset:40%] hover:[text-underline-position:from-font] focus:no-underline"
                     >
                       {item.label}
@@ -69,9 +83,9 @@ export default function Footer(): JSX.Element {
               </h3>
               <ul role="list" className="mt-7 space-y-6 grid grid-cols-2">
                 {dashboards.map((item) => (
-                  <li key={item.label}>
+                  <li key={item.id}>
                     <a
-                      href={item.href}
+                      href={item.uri ?? "#"}
                       className="footer-link text-base/6 text-brand-white/80 font-normal font-family-sourcecodepro transform transition-all duration-300 ease-in-out hover:underline hover:[text-decoration-thickness:6%] hover:[text-underline-offset:40%] hover:[text-underline-position:from-font] focus:no-underline"
                     >
                       {item.label}
@@ -177,9 +191,9 @@ export default function Footer(): JSX.Element {
                 className={`mt-6 space-y-6 md:space-y-4 ${openQuick ? "block" : "hidden"}`}
               >
                 {quickLinks.map((item) => (
-                  <li key={item.label}>
+                  <li key={item.id}>
                     <a
-                      href={item.href}
+                      href={item.uri ?? "#"}
                       className="footer-link text-base/6 text-brand-white/80 font-normal font-family-sourcecodepro transform transition-all duration-300 ease-in-out hover:underline hover:[text-decoration-thickness:6%] hover:[text-underline-offset:40%] hover:[text-underline-position:from-font] focus:no-underline"
                     >
                       {item.label}
@@ -219,9 +233,9 @@ export default function Footer(): JSX.Element {
                 className={`mt-6 space-y-6 md:space-y-4 ${openDashboards ? "block" : "hidden"}`}
               >
                 {dashboards.map((item) => (
-                  <li key={item.label}>
+                  <li key={item.id}>
                     <a
-                      href={item.href}
+                      href={item.uri ?? "#"}
                       className="footer-link text-base/6 text-brand-white/80 font-normal font-family-sourcecodepro transform transition-all duration-300 ease-in-out hover:underline hover:[text-decoration-thickness:6%] hover:[text-underline-offset:40%] hover:[text-underline-position:from-font] focus:no-underline"
                     >
                       {item.label}

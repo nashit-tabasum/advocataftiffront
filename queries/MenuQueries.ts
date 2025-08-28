@@ -1,21 +1,35 @@
 import { gql } from "@apollo/client";
 
 export const HEADER_MENU_QUERY = gql`
-  query GetHeaderMenu {
-    primaryMenuItems: menuItems(where: { location: PRIMARY }) {
+query GetHeaderMenu {
+  menu(id: "Main Menu", idType: NAME) {
+    id
+    name
+    menuItems(first: 200) {
       nodes {
         id
-        uri
-        path
         label
+        uri
         parentId
-        cssClasses
-        menu {
-          node {
-            name
-          }
-        }
       }
     }
   }
+}
+`;
+
+export const FOOTER_MENU_QUERY = gql`
+query GetFooterMenu {
+  menu(id: "Footer", idType: NAME) {
+    id
+    name
+    menuItems {
+      nodes {
+        id
+        label
+        uri
+        parentId
+      }
+    }
+  }
+}
 `;

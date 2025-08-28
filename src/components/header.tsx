@@ -1,4 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useQuery } from "@apollo/client";
+import { HEADER_MENU_QUERY } from "@/queries/MenuQueries";
 
 export type HeaderNavProps = {
   /** Brand logo URL */
@@ -137,7 +139,227 @@ const SearchForm: React.FC<{
   );
 };
 
-const DashboardDropdown: React.FC<{ imageUrl: string }> = ({ imageUrl }) => {
+type MenuItem = {
+  id: string;
+  label: string;
+  uri?: string | null;
+  path?: string | null;
+  parentId?: string | null;
+};
+
+// Icons used in the dashboard dropdown, preserved from the original design
+const dashboardIcons: React.ReactNode[] = [
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+  >
+    <path
+      d="M12.37 2.15003L21.37 5.75C21.72 5.89 22 6.31 22 6.68V10C22 10.55 21.55 11 21 11H3C2.45 11 2 10.55 2 10V6.68C2 6.31 2.28 5.89 2.63 5.75L11.63 2.15003C11.83 2.07003 12.17 2.07003 12.37 2.15003Z"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeMiterlimit="10"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M22 22H2V19C2 18.45 2.45 18 3 18H21C21.55 18 22 18.45 22 19V22Z"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeMiterlimit="10"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M4 18V11"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeMiterlimit="10"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M8 18V11"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeMiterlimit="10"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M12 18V11"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeMiterlimit="10"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M16 18V11"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeMiterlimit="10"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M20 18V11"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeMiterlimit="10"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M1 22H23"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeMiterlimit="10"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M12 8.5C12.8284 8.5 13.5 7.82843 13.5 7C13.5 6.17157 12.8284 5.5 12 5.5C11.1716 5.5 10.5 6.17157 10.5 7C10.5 7.82843 11.1716 8.5 12 8.5Z"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeMiterlimit="10"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>,
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+  >
+    <path
+      d="M17.54 8.31001C18.8986 8.31001 20 7.20863 20 5.85001C20 4.49139 18.8986 3.39001 17.54 3.39001C16.1814 3.39001 15.08 4.49139 15.08 5.85001C15.08 7.20863 16.1814 8.31001 17.54 8.31001Z"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeMiterlimit="10"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M6.46001 8.31001C7.81863 8.31001 8.92 7.20863 8.92 5.85001C8.92 4.49139 7.81863 3.39001 6.46001 3.39001C5.10139 3.39001 4 4.49139 4 5.85001C4 7.20863 5.10139 8.31001 6.46001 8.31001Z"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeMiterlimit="10"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M17.54 20.61C18.8986 20.61 20 19.5086 20 18.15C20 16.7914 18.8986 15.69 17.54 15.69C16.1814 15.69 15.08 16.7914 15.08 18.15C15.08 19.5086 16.1814 20.61 17.54 20.61Z"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeMiterlimit="10"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M6.46001 20.61C7.81863 20.61 8.92 19.5086 8.92 18.15C8.92 16.7914 7.81863 15.69 6.46001 15.69C5.10139 15.69 4 16.7914 4 18.15C4 19.5086 5.10139 20.61 6.46001 20.61Z"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeMiterlimit="10"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>,
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+  >
+    <path
+      d="M8.15998 22C3.97998 22 3.13998 19.47 4.49998 16.39L8.74998 6.74H8.44998C7.79998 6.74 7.19998 6.48 6.76998 6.05C6.32998 5.62 6.06998 5.02 6.06998 4.37C6.06998 3.07 7.12998 2 8.43998 2H15.55C16.21 2 16.8 2.27 17.23 2.7C17.79 3.26 18.07 4.08 17.86 4.95C17.59 6.03 16.55 6.74 15.44 6.74H15.28L19.5 16.4C20.85 19.48 19.97 22 15.83 22H8.15998Z"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M5.94 13.12C5.94 13.12 9 13 12 14C15 15 17.83 13.11 17.83 13.11"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>,
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+  >
+    <path
+      d="M13 22H5C3 22 2 21 2 19V11C2 9 3 8 5 8H10V19C10 21 11 22 13 22Z"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeMiterlimit="10"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M10.11 4C10.03 4.3 10 4.63 10 5V8H5V6C5 4.9 5.9 4 7 4H10.11Z"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeMiterlimit="10"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M14 8V13"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeMiterlimit="10"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M18 8V13"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeMiterlimit="10"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M17 17H15C14.45 17 14 17.45 14 18V22H18V18C18 17.45 17.55 17 17 17Z"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeMiterlimit="10"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M6 13V17"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeMiterlimit="10"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M10 19V5C10 3 11 2 13 2H19C21 2 22 3 22 5V19C22 21 21 22 19 22H13C11 22 10 21 10 19Z"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeMiterlimit="10"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>,
+];
+const DashboardDropdown: React.FC<{ imageUrl: string; items?: MenuItem[] }> = ({
+  imageUrl,
+  items = [],
+}) => {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -178,7 +400,7 @@ const DashboardDropdown: React.FC<{ imageUrl: string }> = ({ imageUrl }) => {
       </button>
 
       <div
-        className={`${open ? "" : "hidden"} absolute space-y-2 grid px-3 py-3 -left-60 mt-2 w-2xl bg-white border-0 rounded-md shadow-lg`}
+        className={`${open ? "" : "hidden"} dropdown-menu absolute space-y-2 grid px-3 py-3 -left-60 mt-2 w-2xl bg-white border-0 rounded-md shadow-lg`}
         role="menu"
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -188,240 +410,15 @@ const DashboardDropdown: React.FC<{ imageUrl: string }> = ({ imageUrl }) => {
             </span>
             <nav className="sidebar-fill pt-4" aria-label="Sidebar">
               <ul role="list" className="space-y-1">
-                <li>
-                  <SidebarItem
-                    label="Government Fiscal Operations"
-                    icon={
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                      >
-                        <path
-                          d="M12.37 2.15003L21.37 5.75C21.72 5.89 22 6.31 22 6.68V10C22 10.55 21.55 11 21 11H3C2.45 11 2 10.55 2 10V6.68C2 6.31 2.28 5.89 2.63 5.75L11.63 2.15003C11.83 2.07003 12.17 2.07003 12.37 2.15003Z"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeMiterlimit="10"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                        <path
-                          d="M22 22H2V19C2 18.45 2.45 18 3 18H21C21.55 18 22 18.45 22 19V22Z"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeMiterlimit="10"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                        <path
-                          d="M4 18V11"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeMiterlimit="10"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                        <path
-                          d="M8 18V11"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeMiterlimit="10"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                        <path
-                          d="M12 18V11"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeMiterlimit="10"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                        <path
-                          d="M16 18V11"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeMiterlimit="10"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                        <path
-                          d="M20 18V11"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeMiterlimit="10"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                        <path
-                          d="M1 22H23"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeMiterlimit="10"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                        <path
-                          d="M12 8.5C12.8284 8.5 13.5 7.82843 13.5 7C13.5 6.17157 12.8284 5.5 12 5.5C11.1716 5.5 10.5 6.17157 10.5 7C10.5 7.82843 11.1716 8.5 12 8.5Z"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeMiterlimit="10"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    }
-                  />
-                </li>
-                <li>
-                  <SidebarItem
-                    label="The Macro Economy of Sri Lanka"
-                    icon={
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                      >
-                        <path
-                          d="M17.54 8.31001C18.8986 8.31001 20 7.20863 20 5.85001C20 4.49139 18.8986 3.39001 17.54 3.39001C16.1814 3.39001 15.08 4.49139 15.08 5.85001C15.08 7.20863 16.1814 8.31001 17.54 8.31001Z"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeMiterlimit="10"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                        <path
-                          d="M6.46001 8.31001C7.81863 8.31001 8.92 7.20863 8.92 5.85001C8.92 4.49139 7.81863 3.39001 6.46001 3.39001C5.10139 3.39001 4 4.49139 4 5.85001C4 7.20863 5.10139 8.31001 6.46001 8.31001Z"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeMiterlimit="10"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                        <path
-                          d="M17.54 20.61C18.8986 20.61 20 19.5086 20 18.15C20 16.7914 18.8986 15.69 17.54 15.69C16.1814 15.69 15.08 16.7914 15.08 18.15C15.08 19.5086 16.1814 20.61 17.54 20.61Z"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeMiterlimit="10"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                        <path
-                          d="M6.46001 20.61C7.81863 20.61 8.92 19.5086 8.92 18.15C8.92 16.7914 7.81863 15.69 6.46001 15.69C5.10139 15.69 4 16.7914 4 18.15C4 19.5086 5.10139 20.61 6.46001 20.61Z"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeMiterlimit="10"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    }
-                  />
-                </li>
-                <li>
-                  <SidebarItem
-                    label="Transparency in government institutions"
-                    icon={
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                      >
-                        <path
-                          d="M8.15998 22C3.97998 22 3.13998 19.47 4.49998 16.39L8.74998 6.74H8.44998C7.79998 6.74 7.19998 6.48 6.76998 6.05C6.32998 5.62 6.06998 5.02 6.06998 4.37C6.06998 3.07 7.12998 2 8.43998 2H15.55C16.21 2 16.8 2.27 17.23 2.7C17.79 3.26 18.07 4.08 17.86 4.95C17.59 6.03 16.55 6.74 15.44 6.74H15.28L19.5 16.4C20.85 19.48 19.97 22 15.83 22H8.15998Z"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                        <path
-                          d="M5.94 13.12C5.94 13.12 9 13 12 14C15 15 17.83 13.11 17.83 13.11"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    }
-                  />
-                </li>
-                <li>
-                  <SidebarItem
-                    label="The Finances of SOE"
-                    icon={
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                      >
-                        <path
-                          d="M13 22H5C3 22 2 21 2 19V11C2 9 3 8 5 8H10V19C10 21 11 22 13 22Z"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeMiterlimit="10"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                        <path
-                          d="M10.11 4C10.03 4.3 10 4.63 10 5V8H5V6C5 4.9 5.9 4 7 4H10.11Z"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeMiterlimit="10"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                        <path
-                          d="M14 8V13"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeMiterlimit="10"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                        <path
-                          d="M18 8V13"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeMiterlimit="10"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                        <path
-                          d="M17 17H15C14.45 17 14 17.45 14 18V22H18V18C18 17.45 17.55 17 17 17Z"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeMiterlimit="10"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                        <path
-                          d="M6 13V17"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeMiterlimit="10"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                        <path
-                          d="M10 19V5C10 3 11 2 13 2H19C21 2 22 3 22 5V19C22 21 21 22 19 22H13C11 22 10 21 10 19Z"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeMiterlimit="10"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    }
-                  />
-                </li>
+                {items.map((item, index) => (
+                  <li key={item.id}>
+                    <SidebarItem
+                      href={item.uri ?? "#"}
+                      label={item.label}
+                      icon={dashboardIcons[index % dashboardIcons.length]}
+                    />
+                  </li>
+                ))}
               </ul>
             </nav>
           </div>
@@ -450,7 +447,9 @@ const DashboardDropdown: React.FC<{ imageUrl: string }> = ({ imageUrl }) => {
 
 const MobileMenu: React.FC<{
   imageUrl: string;
-}> = ({ imageUrl }) => {
+  topLevelItems?: MenuItem[];
+  dashboardItems?: MenuItem[];
+}> = ({ imageUrl, topLevelItems = [], dashboardItems = [] }) => {
   const [open, setOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -532,12 +531,15 @@ const MobileMenu: React.FC<{
         ref={ref}
         className={`mobile-menu px-4 pb-6 space-y-4 grid overflow-y-scroll lg:hidden absolute inset-0 top-13 h-screen w-full bg-brand-black border-t border-gray-300 z-50 flex flex-col gap-4 px-6 py-6 ${open ? "" : "hidden"}`}
       >
-        <a
-          href="#"
-          className="nav-link text-lg leading-snug font-family-sourcecodepro font-normal uppercase text-slate-50 opacity-[.6] py-2.5 px-3.5 rounded-md hover:bg-white/10 hover:text-brand-white hover:font-medium focus:font-medium focus:outline-none"
-        >
-          About
-        </a>
+        {topLevelItems.map((item) => (
+          <a
+            key={item.id}
+            href={item.uri ?? "#"}
+            className="nav-link text-lg leading-snug font-family-sourcecodepro font-normal uppercase text-slate-50 opacity-[.6] py-2.5 px-3.5 rounded-md hover:bg-white/10 hover:text-brand-white hover:font-medium focus:font-medium focus:outline-none"
+          >
+            {item.label}
+          </a>
+        ))}
 
         {/* Clickable Dropdown (mobile) */}
         <div className="relative">
@@ -565,7 +567,7 @@ const MobileMenu: React.FC<{
             </svg>
           </button>
           <div
-            className={`${dropdownOpen ? "" : "hidden"} space-y-2 grid ml-4 px-4 py-2 left-0 mt-2 w-[96%] xl:w-full bg-white border-0 rounded-md shadow-lg`}
+            className={`${dropdownOpen ? "" : "hidden"} dropdown-menu space-y-2 grid ml-4 px-4 py-2 left-0 mt-2 w-[96%] xl:w-full bg-white border-0 rounded-md shadow-lg`}
           >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -574,38 +576,15 @@ const MobileMenu: React.FC<{
                 </span>
                 <nav className="sidebar-fill pt-4" aria-label="Sidebar">
                   <ul role="list" className="space-y-1">
-                    <li>
-                      <SidebarItem
-                        label="Government Fiscal Operations"
-                        icon={
-                          <span className="inline-block w-5 h-5 bg-white/10 rounded" />
-                        }
-                      />
-                    </li>
-                    <li>
-                      <SidebarItem
-                        label="The Macro Economy of Sri Lanka"
-                        icon={
-                          <span className="inline-block w-5 h-5 bg-white/10 rounded" />
-                        }
-                      />
-                    </li>
-                    <li>
-                      <SidebarItem
-                        label="Transparency in government institutions"
-                        icon={
-                          <span className="inline-block w-5 h-5 bg-white/10 rounded" />
-                        }
-                      />
-                    </li>
-                    <li>
-                      <SidebarItem
-                        label="The Finances of SOE"
-                        icon={
-                          <span className="inline-block w-5 h-5 bg-white/10 rounded" />
-                        }
-                      />
-                    </li>
+                    {dashboardItems.map((item, index) => (
+                      <li key={item.id}>
+                        <SidebarItem
+                          href={item.uri ?? "#"}
+                          label={item.label}
+                          icon={dashboardIcons[index % dashboardIcons.length]}
+                        />
+                      </li>
+                    ))}
                   </ul>
                 </nav>
               </div>
@@ -630,18 +609,7 @@ const MobileMenu: React.FC<{
           </div>
         </div>
 
-        <a
-          href="#"
-          className="nav-link text-lg leading-snug font-family-sourcecodepro font-normal uppercase text-slate-50 opacity-[.6] py-2.5 px-3.5 rounded-md hover:bg-white/10 hover:text-brand-white hover:font-medium focus:font-medium focus:outline-none"
-        >
-          Insights
-        </a>
-        <a
-          href="#"
-          className="nav-link text-lg leading-snug font-family-sourcecodepro font-normal uppercase text-slate-50 opacity-[.6] py-2.5 px-3.5 rounded-md hover:bg-white/10 hover:text-brand-white hover:font-medium focus:font-medium focus:outline-none"
-        >
-          Datasets
-        </a>
+        {/** remaining links rendered above */}
       </div>
     </div>
   );
@@ -653,8 +621,29 @@ const HeaderNav: React.FC<HeaderNavProps> = ({
   onSearch,
   className,
 }) => {
+  const { data } = useQuery(HEADER_MENU_QUERY);
+
+  const allMenuItems: MenuItem[] = data?.menu?.menuItems?.nodes ?? [];
+  const dashboardsItem = allMenuItems.find(
+    (n) => n.label?.toLowerCase?.().includes("dashboard") && !n.parentId
+  );
+  const dashboardChildren: MenuItem[] = dashboardsItem
+    ? allMenuItems.filter((n) => n.parentId === dashboardsItem.id)
+    : [];
+  const topLevelOrdered: MenuItem[] = allMenuItems.filter((n) => !n.parentId);
+  const dashboardIndex = dashboardsItem
+    ? topLevelOrdered.findIndex((n) => n.id === dashboardsItem.id)
+    : -1;
+  const itemsBeforeDashboard: MenuItem[] =
+    dashboardIndex > -1
+      ? topLevelOrdered.slice(0, dashboardIndex)
+      : topLevelOrdered;
+  const itemsAfterDashboard: MenuItem[] =
+    dashboardIndex > -1 ? topLevelOrdered.slice(dashboardIndex + 1) : [];
   return (
-    <header className={`${className ?? ""} bg-brand-black relative z-30`}>
+    <header
+      className={`${className ?? ""} navbar bg-brand-black relative z-30`}
+    >
       <div className="max-w-full mx-auto px-6 md:px-6 lg:px-8 flex items-center justify-between py-3 lg:py-3">
         {/* Logo */}
         <a
@@ -672,27 +661,30 @@ const HeaderNav: React.FC<HeaderNavProps> = ({
         <div className="flex items-center gap-10">
           {/* Desktop Nav */}
           <nav className="nav hidden lg:flex items-center space-x-2">
-            <a
-              href="#"
-              className="nav-link text-lg leading-snug font-family-sourcecodepro font-normal uppercase text-slate-50 opacity-[.6] py-2.5 px-3.5 rounded-md hover:bg-white/10 hover:text-brand-white hover:font-medium focus:font-medium focus:outline-none"
-            >
-              About
-            </a>
-
-            <DashboardDropdown imageUrl={navDropdownImage} />
-
-            <a
-              href="#"
-              className="nav-link text-lg leading-snug font-family-sourcecodepro font-normal uppercase text-slate-50 opacity-[.6] py-2.5 px-3.5 rounded-md hover:bg-white/10 hover:text-brand-white hover:font-medium focus:font-medium focus:outline-none"
-            >
-              Insights
-            </a>
-            <a
-              href="#"
-              className="nav-link text-lg leading-snug font-family-sourcecodepro font-normal uppercase text-slate-50 opacity-[.6] py-2.5 px-3.5 rounded-md hover:bg-white/10 hover:text-brand-white hover:font-medium focus:font-medium focus:outline-none"
-            >
-              Datasets
-            </a>
+            {itemsBeforeDashboard.map((item) => (
+              <a
+                key={item.id}
+                href={item.uri ?? "#"}
+                className="nav-link text-lg leading-snug font-family-sourcecodepro font-normal uppercase text-slate-50 opacity-[.6] py-2.5 px-3.5 rounded-md hover:bg-white/10 hover:text-brand-white hover:font-medium focus:font-medium focus:outline-none"
+              >
+                {item.label}
+              </a>
+            ))}
+            {dashboardsItem && (
+              <DashboardDropdown
+                imageUrl={navDropdownImage}
+                items={dashboardChildren}
+              />
+            )}
+            {itemsAfterDashboard.map((item) => (
+              <a
+                key={item.id}
+                href={item.uri ?? "#"}
+                className="nav-link text-lg leading-snug font-family-sourcecodepro font-normal uppercase text-slate-50 opacity-[.6] py-2.5 px-3.5 rounded-md hover:bg-white/10 hover:text-brand-white hover:font-medium focus:font-medium focus:outline-none"
+              >
+                {item.label}
+              </a>
+            ))}
           </nav>
 
           {/* Desktop Search */}
@@ -707,7 +699,11 @@ const HeaderNav: React.FC<HeaderNavProps> = ({
         </div>
 
         {/* Mobile */}
-        <MobileMenu imageUrl={navDropdownImage} />
+        <MobileMenu
+          imageUrl={navDropdownImage}
+          topLevelItems={topLevelOrdered}
+          dashboardItems={dashboardChildren}
+        />
       </div>
     </header>
   );
