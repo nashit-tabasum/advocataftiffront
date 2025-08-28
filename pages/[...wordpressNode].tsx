@@ -1,24 +1,27 @@
+// pages/[...wordpressNode].tsx
 import { getWordPressProps, WordPressTemplate } from "@faustwp/core";
-import { GetStaticPropsContext } from "next"; // Import GetStaticPropsContext
+import type { GetStaticPropsContext, GetStaticPaths } from "next";
 
 interface WordPressTemplateProps {
-  __TEMPLATE_SLUG__?: string;
-  __SEED_NODE__?: any; // This can be more specific if needed
+  _TEMPLATE_SLUG_?: string;
+  _SEED_NODE_?: unknown;
   loading?: boolean;
 }
 
-export default function Page(props: WordPressTemplateProps) {
+export default function Page(props: any) {
   return <WordPressTemplate {...props} />;
 }
 
-export async function getStaticProps(ctx) {
+// ✅ Type the ctx param so TS doesn't complain about implicit any
+export async function getStaticProps(ctx: GetStaticPropsContext) {
   const props = await getWordPressProps({ ctx });
   return { ...props, revalidate: 120 };
 }
 
-export async function getStaticPaths() {
+// ✅ Type getStaticPaths too
+export const getStaticPaths: GetStaticPaths = async () => {
   return {
     paths: [],
     fallback: "blocking",
   };
-}
+};
