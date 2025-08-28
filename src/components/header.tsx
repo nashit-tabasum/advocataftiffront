@@ -647,7 +647,7 @@ const HeaderNav: React.FC<HeaderNavProps> = ({
       <div className="max-w-full mx-auto px-6 md:px-6 lg:px-8 flex items-center justify-between py-3 lg:py-3">
         {/* Logo */}
         <a
-          href="/home"
+          href="#"
           className="brand-logo text-2xl leading-snug font-bold text-gray-800 w-full sm:w-40 md:w-52 lg:w-64"
           aria-label="Homepage"
         >
