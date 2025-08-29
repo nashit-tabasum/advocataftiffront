@@ -20,6 +20,7 @@ const PAGE_QUERY = gql`
         uri
         title
         excerpt
+        content
         date
         dataSetsCategories {
           nodes {
@@ -59,6 +60,7 @@ interface DatasetsPageProps {
         uri?: string | null;
         title?: string | null;
         excerpt?: string | null;
+        content?: string | null;
         date?: string | null;
         dataSetsCategories?: {
           nodes?: Array<{
@@ -74,14 +76,14 @@ interface DatasetsPageProps {
             } | null;
           } | null;
         } | null;
-      }>;
+      }> | null;
     };
     dataSetsCategories?: {
       nodes?: Array<{
         id: string;
         name?: string | null;
         slug?: string | null;
-      }>;
+      }> | null;
     };
   };
   loading?: boolean;
@@ -95,23 +97,43 @@ export default function DatasetsPage({ data }: DatasetsPageProps) {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [activeCategory, setActiveCategory] = useState<string>("All");
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
   // ✅ categories from WPGraphQL + prepend "All"
   const categories = useMemo(() => {
     const cats = data?.dataSetsCategories?.nodes ?? [];
-    return [...cats.map((c) => c.name ?? "").filter(Boolean)];
+    return ["All", ...cats.map((c) => c.name ?? "").filter(Boolean)];
   }, [data?.dataSetsCategories]);
 
   // ✅ datasets
   const datasetCards = data?.dataSets?.nodes ?? [];
 
-  // ✅ filter datasets
+  // ✅ filter datasets (category + search)
   const filteredCards = useMemo(() => {
-    if (activeCategory === "All") return datasetCards;
-    return datasetCards.filter((c) =>
-      c.dataSetsCategories?.nodes?.some((cat) => cat.name === activeCategory)
-    );
-  }, [activeCategory, datasetCards]);
+    let filtered = datasetCards;
+
+    if (activeCategory !== "All") {
+      filtered = filtered.filter((c) =>
+        c.dataSetsCategories?.nodes?.some((cat) => cat.name === activeCategory)
+      );
+    }
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      filtered = filtered.filter((c) => {
+        const inTitle = c.title?.toLowerCase().includes(q);
+        const inExcerpt = c.excerpt?.toLowerCase().includes(q);
+        const inContent = c.content?.toLowerCase().includes(q);
+        const inCategory = c.dataSetsCategories?.nodes?.some((cat) =>
+          cat.name?.toLowerCase().includes(q)
+        );
+
+        return inTitle || inExcerpt || inContent || inCategory;
+      });
+    }
+
+    return filtered;
+  }, [activeCategory, searchQuery, datasetCards]);
 
   // ✅ pagination
   const pageSize = 6;
@@ -137,7 +159,18 @@ export default function DatasetsPage({ data }: DatasetsPageProps) {
       <section className="bg-white">
         <div className="mx-auto max-w-7xl px-5 md:px-10 xl:px-16 pt-5 pb-3.5 md:pb-5 md:pt-10 lg:pt-16 lg:pb-6">
           <div className="pb-8">
-            <SearchField />
+            <SearchField
+              value={searchQuery}
+              onChange={(q) => {
+                setSearchQuery(q);
+                setCurrentPage(1);
+              }}
+              onSubmit={(q) => {
+                setSearchQuery(q);
+                setCurrentPage(1);
+              }}
+              placeholder="Search datasets..."
+            />
           </div>
 
           {categories.length > 0 && (

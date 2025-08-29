@@ -20,6 +20,7 @@ const PAGE_QUERY = gql`
         uri
         title
         excerpt
+        content
         date
         featuredImage {
           node {
@@ -87,6 +88,7 @@ export default function InsightsPage({ data }: InsightsPageProps) {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [activeCategory, setActiveCategory] = useState<string>("All");
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const pageSize = 6;
 
   // ✅ categories from WPGraphQL + prepend "All"
@@ -98,13 +100,32 @@ export default function InsightsPage({ data }: InsightsPageProps) {
   // ✅ insights
   const cards = data?.insights?.nodes ?? [];
 
-  // ✅ filter insights
+  // ✅ filter insights (category + search combined)
   const filteredCards = useMemo(() => {
-    if (activeCategory === "All") return cards;
-    return cards.filter((c) =>
-      c.insightsCategories?.nodes?.some((cat) => cat.name === activeCategory)
-    );
-  }, [activeCategory, cards]);
+    let filtered = cards;
+
+    if (activeCategory !== "All") {
+      filtered = filtered.filter((c) =>
+        c.insightsCategories?.nodes?.some((cat) => cat.name === activeCategory)
+      );
+    }
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      filtered = filtered.filter((c) => {
+        const inTitle = c.title?.toLowerCase().includes(q);
+        const inExcerpt = c.excerpt?.toLowerCase().includes(q);
+        const inContent = (c as any).content?.toLowerCase().includes(q);
+        const inCategory = c.insightsCategories?.nodes?.some((cat) =>
+          cat.name?.toLowerCase().includes(q)
+        );
+
+        return inTitle || inExcerpt || inContent || inCategory;
+      });
+    }
+
+    return filtered;
+  }, [activeCategory, searchQuery, cards]);
 
   const totalItems = filteredCards.length;
   const paginated = filteredCards.slice(
@@ -126,7 +147,18 @@ export default function InsightsPage({ data }: InsightsPageProps) {
         <div className="mx-auto max-w-7xl px-5 md:px-10 xl:px-16 pt-5 pb-3.5 md:pb-5 md:pt-10 lg:pt-16 lg:pb-6">
           {/* Search Field */}
           <div className="pb-8">
-            <SearchField />
+            <SearchField
+              value={searchQuery}
+              onChange={(q) => {
+                setSearchQuery(q);
+                setCurrentPage(1);
+              }}
+              onSubmit={(q) => {
+                setSearchQuery(q);
+                setCurrentPage(1);
+              }}
+              placeholder="Search insights..."
+            />
           </div>
 
           {/* Filter Carousel Component */}
