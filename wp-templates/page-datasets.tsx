@@ -102,7 +102,7 @@ export default function DatasetsPage({ data }: DatasetsPageProps) {
   // ✅ categories from WPGraphQL + prepend "All"
   const categories = useMemo(() => {
     const cats = data?.dataSetsCategories?.nodes ?? [];
-    return ["All", ...cats.map((c) => c.name ?? "").filter(Boolean)];
+    return [...cats.map((c) => c.name ?? "").filter(Boolean)];
   }, [data?.dataSetsCategories]);
 
   // ✅ datasets
@@ -199,14 +199,14 @@ export default function DatasetsPage({ data }: DatasetsPageProps) {
               const fileUrl =
                 c.dataSetFields?.dataSetFile?.node?.mediaItemUrl ?? "";
               return (
-                <Link href={c.uri ?? "#"} key={c.id} className="block h-full">
-                  <CardType6
-                    title={c.title ?? ""}
-                    excerpt={c.excerpt ?? ""}
-                    fileUrl={fileUrl}
-                    postDate={c.date ?? ""}
-                  />
-                </Link>
+                <CardType6
+                  key={c.id}
+                  title={c.title ?? ""}
+                  excerpt={c.excerpt ?? ""}
+                  fileUrl={fileUrl}
+                  postDate={c.date ?? ""}
+                  uri={c.uri ?? undefined}
+                />
               );
             })}
           </div>

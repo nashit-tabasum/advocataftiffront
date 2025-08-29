@@ -32,6 +32,12 @@ const formatDate = (dateStr: string) => {
   return `${day}${suffix} ${month} ${year}`;
 };
 
+const toISOOrRaw = (date?: string) => {
+  if (!date) return undefined;
+  const d = new Date(date);
+  return isNaN(d.getTime()) ? date : d.toISOString().split("T")[0];
+};
+
 const CardType5: React.FC<CardType5Props> = ({
   title,
   excerpt,
@@ -39,19 +45,22 @@ const CardType5: React.FC<CardType5Props> = ({
   postDate,
   uri,
 }) => {
+  const isoDate = toISOOrRaw(postDate);
+
   return (
-    <div
+    <article
       className="relative h-full overflow-hidden rounded-lg border border-gray-300
-                 cursor-pointer transition-all duration-500 ease-in-out
+                 transition-all duration-500 ease-in-out
                  hover:-translate-y-1.5 hover:border-brand-2-100
                  hover:shadow-[0_0_40px_0_rgba(79,8,46,0.40)]
                  focus:border-brand-2-100 focus:shadow-inner-lg bg-white"
+      aria-label={title}
     >
       <div>
         <img
           className="shrink-0 w-full h-64 object-cover aspect-[4/3]"
           src={imageUrl}
-          alt="card-type-5 img"
+          alt={title || "card-type-5 img"}
           width={100}
           height={100}
           loading="lazy"
@@ -66,7 +75,13 @@ const CardType5: React.FC<CardType5Props> = ({
 
           {/* Title with permalink only */}
           <h2 className="mt-3 text-xl md:text-2xl font-semibold font-family-montserrat text-slate-950 line-clamp-3">
-            {uri ? <Link href={uri}>{title}</Link> : title}
+            {uri ? (
+              <Link href={uri} className="focus:outline-none">
+                {title}
+              </Link>
+            ) : (
+              title
+            )}
           </h2>
 
           {excerpt && (
@@ -81,14 +96,14 @@ const CardType5: React.FC<CardType5Props> = ({
           <div className="mt-9">
             <time
               className="text-xs font-family-baskervville text-slate-600"
-              dateTime={postDate}
+              dateTime={isoDate}
             >
               {formatDate(postDate)}
             </time>
           </div>
         )}
       </div>
-    </div>
+    </article>
   );
 };
 

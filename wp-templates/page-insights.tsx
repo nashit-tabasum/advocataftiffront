@@ -181,14 +181,14 @@ export default function InsightsPage({ data }: InsightsPageProps) {
         <div className="mx-auto max-w-7xl px-5 md:px-10 xl:px-16">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
             {paginated.map((c) => (
-              <Link href={c.uri ?? "#"} key={c.id} className="block h-full">
-                <CardType5
-                  title={c.title ?? ""}
-                  excerpt={c.excerpt ?? ""}
-                  imageUrl={c.featuredImage?.node?.sourceUrl ?? undefined}
-                  postDate={c.date ?? ""}
-                />
-              </Link>
+              <CardType5
+                key={c.id}
+                title={c.title ?? ""}
+                excerpt={c.excerpt ?? ""}
+                imageUrl={c.featuredImage?.node?.sourceUrl ?? undefined}
+                postDate={c.date ?? ""}
+                uri={c.uri ?? undefined}
+              />
             ))}
           </div>
         </div>

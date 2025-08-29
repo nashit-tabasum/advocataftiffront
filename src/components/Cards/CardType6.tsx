@@ -1,11 +1,12 @@
-// src/components/Cards/CardType6.tsx
 import React from "react";
+import Link from "next/link";
 
 interface CardType6Props {
   title: string;
   excerpt: string;
   fileUrl: string;
   postDate?: string;
+  uri?: string; // permalink for title
 }
 
 const stripParagraphTags = (html: string) => {
@@ -32,8 +33,7 @@ const getFileNameFromUrl = (url: string) => {
 // Required fixed label per spec
 const FIXED_DOWNLOAD_LABEL = "csv,json,xml,excel";
 
-// Force browser to download the file using a blob URL. Works even if the
-// server doesn't set Content-Disposition.
+// Force browser to download the file using a blob URL
 const triggerDownload = async (url: string) => {
   try {
     const filename = getFileNameFromUrl(url);
@@ -57,28 +57,34 @@ const CardType6: React.FC<CardType6Props> = ({
   excerpt,
   fileUrl,
   postDate,
+  uri,
 }) => {
   return (
     <div className="h-full">
       <div
         className={[
-          // Base card styles
           "relative flex flex-col h-full overflow-hidden rounded-lg bg-white border border-slate-300",
-          // Hover / focus effect
-          "cursor-pointer transition-all duration-500 ease-in-out",
+          "transition-all duration-500 ease-in-out",
           "hover:-translate-y-1.5 hover:border-brand-2-100",
           "hover:shadow-[0_0_40px_0_rgba(79,8,46,0.40)]",
           "focus:border-brand-2-100 focus:shadow-inner-lg",
-          // Keep card-specific classes
           "card card-type-6",
         ].join(" ")}
       >
         <div className="card-body flex flex-1 flex-col justify-between bg-white px-6 py-5">
           <div className="flex-1">
             <div>
-              <h2 className="mt-2 text-2xl leading-snug font-semibold font-family-montserrat text-slate-800 transition-colors duration-500 ease-in-out">
-                {title}
+              {/* Title with permalink only */}
+              <h2 className="mt-2 cursor-pointer text-2xl leading-snug font-semibold font-family-montserrat text-slate-800 transition-colors duration-500 ease-in-out">
+                {uri ? (
+                  <Link href={uri} className="cursor-pointer">
+                    {title}
+                  </Link>
+                ) : (
+                  title
+                )}
               </h2>
+
               <div className="mt-2 text-base/6 font-normal font-family-sourcecodepro text-slate-600 line-clamp-3 transition-colors duration-500 ease-in-out">
                 {stripParagraphTags(excerpt)}
               </div>

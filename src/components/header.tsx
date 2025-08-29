@@ -375,7 +375,7 @@ const DashboardDropdown: React.FC<{ imageUrl: string; items?: MenuItem[] }> = ({
   return (
     <div ref={containerRef} className="relative">
       <button
-        className="dropdown-btn nav-link text-lg leading-snug font-family-sourcecodepro font-normal uppercase text-slate-50 opacity-[.6] py-2.5 px-3.5 rounded-md hover:bg-white/10 hover:text-brand-white hover:font-medium focus:font-medium focus:outline-none flex items-center focus:outline-none"
+        className="dropdown-btn nav-link text-lg leading-snug font-family-sourcecodepro font-normal uppercase text-slate-50 opacity-[.6] py-2.5 px-3.5 rounded-md hover:bg-white/10 hover:text-brand-white hover:font-medium focus:font-medium focus:outline-none flex items-center"
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={(e) => {
