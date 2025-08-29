@@ -7,6 +7,7 @@ import { WysiwygInner } from "@/src/components/WyisiwygInner";
 import SecondaryButton from "@/src/components/Buttons/SecondaryBtn";
 import CardType6 from "@/src/components/Cards/CardType6";
 import { downloadCsvFile, downloadExcelFromCsv } from "@/src/lib/download";
+import { InnerPageTitle, PageSubTitle } from "@/src/components/Typography";
 
 const SINGLE_DATASET_QUERY = gql`
   query GetSingleDataset($slug: ID!) {
@@ -385,11 +386,10 @@ const DatasetInnerPage: React.FC<SingleDatasetProps> = ({ data }) => {
       </div>
 
       {/* Related Datasets */}
-      <section className="bg-white py-12 md:py-16 xl:py-20">
+      <section className="bg-pink-100 py-12 md:py-16 xl:py-20">
         <div className="mx-auto max-w-7xl px-5 md:px-10 xl:px-16">
-          <WysiwygInner>
-            <h2>Related Datasets</h2>
-          </WysiwygInner>
+          <PageSubTitle>Advocata ai suggestions</PageSubTitle>
+          <InnerPageTitle className="mb-8">Related Datasets</InnerPageTitle>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {(related ?? []).map((c) => (
               <CardType6
