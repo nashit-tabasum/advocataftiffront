@@ -1,7 +1,8 @@
 import { gql } from "@apollo/client";
 import type { GetStaticPropsContext } from "next";
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/router";
 import Pagination from "../src/components/Pagination";
 import CardType5 from "../src/components/Cards/CardType5";
 import HeroBasic from "../src/components/HeroBlocks/HeroBasic";
@@ -84,6 +85,8 @@ const insightBgPattern = "/assets/images/patterns/insight-bg-pattern.jpg";
 
 export default function InsightsPage({ data }: InsightsPageProps) {
   const page = data?.page;
+  const router = useRouter();
+
   if (!page) return <p>Insights page not found.</p>;
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -91,11 +94,44 @@ export default function InsightsPage({ data }: InsightsPageProps) {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const pageSize = 6;
 
-  // categories from WPGraphQL + prepend "All"
+  // Raw categories from WPGraphQL
+  const rawCats = data?.insightsCategories?.nodes ?? [];
+
+  // Map Name <-> Slug (add "All")
+  const nameToSlug = useMemo(() => {
+    const m = new Map<string, string>();
+    m.set("All", "");
+    rawCats.forEach((c) => {
+      if (c?.name && c?.slug) m.set(c.name, c.slug);
+    });
+    return m;
+  }, [rawCats]);
+
+  const slugToName = useMemo(() => {
+    const m = new Map<string, string>();
+    m.set("", "All");
+    rawCats.forEach((c) => {
+      if (c?.slug && c?.name) m.set(String(c.slug).toLowerCase(), c.name);
+    });
+    return m;
+  }, [rawCats]);
+
+  // Labels for the carousel (prepend "All")
   const categories = useMemo(() => {
-    const cats = data?.insightsCategories?.nodes ?? [];
-    return ["All", ...cats.map((c) => c.name ?? "").filter(Boolean)];
-  }, [data?.insightsCategories]);
+    return ["All", ...rawCats.map((c) => c.name ?? "").filter(Boolean)];
+  }, [rawCats]);
+
+  useEffect(() => {
+    // strip query/hash
+    const clean = router.asPath.split("?")[0].split("#")[0];
+    // normalize trailing slash
+    const parts = clean.replace(/\/+$/, "").split("/").filter(Boolean);
+    // expecting ["insights", "<slug?>"]
+    const maybeSlug = parts[0] === "insights" ? parts[1] || "" : "";
+    const fromUrl = slugToName.get(maybeSlug.toLowerCase()) || "All";
+    setActiveCategory(fromUrl);
+    setCurrentPage(1);
+  }, [router.asPath, slugToName]);
 
   // insights
   const cards = (data?.insights?.nodes ?? []) as Array<{
@@ -114,7 +150,7 @@ export default function InsightsPage({ data }: InsightsPageProps) {
     } | null;
   }>;
 
-  // filter insights (category + search combined)
+  // filter insights (category + search)
   const filteredCards = useMemo(() => {
     let filtered = cards;
 
@@ -175,7 +211,7 @@ export default function InsightsPage({ data }: InsightsPageProps) {
             />
           </div>
 
-          {/* Filter Carousel Component */}
+          {/* Filter Carousel */}
           {categories.length > 0 && (
             <FilterCarousel
               items={categories}
@@ -183,6 +219,12 @@ export default function InsightsPage({ data }: InsightsPageProps) {
               onChangeActive={(label) => {
                 setActiveCategory(label);
                 setCurrentPage(1);
+
+                // Update URL without a full reload
+                const slug = nameToSlug.get(label) ?? "";
+                const href = slug ? `/insights/${slug}` : `/insights`;
+                // Shallow route, don't scroll to top
+                router.push(href, href, { shallow: true, scroll: false });
               }}
             />
           )}
@@ -202,7 +244,7 @@ export default function InsightsPage({ data }: InsightsPageProps) {
                 imageUrl={c.featuredImage?.node?.sourceUrl ?? undefined}
                 postDate={c.date ?? ""}
                 uri={c.uri ?? undefined}
-                categories={c.insightsCategories?.nodes ?? []} // pass categories
+                categories={c.insightsCategories?.nodes ?? []}
               />
             ))}
           </div>
