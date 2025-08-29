@@ -1,6 +1,6 @@
 import { gql } from "@apollo/client";
 import type { GetStaticPropsContext } from "next";
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import Link from "next/link";
 import Pagination from "../src/components/Pagination";
 import CardType6 from "../src/components/Cards/CardType6";
@@ -21,6 +21,13 @@ const PAGE_QUERY = gql`
         title
         excerpt
         date
+        dataSetsCategories {
+          nodes {
+            id
+            name
+            slug
+          }
+        }
         dataSetFields {
           dataSetFile {
             node {
@@ -28,6 +35,13 @@ const PAGE_QUERY = gql`
             }
           }
         }
+      }
+    }
+    dataSetsCategories(first: 50) {
+      nodes {
+        id
+        name
+        slug
       }
     }
   }
@@ -46,6 +60,13 @@ interface DatasetsPageProps {
         title?: string | null;
         excerpt?: string | null;
         date?: string | null;
+        dataSetsCategories?: {
+          nodes?: Array<{
+            id: string;
+            name?: string | null;
+            slug?: string | null;
+          }> | null;
+        } | null;
         dataSetFields?: {
           dataSetFile?: {
             node?: {
@@ -53,6 +74,13 @@ interface DatasetsPageProps {
             } | null;
           } | null;
         } | null;
+      }>;
+    };
+    dataSetsCategories?: {
+      nodes?: Array<{
+        id: string;
+        name?: string | null;
+        slug?: string | null;
       }>;
     };
   };
@@ -66,12 +94,29 @@ export default function DatasetsPage({ data }: DatasetsPageProps) {
   if (!page) return <p>Datasets page not found.</p>;
 
   const [currentPage, setCurrentPage] = useState(1);
+  const [activeCategory, setActiveCategory] = useState<string>("All");
 
-  const pageSize = 6;
+  // ✅ categories from WPGraphQL + prepend "All"
+  const categories = useMemo(() => {
+    const cats = data?.dataSetsCategories?.nodes ?? [];
+    return [...cats.map((c) => c.name ?? "").filter(Boolean)];
+  }, [data?.dataSetsCategories]);
+
+  // ✅ datasets
   const datasetCards = data?.dataSets?.nodes ?? [];
-  const totalItems = datasetCards.length;
 
-  const paginatedCards = datasetCards.slice(
+  // ✅ filter datasets
+  const filteredCards = useMemo(() => {
+    if (activeCategory === "All") return datasetCards;
+    return datasetCards.filter((c) =>
+      c.dataSetsCategories?.nodes?.some((cat) => cat.name === activeCategory)
+    );
+  }, [activeCategory, datasetCards]);
+
+  // ✅ pagination
+  const pageSize = 6;
+  const totalItems = filteredCards.length;
+  const paginatedCards = filteredCards.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
@@ -94,22 +139,17 @@ export default function DatasetsPage({ data }: DatasetsPageProps) {
           <div className="pb-8">
             <SearchField />
           </div>
-          {/* ✅ Use FilterCarousel component */}
-          <FilterCarousel
-            items={[
-              "Provincial Councils",
-              "All datasets",
-              "Management",
-              "Budget",
-              "Financing",
-              "Direction",
-              "Expenditure",
-              "Revenue",
-              "Debt",
-            ]}
-            activeIndex={2}
-            onSelect={(item) => console.log("Selected:", item)}
-          />
+
+          {categories.length > 0 && (
+            <FilterCarousel
+              items={categories}
+              initialActiveIndex={0}
+              onChangeActive={(label) => {
+                setActiveCategory(label);
+                setCurrentPage(1); // reset to page 1 on filter change
+              }}
+            />
+          )}
         </div>
       </section>
 

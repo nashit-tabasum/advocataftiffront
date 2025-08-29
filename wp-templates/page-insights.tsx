@@ -1,6 +1,6 @@
 import { gql } from "@apollo/client";
 import type { GetStaticPropsContext } from "next";
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import Link from "next/link";
 import Pagination from "../src/components/Pagination";
 import CardType5 from "../src/components/Cards/CardType5";
@@ -26,6 +26,20 @@ const PAGE_QUERY = gql`
             sourceUrl
           }
         }
+        insightsCategories {
+          nodes {
+            id
+            name
+            slug
+          }
+        }
+      }
+    }
+    insightsCategories(first: 50) {
+      nodes {
+        id
+        name
+        slug
       }
     }
   }
@@ -45,6 +59,20 @@ interface InsightsPageProps {
         excerpt?: string | null;
         date?: string | null;
         featuredImage?: { node?: { sourceUrl?: string | null } | null } | null;
+        insightsCategories?: {
+          nodes?: Array<{
+            id: string;
+            name?: string | null;
+            slug?: string | null;
+          }> | null;
+        } | null;
+      }>;
+    };
+    insightsCategories?: {
+      nodes?: Array<{
+        id: string;
+        name?: string | null;
+        slug?: string | null;
       }>;
     };
   };
@@ -58,11 +86,28 @@ export default function InsightsPage({ data }: InsightsPageProps) {
   if (!page) return <p>Insights page not found.</p>;
 
   const [currentPage, setCurrentPage] = useState(1);
+  const [activeCategory, setActiveCategory] = useState<string>("All");
   const pageSize = 6;
 
+  // ✅ categories from WPGraphQL + prepend "All"
+  const categories = useMemo(() => {
+    const cats = data?.insightsCategories?.nodes ?? [];
+    return ["All", ...cats.map((c) => c.name ?? "").filter(Boolean)];
+  }, [data?.insightsCategories]);
+
+  // ✅ insights
   const cards = data?.insights?.nodes ?? [];
-  const totalItems = cards.length;
-  const paginated = cards.slice(
+
+  // ✅ filter insights
+  const filteredCards = useMemo(() => {
+    if (activeCategory === "All") return cards;
+    return cards.filter((c) =>
+      c.insightsCategories?.nodes?.some((cat) => cat.name === activeCategory)
+    );
+  }, [activeCategory, cards]);
+
+  const totalItems = filteredCards.length;
+  const paginated = filteredCards.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
@@ -73,7 +118,7 @@ export default function InsightsPage({ data }: InsightsPageProps) {
       <HeroBasic
         bgUrl={insightBgPattern}
         title="Exploring Insights"
-        paragraph="A dataset is a structured collection of data that is organized and stored for analysis, processing, or reference. Datasets typically consist of related data points grouped into tables, files, or arrays, making it easier to work with them in research, analytics, or machine learning."
+        paragraph="Insights are knowledge-rich articles and perspectives curated for better decision-making, research, and awareness."
       />
 
       {/* Search & Filter Section Start */}
@@ -84,8 +129,17 @@ export default function InsightsPage({ data }: InsightsPageProps) {
             <SearchField />
           </div>
 
-          {/* Filter Carousel Component (unchanged) */}
-          <FilterCarousel />
+          {/* Filter Carousel Component */}
+          {categories.length > 0 && (
+            <FilterCarousel
+              items={categories}
+              initialActiveIndex={0}
+              onChangeActive={(label) => {
+                setActiveCategory(label);
+                setCurrentPage(1);
+              }}
+            />
+          )}
         </div>
       </div>
       {/* Search & Filter Section End */}

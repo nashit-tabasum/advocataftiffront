@@ -37,7 +37,9 @@ const FIXED_DOWNLOAD_LABEL = "csv,json,xml,excel";
 const triggerDownload = async (url: string) => {
   try {
     const filename = getFileNameFromUrl(url);
-    const apiUrl = `/api/download?url=${encodeURIComponent(url)}&filename=${encodeURIComponent(filename)}`;
+    const apiUrl = `/api/download?url=${encodeURIComponent(
+      url
+    )}&filename=${encodeURIComponent(filename)}`;
     const anchor = document.createElement("a");
     anchor.href = apiUrl;
     anchor.setAttribute("download", filename);
@@ -60,10 +62,14 @@ const CardType6: React.FC<CardType6Props> = ({
     <div className="h-full">
       <div
         className={[
-          // .card
-          "relative flex flex-col h-full overflow-hidden transition-all duration-500 ease-in-out",
-          // .card-type-6
-          "rounded-lg bg-white border border-slate-300",
+          // Base card styles
+          "relative flex flex-col h-full overflow-hidden rounded-lg bg-white border border-slate-300",
+          // Hover / focus effect
+          "cursor-pointer transition-all duration-500 ease-in-out",
+          "hover:-translate-y-1.5 hover:border-brand-2-100",
+          "hover:shadow-[0_0_40px_0_rgba(79,8,46,0.40)]",
+          "focus:border-brand-2-100 focus:shadow-inner-lg",
+          // Keep card-specific classes
           "card card-type-6",
         ].join(" ")}
       >

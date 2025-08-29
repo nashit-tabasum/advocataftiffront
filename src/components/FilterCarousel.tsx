@@ -72,7 +72,7 @@ export default function FilterCarousel({
   const handleSelect = useCallback(
     (index: number) => {
       setActiveIndex(index);
-      if (onChangeActive) onChangeActive(items[index], index);
+      onChangeActive?.(items[index], index);
     },
     [items, onChangeActive]
   );
