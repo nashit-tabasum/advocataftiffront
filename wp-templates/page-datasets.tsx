@@ -1,7 +1,6 @@
 import { gql } from "@apollo/client";
 import type { GetStaticPropsContext } from "next";
 import React, { useState, useMemo, useEffect } from "react";
-import Link from "next/link";
 import { useRouter } from "next/router";
 import Pagination from "../src/components/Pagination";
 import CardType6 from "../src/components/Cards/CardType6";
@@ -51,10 +50,7 @@ const PAGE_QUERY = gql`
 
 interface DatasetsPageProps {
   data?: {
-    page?: {
-      title?: string | null;
-      content?: string | null;
-    } | null;
+    page?: { title?: string | null; content?: string | null } | null;
     dataSets?: {
       nodes?: Array<{
         id: string;
@@ -72,9 +68,7 @@ interface DatasetsPageProps {
         } | null;
         dataSetFields?: {
           dataSetFile?: {
-            node?: {
-              mediaItemUrl?: string | null;
-            } | null;
+            node?: { mediaItemUrl?: string | null } | null;
           } | null;
         } | null;
       }> | null;
@@ -124,11 +118,12 @@ export default function DatasetsPage({ data }: DatasetsPageProps) {
   }, [rawCats]);
 
   // Labels for the carousel (prepend "All")
-  const categories = useMemo(() => {
-    return ["All", ...rawCats.map((c) => c.name ?? "").filter(Boolean)];
-  }, [rawCats]);
+  const categories = useMemo(
+    () => ["All", ...rawCats.map((c) => c.name ?? "").filter(Boolean)],
+    [rawCats]
+  );
 
-  // Sync active tab from the URL (client-side)
+  // Sync active tab from URL on initial load/refresh (works with rewrites)
   useEffect(() => {
     const clean = router.asPath.split("?")[0].split("#")[0];
     const parts = clean.replace(/\/+$/, "").split("/").filter(Boolean);
@@ -138,6 +133,12 @@ export default function DatasetsPage({ data }: DatasetsPageProps) {
     setActiveCategory(fromUrl);
     setCurrentPage(1);
   }, [router.asPath, slugToName]);
+
+  // Compute the starting index for FilterCarousel
+  const initialIndex = useMemo(() => {
+    const idx = categories.indexOf(activeCategory);
+    return idx >= 0 ? idx : 0;
+  }, [categories, activeCategory]);
 
   // datasets
   const datasetCards = data?.dataSets?.nodes ?? [];
@@ -161,7 +162,6 @@ export default function DatasetsPage({ data }: DatasetsPageProps) {
         const inCategory = c.dataSetsCategories?.nodes?.some((cat) =>
           cat.name?.toLowerCase().includes(q)
         );
-
         return inTitle || inExcerpt || inContent || inCategory;
       });
     }
@@ -210,8 +210,9 @@ export default function DatasetsPage({ data }: DatasetsPageProps) {
 
           {categories.length > 0 && (
             <FilterCarousel
+              key={`fc-${activeCategory}`} // force remount when active changes
               items={categories}
-              initialActiveIndex={0}
+              initialActiveIndex={initialIndex} // start on correct tab
               onChangeActive={(label) => {
                 setActiveCategory(label);
                 setCurrentPage(1);
@@ -293,8 +294,5 @@ export default function DatasetsPage({ data }: DatasetsPageProps) {
       "DatasetsPage.variables: missing databaseId from seed node."
     );
   }
-  return {
-    databaseId: String(seedNode.databaseId),
-    asPreview: !!ctx?.preview,
-  };
+  return { databaseId: String(seedNode.databaseId), asPreview: !!ctx?.preview };
 };

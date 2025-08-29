@@ -1,7 +1,6 @@
 import { gql } from "@apollo/client";
 import type { GetStaticPropsContext } from "next";
 import React, { useState, useMemo, useEffect } from "react";
-import Link from "next/link";
 import { useRouter } from "next/router";
 import Pagination from "../src/components/Pagination";
 import CardType5 from "../src/components/Cards/CardType5";
@@ -49,10 +48,7 @@ const PAGE_QUERY = gql`
 
 interface InsightsPageProps {
   data?: {
-    page?: {
-      title?: string | null;
-      content?: string | null;
-    } | null;
+    page?: { title?: string | null; content?: string | null } | null;
     insights?: {
       nodes?: Array<{
         id: string;
@@ -71,11 +67,7 @@ interface InsightsPageProps {
       }>;
     };
     insightsCategories?: {
-      nodes?: Array<{
-        id: string;
-        name?: string | null;
-        slug?: string | null;
-      }>;
+      nodes?: Array<{ id: string; name?: string | null; slug?: string | null }>;
     };
   };
   loading?: boolean;
@@ -86,7 +78,6 @@ const insightBgPattern = "/assets/images/patterns/insight-bg-pattern.jpg";
 export default function InsightsPage({ data }: InsightsPageProps) {
   const page = data?.page;
   const router = useRouter();
-
   if (!page) return <p>Insights page not found.</p>;
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -97,7 +88,7 @@ export default function InsightsPage({ data }: InsightsPageProps) {
   // Raw categories from WPGraphQL
   const rawCats = data?.insightsCategories?.nodes ?? [];
 
-  // Map Name <-> Slug (add "All")
+  // Map Name <-> Slug
   const nameToSlug = useMemo(() => {
     const m = new Map<string, string>();
     m.set("All", "");
@@ -116,21 +107,27 @@ export default function InsightsPage({ data }: InsightsPageProps) {
     return m;
   }, [rawCats]);
 
-  // Labels for the carousel (prepend "All")
-  const categories = useMemo(() => {
-    return ["All", ...rawCats.map((c) => c.name ?? "").filter(Boolean)];
-  }, [rawCats]);
+  // Labels (prepend All)
+  const categories = useMemo(
+    () => ["All", ...rawCats.map((c) => c.name ?? "").filter(Boolean)],
+    [rawCats]
+  );
 
-  // Sync active tab from URL (client-side)
+  // Derive active tab from URL (works on refresh)
   useEffect(() => {
     const clean = router.asPath.split("?")[0].split("#")[0];
     const parts = clean.replace(/\/+$/, "").split("/").filter(Boolean);
-    // expecting ["insights", "<slug?>"]
     const maybeSlug = parts[0] === "insights" ? parts[1] || "" : "";
     const fromUrl = slugToName.get(maybeSlug.toLowerCase()) || "All";
     setActiveCategory(fromUrl);
     setCurrentPage(1);
   }, [router.asPath, slugToName]);
+
+  // Compute index for the current activeCategory
+  const initialIndex = useMemo(() => {
+    const idx = categories.indexOf(activeCategory);
+    return idx >= 0 ? idx : 0;
+  }, [categories, activeCategory]);
 
   // insights
   const cards = (data?.insights?.nodes ?? []) as Array<{
@@ -168,7 +165,6 @@ export default function InsightsPage({ data }: InsightsPageProps) {
         const inCategory = c.insightsCategories?.nodes?.some((cat) =>
           cat.name?.toLowerCase().includes(q)
         );
-
         return inTitle || inExcerpt || inContent || inCategory;
       });
     }
@@ -192,10 +188,9 @@ export default function InsightsPage({ data }: InsightsPageProps) {
         paragraph="Insights are knowledge-rich articles and perspectives curated for better decision-making, research, and awareness."
       />
 
-      {/* Search & Filter Section Start */}
+      {/* Search & Filter Section */}
       <div className="bg-white">
         <div className="mx-auto max-w-7xl px-5 md:px-10 xl:px-16 pt-5 pb-3.5 md:pb-5 md:pt-10 lg:pt-16 lg:pb-6">
-          {/* Search Field */}
           <div className="pb-8">
             <SearchField
               value={searchQuery}
@@ -211,16 +206,15 @@ export default function InsightsPage({ data }: InsightsPageProps) {
             />
           </div>
 
-          {/* Filter Carousel */}
           {categories.length > 0 && (
             <FilterCarousel
+              key={`fc-${activeCategory}`} // force remount when active changes
               items={categories}
-              initialActiveIndex={0}
+              initialActiveIndex={initialIndex} // start on the correct tab
               onChangeActive={(label) => {
                 setActiveCategory(label);
                 setCurrentPage(1);
-
-                // Update URL without a full reload
+                // Update URL without reload
                 const slug = nameToSlug.get(label) ?? "";
                 const href = slug ? `/insights/${slug}` : `/insights`;
                 router.push(href, href, { shallow: true, scroll: false });
@@ -229,7 +223,6 @@ export default function InsightsPage({ data }: InsightsPageProps) {
           )}
         </div>
       </div>
-      {/* Search & Filter Section End */}
 
       {/* Cards / Empty state */}
       <div className="bg-white py-12 md:py-16 xl:py-20">

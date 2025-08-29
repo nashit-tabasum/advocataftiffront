@@ -8,4 +8,12 @@ module.exports = withFaust({
     domains: ["faustexample.wpengine.com"],
   },
   trailingSlash: true,
+
+  async rewrites() {
+    return [
+      // Keep the category slug in the URL, but render the base pages
+      { source: "/datasets/:slug*", destination: "/datasets/" },
+      { source: "/insights/:slug*", destination: "/insights/" },
+    ];
+  },
 });
