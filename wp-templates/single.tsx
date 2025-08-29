@@ -51,7 +51,7 @@ export default function Component(props: SinglePageProps) {
   const { title, content, date, author } = contentQuery?.post || {};
 
   return (
-    <Layout title={title}>
+    <Layout>
       <main className="max-w-6xl mx-auto px-4">
         <EntryHeader title={title} date={date} author={author?.node?.name} />
         <div
