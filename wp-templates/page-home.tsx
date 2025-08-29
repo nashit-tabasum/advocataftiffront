@@ -21,6 +21,10 @@ interface HomePageProps {
     page?: {
       title?: string | null;
       content?: string | null;
+      homeHeroSection?: {
+        homeHeroTitle?: string | null;
+        homeHeroDescription?: string | null;
+      } | null;
       homeAiSection?: {
         aiTitle?: string | null;
         aiDescription?: string | null;
@@ -59,6 +63,10 @@ const PAGE_QUERY = gql`
     page(id: $databaseId, idType: DATABASE_ID, asPreview: $asPreview) {
       title
       content
+      homeHeroSection {
+        homeHeroTitle
+        homeHeroDescription
+      }
       homeAiSection {
         aiTitle
         aiDescription
@@ -97,28 +105,45 @@ const PAGE_QUERY = gql`
   }
 `;
 
+/** Convert ACF WYSIWYG/HTML to plain text */
+function htmlToPlain(input?: string | null): string {
+  if (!input) return "";
+  return input
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/(p|div|h[1-6]|li)>/gi, "\n")
+    .replace(/<[^>]+>/g, "")
+    .replace(/\u00a0/g, " ")
+    .replace(/\n{2,}/g, "\n")
+    .trim();
+}
+
 export default function PageHome({ data }: HomePageProps): JSX.Element {
   const router = useRouter();
   const homeHeroBg = "/assets/images/patterns/home-hero-bg.jpg";
   const imageSectionSrc = "/assets/images/home-img.jpg";
 
+  const heroTitle =
+    htmlToPlain(data?.page?.homeHeroSection?.homeHeroTitle) ||
+    "Connecting the dots on Public Data";
+
+  const heroDescription =
+    htmlToPlain(data?.page?.homeHeroSection?.homeHeroDescription) ||
+    "Powered by Advocata’s cutting-edge AI, our platform leverages advanced data insights to help you connect with people who share your values and interests.";
+
   return (
     <div className="bg-gray-400 overflow-x-hidden">
-      {/* Hero Section Start */}
-
+      {/* Hero */}
       <div className="home-hero relative bg-cover bg-center bg-no-repeat text-white">
-        {/* Background Image */}
         <div>
           <img
             src={homeHeroBg}
             width={1628}
             height={700}
             className="h-full w-full object-cover"
-            alt="about-hero-img.jpg"
+            alt="home-hero-bg"
           />
         </div>
 
-        {/* Overlay */}
         <div
           className="absolute inset-0"
           style={{
@@ -127,21 +152,19 @@ export default function PageHome({ data }: HomePageProps): JSX.Element {
           }}
         />
 
-        {/* Hero Content */}
         <div className="absolute inset-0 flex items-center">
           <div className="px-5 md:px-10 xl:px-16 py-12 md:py-16 xl:py-20 mx-auto w-full">
             <div className="text-center mx-auto max-w-6xl grid place-items-center">
-              <h1 className="mb-5 md:mb-0 text-slate-50 text-4xl md:text-5xl xl:text-6xl leading-snug font-montserrat font-bold max-w-5 xl:max-w-sm">
-                Connecting the dots on Public Data
+              <h1 className="mb-5 md:mb-0 text-slate-50 text-4xl md:text-5xl xl:text-6xl leading-snug font-montserrat font-bold whitespace-pre-line">
+                {heroTitle}
               </h1>
+
               <div className="space-y-2.5">
                 <p className="text-slate-200 text-base/6 lg:text-lg/7 font-playfair font-normal max-w-2xl">
-                  Powered by Advocata’s cutting-edge AI, our platform leverages
-                  advanced data insights to help you connect with people who
-                  share your values and interests.
+                  {heroDescription}
                 </p>
               </div>
-              {/* Search Form */}
+
               <div className="pb-8 w-full max-w-2xl">
                 <SearchFieldHome />
               </div>
@@ -149,9 +172,8 @@ export default function PageHome({ data }: HomePageProps): JSX.Element {
           </div>
         </div>
       </div>
-      {/* Hero Section End */}
 
-      {/* Image Section Start */}
+      {/* Image section */}
       <div className="bg-white pb-0">
         <div className="mx-auto max-w-7xl px-5 md:px-10 xl:px-16">
           <div className="ring-1 ring-black/10 rounded-3xl relative -top-32 md:-top-40 xl:-top-48 z-20">
@@ -166,9 +188,8 @@ export default function PageHome({ data }: HomePageProps): JSX.Element {
           </div>
         </div>
       </div>
-      {/* Image Section End */}
 
-      {/* Advance Dashboard Section Start */}
+      {/* Dashboards */}
       <div className="bg-white pb-24 sm:pb-32 -mt-18">
         <div className="mx-auto max-w-7xl px-5 md:px-10 xl:px-16">
           <div className="mx-auto max-w-2xl text-center">
@@ -183,28 +204,23 @@ export default function PageHome({ data }: HomePageProps): JSX.Element {
             </PageTitleText>
           </div>
           <div className="mt-10 grid grid-cols-1 gap-6 md:gap-8 xl:gap-10 sm:mt-16 xl:grid-cols-7 xl:grid-rows-2">
-            {/* card-1 */}
             <div className="flex p-px xl:col-span-4">
               <CardType1 />
             </div>
-            {/* card-2 */}
             <div className="flex p-px xl:col-span-3">
               <CardType2 />
             </div>
-            {/* card-3 */}
             <div className="flex p-px xl:col-span-3">
               <CardType3 />
             </div>
-            {/* card-4 */}
             <div className="flex p-px xl:col-span-4">
               <CardType4 />
             </div>
           </div>
         </div>
       </div>
-      {/* Advance Dashboard Section End */}
 
-      {/* Introduction of AI Section Start */}
+      {/* AI intro */}
       <div
         className="relative overflow-hidden bg-white py-24 sm:py-32"
         style={{
@@ -228,9 +244,8 @@ export default function PageHome({ data }: HomePageProps): JSX.Element {
           </div>
         </div>
       </div>
-      {/* Introduction of AI Section End */}
 
-      {/* Dataset Card Section Start */}
+      {/* Datasets */}
       <div className="bg-white py-12 md:py-16 xl:py-20">
         <div className="mx-auto max-w-7xl px-5 md:px-10 xl:px-16">
           <div className="mx-auto max-w-2xl text-center">
@@ -256,8 +271,6 @@ export default function PageHome({ data }: HomePageProps): JSX.Element {
               </div>
             ))}
           </div>
-
-          {/* Button */}
           <div className="mx-auto max-w-7xl text-center">
             <PrimaryButton onClick={() => router.push("/datasets")}>
               View data catalog
@@ -265,9 +278,8 @@ export default function PageHome({ data }: HomePageProps): JSX.Element {
           </div>
         </div>
       </div>
-      {/* Dataset Card Section Start */}
 
-      {/* Insight Card Section Start */}
+      {/* Insights */}
       <div className="bg-pink-100 py-12 md:py-16 xl:py-24">
         <div className="mx-auto max-w-7xl px-5 md:px-10 xl:px-16">
           <div className="mx-auto max-w-2xl text-center">
@@ -289,8 +301,6 @@ export default function PageHome({ data }: HomePageProps): JSX.Element {
               </div>
             ))}
           </div>
-
-          {/* Button */}
           <div className="mx-auto max-w-7xl text-center">
             <PrimaryButton onClick={() => router.push("/insights")}>
               Explore more
@@ -298,13 +308,10 @@ export default function PageHome({ data }: HomePageProps): JSX.Element {
           </div>
         </div>
       </div>
-      {/* Insight Card Section Start */}
     </div>
   );
 }
 
-// Attach Faust query/variables so this template fetches its data
-// at build-time and preview.
 (PageHome as any).query = PAGE_QUERY;
 (PageHome as any).variables = (
   _seedNode: { databaseId?: number | string } = {},
