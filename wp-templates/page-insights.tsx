@@ -1,6 +1,6 @@
 import { gql } from "@apollo/client";
 import type { GetStaticPropsContext } from "next";
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useRouter } from "next/router";
 import Pagination from "../src/components/Pagination";
 import CardType5 from "../src/components/Cards/CardType5";
@@ -85,35 +85,30 @@ export default function InsightsPage({ data }: InsightsPageProps) {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const pageSize = 6;
 
-  // Raw categories from WPGraphQL
   const rawCats = data?.insightsCategories?.nodes ?? [];
 
-  // Map Name <-> Slug
   const nameToSlug = useMemo(() => {
     const m = new Map<string, string>();
     m.set("All", "");
-    rawCats.forEach((c) => {
-      if (c?.name && c?.slug) m.set(c.name, c.slug);
-    });
+    rawCats.forEach((c) => c?.name && c?.slug && m.set(c.name, c.slug));
     return m;
   }, [rawCats]);
 
   const slugToName = useMemo(() => {
     const m = new Map<string, string>();
     m.set("", "All");
-    rawCats.forEach((c) => {
-      if (c?.slug && c?.name) m.set(String(c.slug).toLowerCase(), c.name);
-    });
+    rawCats.forEach(
+      (c) => c?.slug && c?.name && m.set(String(c.slug).toLowerCase(), c.name)
+    );
     return m;
   }, [rawCats]);
 
-  // Labels (prepend All)
   const categories = useMemo(
     () => ["All", ...rawCats.map((c) => c.name ?? "").filter(Boolean)],
     [rawCats]
   );
 
-  // Derive active tab from URL (works on refresh)
+  // Initialize from path (/insights/:slug?) and ?q=
   useEffect(() => {
     const clean = router.asPath.split("?")[0].split("#")[0];
     const parts = clean.replace(/\/+$/, "").split("/").filter(Boolean);
@@ -121,15 +116,12 @@ export default function InsightsPage({ data }: InsightsPageProps) {
     const fromUrl = slugToName.get(maybeSlug.toLowerCase()) || "All";
     setActiveCategory(fromUrl);
     setCurrentPage(1);
-  }, [router.asPath, slugToName]);
 
-  // Compute index for the current activeCategory
-  const initialIndex = useMemo(() => {
-    const idx = categories.indexOf(activeCategory);
-    return idx >= 0 ? idx : 0;
-  }, [categories, activeCategory]);
+    const qp = router.query?.q;
+    const qStr = Array.isArray(qp) ? qp[0] : qp;
+    if (typeof qStr === "string") setSearchQuery(qStr);
+  }, [router.asPath, router.query?.q, slugToName]);
 
-  // insights
   const cards = (data?.insights?.nodes ?? []) as Array<{
     id: string;
     uri?: string | null;
@@ -146,31 +138,51 @@ export default function InsightsPage({ data }: InsightsPageProps) {
     } | null;
   }>;
 
-  // filter insights (category + search)
+  // Global search; category filter applies only when search is empty
   const filteredCards = useMemo(() => {
-    let filtered = cards;
-
-    if (activeCategory !== "All") {
-      filtered = filtered.filter((c) =>
-        c.insightsCategories?.nodes?.some((cat) => cat.name === activeCategory)
-      );
-    }
-
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      filtered = filtered.filter((c) => {
+    const q = searchQuery.trim().toLowerCase();
+    if (q) {
+      return cards.filter((c) => {
         const inTitle = c.title?.toLowerCase().includes(q);
         const inExcerpt = c.excerpt?.toLowerCase().includes(q);
-        const inContent = (c as any).content?.toLowerCase().includes(q);
+        const inContent = (c as any).content?.toLowerCase()?.includes(q);
         const inCategory = c.insightsCategories?.nodes?.some((cat) =>
           cat.name?.toLowerCase().includes(q)
         );
         return inTitle || inExcerpt || inContent || inCategory;
       });
     }
-
-    return filtered;
+    if (activeCategory !== "All") {
+      return cards.filter((c) =>
+        c.insightsCategories?.nodes?.some((cat) => cat.name === activeCategory)
+      );
+    }
+    return cards;
   }, [activeCategory, searchQuery, cards]);
+
+  // Debounced URL sync
+  const syncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (syncTimer.current) clearTimeout(syncTimer.current);
+    syncTimer.current = setTimeout(() => {
+      const q = searchQuery.trim();
+      if (q) {
+        const href = `/insights/?q=${encodeURIComponent(q)}`;
+        router.replace(href, href, { shallow: true, scroll: false });
+      } else {
+        const slug = nameToSlug.get(activeCategory) ?? "";
+        const href = slug ? `/insights/${slug}/` : `/insights/`;
+        router.replace(href, href, { shallow: true, scroll: false });
+      }
+    }, 250);
+
+    return () => {
+      if (syncTimer.current) {
+        clearTimeout(syncTimer.current);
+        syncTimer.current = null;
+      }
+    };
+  }, [searchQuery, activeCategory, nameToSlug, router]);
 
   const totalItems = filteredCards.length;
   const paginated = filteredCards.slice(
@@ -179,16 +191,21 @@ export default function InsightsPage({ data }: InsightsPageProps) {
   );
   const hasResults = totalItems > 0;
 
+  const isSearching = searchQuery.trim().length > 0;
+  const displayActiveCategory = isSearching ? "All" : activeCategory;
+  const initialIndex = useMemo(() => {
+    const idx = categories.indexOf(displayActiveCategory);
+    return idx >= 0 ? idx : 0;
+  }, [categories, displayActiveCategory]);
+
   return (
     <main>
-      {/* Hero */}
       <HeroBasic
         bgUrl={insightBgPattern}
         title="Exploring Insights"
-        paragraph="Insights are knowledge-rich articles and perspectives curated for better decision-making, research, and awareness."
+        paragraph="A dataset is a structured collection of data that is organized and stored for analysis, processing, or reference. Datasets typically consist of related data points grouped into tables, files, or arrays, making it easier to work with them in research, analytics, or machine learning."
       />
 
-      {/* Search & Filter Section */}
       <div className="bg-white">
         <div className="mx-auto max-w-7xl px-5 md:px-10 xl:px-16 pt-5 pb-3.5 md:pb-5 md:pt-10 lg:pt-16 lg:pb-6">
           <div className="pb-8">
@@ -208,23 +225,19 @@ export default function InsightsPage({ data }: InsightsPageProps) {
 
           {categories.length > 0 && (
             <FilterCarousel
-              key={`fc-${activeCategory}`} // force remount when active changes
+              key={`fc-${displayActiveCategory}`}
               items={categories}
-              initialActiveIndex={initialIndex} // start on the correct tab
+              initialActiveIndex={initialIndex}
               onChangeActive={(label) => {
+                if (isSearching) return;
                 setActiveCategory(label);
                 setCurrentPage(1);
-                // Update URL without reload
-                const slug = nameToSlug.get(label) ?? "";
-                const href = slug ? `/insights/${slug}` : `/insights`;
-                router.push(href, href, { shallow: true, scroll: false });
               }}
             />
           )}
         </div>
       </div>
 
-      {/* Cards / Empty state */}
       <div className="bg-white py-12 md:py-16 xl:py-20">
         <div className="mx-auto max-w-7xl px-5 md:px-10 xl:px-16">
           {hasResults ? (
@@ -244,13 +257,15 @@ export default function InsightsPage({ data }: InsightsPageProps) {
           ) : (
             <div className="text-center py-16" aria-live="polite">
               <h3 className="text-xl font-semibold tracking-wide">
-                {activeCategory === "All"
-                  ? "No insights found."
-                  : `No insights for “${activeCategory}”.`}
+                {isSearching
+                  ? `No insights found for “${searchQuery.trim()}”.`
+                  : displayActiveCategory === "All"
+                    ? "No insights found."
+                    : `No insights for “${displayActiveCategory}”.`}
               </h3>
-              {searchQuery.trim() ? (
+              {isSearching ? (
                 <p className="mt-2 text-gray-600">
-                  Try clearing the search or selecting another category.
+                  Try adjusting your search terms.
                 </p>
               ) : null}
             </div>
@@ -258,7 +273,6 @@ export default function InsightsPage({ data }: InsightsPageProps) {
         </div>
       </div>
 
-      {/* Pagination (only when results exist) */}
       {hasResults && (
         <div className="mx-auto max-w-7xl px-5 md:px-10 xl:px-16 pb-16">
           <Pagination

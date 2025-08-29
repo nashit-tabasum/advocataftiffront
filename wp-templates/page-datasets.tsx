@@ -1,6 +1,6 @@
 import { gql } from "@apollo/client";
 import type { GetStaticPropsContext } from "next";
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useRouter } from "next/router";
 import Pagination from "../src/components/Pagination";
 import CardType6 from "../src/components/Cards/CardType6";
@@ -95,81 +95,91 @@ export default function DatasetsPage({ data }: DatasetsPageProps) {
   const [activeCategory, setActiveCategory] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState<string>("");
 
-  // Raw categories from WPGraphQL
   const rawCats = data?.dataSetsCategories?.nodes ?? [];
 
-  // Build name <-> slug maps
   const nameToSlug = useMemo(() => {
     const m = new Map<string, string>();
     m.set("All", "");
-    rawCats.forEach((c) => {
-      if (c?.name && c?.slug) m.set(c.name, c.slug);
-    });
+    rawCats.forEach((c) => c?.name && c?.slug && m.set(c.name, c.slug));
     return m;
   }, [rawCats]);
 
   const slugToName = useMemo(() => {
     const m = new Map<string, string>();
     m.set("", "All");
-    rawCats.forEach((c) => {
-      if (c?.slug && c?.name) m.set(String(c.slug).toLowerCase(), c.name);
-    });
+    rawCats.forEach(
+      (c) => c?.slug && c?.name && m.set(String(c.slug).toLowerCase(), c.name)
+    );
     return m;
   }, [rawCats]);
 
-  // Labels for the carousel (prepend "All")
   const categories = useMemo(
     () => ["All", ...rawCats.map((c) => c.name ?? "").filter(Boolean)],
     [rawCats]
   );
 
-  // Sync active tab from URL on initial load/refresh (works with rewrites)
+  // Initialize from path (/datasets/:slug?) and ?q=
   useEffect(() => {
     const clean = router.asPath.split("?")[0].split("#")[0];
     const parts = clean.replace(/\/+$/, "").split("/").filter(Boolean);
-    // expecting ["datasets", "<slug?>"]
     const maybeSlug = parts[0] === "datasets" ? parts[1] || "" : "";
     const fromUrl = slugToName.get(maybeSlug.toLowerCase()) || "All";
     setActiveCategory(fromUrl);
     setCurrentPage(1);
-  }, [router.asPath, slugToName]);
 
-  // Compute the starting index for FilterCarousel
-  const initialIndex = useMemo(() => {
-    const idx = categories.indexOf(activeCategory);
-    return idx >= 0 ? idx : 0;
-  }, [categories, activeCategory]);
+    const qp = router.query?.q;
+    const qStr = Array.isArray(qp) ? qp[0] : qp;
+    if (typeof qStr === "string") setSearchQuery(qStr);
+  }, [router.asPath, router.query?.q, slugToName]);
 
-  // datasets
   const datasetCards = data?.dataSets?.nodes ?? [];
 
-  // filter datasets (category + search)
+  // Global search; category filter applies only when search is empty
   const filteredCards = useMemo(() => {
-    let filtered = datasetCards;
-
-    if (activeCategory !== "All") {
-      filtered = filtered.filter((c) =>
-        c.dataSetsCategories?.nodes?.some((cat) => cat.name === activeCategory)
-      );
-    }
-
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      filtered = filtered.filter((c) => {
+    const q = searchQuery.trim().toLowerCase();
+    if (q) {
+      return datasetCards.filter((c) => {
         const inTitle = c.title?.toLowerCase().includes(q);
         const inExcerpt = c.excerpt?.toLowerCase().includes(q);
-        const inContent = c.content?.toLowerCase().includes(q);
+        const inContent = c.content?.toLowerCase()?.includes(q);
         const inCategory = c.dataSetsCategories?.nodes?.some((cat) =>
           cat.name?.toLowerCase().includes(q)
         );
         return inTitle || inExcerpt || inContent || inCategory;
       });
     }
-
-    return filtered;
+    if (activeCategory !== "All") {
+      return datasetCards.filter((c) =>
+        c.dataSetsCategories?.nodes?.some((cat) => cat.name === activeCategory)
+      );
+    }
+    return datasetCards;
   }, [activeCategory, searchQuery, datasetCards]);
 
-  // pagination
+  // Debounced URL sync
+  const syncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (syncTimer.current) clearTimeout(syncTimer.current);
+    syncTimer.current = setTimeout(() => {
+      const q = searchQuery.trim();
+      if (q) {
+        const href = `/datasets/?q=${encodeURIComponent(q)}`;
+        router.replace(href, href, { shallow: true, scroll: false });
+      } else {
+        const slug = nameToSlug.get(activeCategory) ?? "";
+        const href = slug ? `/datasets/${slug}/` : `/datasets/`;
+        router.replace(href, href, { shallow: true, scroll: false });
+      }
+    }, 250);
+
+    return () => {
+      if (syncTimer.current) {
+        clearTimeout(syncTimer.current);
+        syncTimer.current = null;
+      }
+    };
+  }, [searchQuery, activeCategory, nameToSlug, router]);
+
   const pageSize = 6;
   const totalItems = filteredCards.length;
   const paginatedCards = filteredCards.slice(
@@ -178,11 +188,17 @@ export default function DatasetsPage({ data }: DatasetsPageProps) {
   );
   const hasResults = totalItems > 0;
 
+  const isSearching = searchQuery.trim().length > 0;
+  const displayActiveCategory = isSearching ? "All" : activeCategory;
+  const initialIndex = useMemo(() => {
+    const idx = categories.indexOf(displayActiveCategory);
+    return idx >= 0 ? idx : 0;
+  }, [categories, displayActiveCategory]);
+
   return (
     <main>
-      {/* Hero Section */}
       <section className="dataset-hero relative">
-        <div className="absolute inset-0 -z-10"></div>
+        <div className="absolute inset-0 -z-10" />
         <HeroBasic
           bgUrl={datasetBgPattern}
           title="Research Datasets"
@@ -190,7 +206,6 @@ export default function DatasetsPage({ data }: DatasetsPageProps) {
         />
       </section>
 
-      {/* Search & Filter Section */}
       <section className="bg-white">
         <div className="mx-auto max-w-7xl px-5 md:px-10 xl:px-16 pt-5 pb-3.5 md:pb-5 md:pt-10 lg:pt-16 lg:pb-6">
           <div className="pb-8">
@@ -210,17 +225,13 @@ export default function DatasetsPage({ data }: DatasetsPageProps) {
 
           {categories.length > 0 && (
             <FilterCarousel
-              key={`fc-${activeCategory}`} // force remount when active changes
+              key={`fc-${displayActiveCategory}`}
               items={categories}
-              initialActiveIndex={initialIndex} // start on correct tab
+              initialActiveIndex={initialIndex}
               onChangeActive={(label) => {
+                if (isSearching) return;
                 setActiveCategory(label);
                 setCurrentPage(1);
-
-                // Update the URL without reload
-                const slug = nameToSlug.get(label) ?? "";
-                const href = slug ? `/datasets/${slug}` : `/datasets`;
-                router.push(href, href, { shallow: true, scroll: false });
               }}
             />
           )}
@@ -232,7 +243,6 @@ export default function DatasetsPage({ data }: DatasetsPageProps) {
         dangerouslySetInnerHTML={{ __html: page?.content ?? "" }}
       />
 
-      {/* Cards / Empty state */}
       <section className="bg-white py-12 md:py-16 xl:py-20">
         <div className="mx-auto max-w-7xl px-5 md:px-10 xl:px-16">
           {hasResults ? (
@@ -255,13 +265,15 @@ export default function DatasetsPage({ data }: DatasetsPageProps) {
           ) : (
             <div className="text-center py-16" aria-live="polite">
               <h3 className="text-xl font-semibold tracking-wide">
-                {activeCategory === "All"
-                  ? "No datasets found."
-                  : `No datasets for “${activeCategory}”.`}
+                {isSearching
+                  ? `No datasets found for “${searchQuery.trim()}”.`
+                  : displayActiveCategory === "All"
+                    ? "No datasets found."
+                    : `No datasets for “${displayActiveCategory}”.`}
               </h3>
-              {searchQuery.trim() ? (
+              {isSearching ? (
                 <p className="mt-2 text-gray-600">
-                  Try clearing the search or selecting another category.
+                  Try adjusting your search terms.
                 </p>
               ) : null}
             </div>
@@ -269,13 +281,12 @@ export default function DatasetsPage({ data }: DatasetsPageProps) {
         </div>
       </section>
 
-      {/* Pagination (only when results exist) */}
       {hasResults && (
         <section className="mx-auto max-w-7xl px-5 md:px-10 xl:px-16 pb-16">
           <Pagination
             currentPage={currentPage}
             totalItems={totalItems}
-            pageSize={pageSize}
+            pageSize={6}
             onPageChange={setCurrentPage}
           />
         </section>

@@ -1,11 +1,11 @@
 "use client";
 
-import { type JSX, useCallback, useMemo, useState } from "react";
+import { type JSX, useCallback, useMemo, useRef, useState } from "react";
 
 type SearchFieldProps = {
   value?: string; // controlled value
   defaultValue?: string; // for uncontrolled usage
-  onChange?: (query: string) => void; // fires on each keystroke
+  onChange?: (query: string) => void; // fires on each keystroke (or when clear on focus)
   onSubmit?: (query: string) => void; // fires on Enter or submit
   placeholder?: string;
   className?: string;
@@ -21,6 +21,7 @@ export default function SearchField({
   className,
   autoFocus,
 }: SearchFieldProps): JSX.Element {
+  const inputRef = useRef<HTMLInputElement>(null);
   const isControlled = useMemo(() => typeof value === "string", [value]);
   const [internal, setInternal] = useState<string>(defaultValue ?? "");
   const query = isControlled ? (value as string) : internal;
@@ -29,25 +30,43 @@ export default function SearchField({
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const next = e.target.value;
       if (!isControlled) setInternal(next);
-      if (onChange) onChange(next);
+      onChange?.(next);
     },
     [isControlled, onChange]
   );
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === "Enter" && onSubmit) onSubmit(query);
+      if (e.key === "Enter") onSubmit?.(query);
     },
     [onSubmit, query]
   );
 
+  const handleFocus = useCallback(() => {
+    // Auto-clear previous keyword, but keep the input focused + caret stable.
+    if (query && query.length > 0) {
+      if (!isControlled) setInternal("");
+      onChange?.("");
+
+      // Ensure focus is preserved after React re-render
+      requestAnimationFrame(() => {
+        const el = inputRef.current;
+        if (el) {
+          el.focus({ preventScroll: true });
+          el.setSelectionRange(0, 0);
+        }
+      });
+    }
+  }, [isControlled, onChange, query]);
+
   const handleBlur = useCallback(() => {
-    // Optional: trigger submit on blur if desired; keeping noop by default
+    // noop
   }, []);
 
   return (
     <div className={"relative w-full " + (className || "")}>
       <input
+        ref={inputRef}
         type="text"
         id="search-plain"
         name="search"
@@ -56,6 +75,7 @@ export default function SearchField({
         value={query}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
+        onFocus={handleFocus}
         onBlur={handleBlur}
         autoFocus={autoFocus}
         aria-label="Search"
