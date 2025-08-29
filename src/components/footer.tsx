@@ -128,7 +128,7 @@ export default function Footer(): JSX.Element {
                   </div>
                 </div>
                 <div className="mt-5">
-                  <h3 className="footer-heading text-xl/7">
+                  <h3 className="text-2xl/snug tracking-normal font-family-montserrat font-normal text-brand-white">
                     Newsletter Subscription
                   </h3>
                   <p className="mt-3 text-lg/7 font-family-baskervville font-normal text-brand-white/80">
@@ -152,7 +152,7 @@ export default function Footer(): JSX.Element {
                   <div className="mt-3 sm:shrink-0">
                     <button
                       type="submit"
-                      className="footer-subscribe-btn flex w-full items-center justify-center rounded-md bg-brand-1-900 px-6 py-4 text-lg/7 font-medium text-brand-white font-family-sourcecodepro shadow-sm hover:bg-brand-1-950 transform focus-visible:outline-0 focus-visible:outline-offset-0 focus-visible:outline-transparent transition-colors duration-300 ease-in-out cursor-pointer"
+                      className="flex w-full items-center justify-center rounded-md bg-brand-1-600 px-6 py-4 text-lg/7 font-medium text-brand-white font-family-sourcecodepro shadow-sm hover:bg-brand-1-900 transform focus-visible:outline-0 focus-visible:outline-offset-0 focus-visible:outline-transparent transition-colors duration-300 ease-in-out cursor-pointer"
                     >
                       Subscribe
                     </button>
@@ -629,7 +629,14 @@ export default function Footer(): JSX.Element {
           </div>
           <div>
             <p className="text-xs/4 font-family-inter font-normal text-slate-50/60 mt-3.5 xl:mt-0">
-              Site built by ODDLY
+              Built by{" "}
+              <a
+                href="https://oddly.lk"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                ODDLY
+              </a>
             </p>
           </div>
         </div>

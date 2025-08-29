@@ -3,6 +3,7 @@ import type { GetStaticPropsContext } from "next";
 import React from "react";
 import Accordion from "../src/components/Accordion";
 import TextBlock from "../src/components/TextBlock";
+import { PageSubTitle, PageTitle } from "@/src/components/Typography";
 
 const PAGE_QUERY = gql`
   query GetAboutPage($databaseId: ID!, $asPreview: Boolean = false) {
@@ -118,8 +119,11 @@ export default function AboutPage({ data, loading }: AboutPageProps) {
         <section className="relative overflow-hidden py-24 sm:py-32 bg-brand-2-900">
           <div className="mx-auto max-w-7xl px-5 md:px-10 xl:px-16">
             <div className="mx-auto max-w-2xl text-center">
-              <span className="page-sub-title text-slate-50">FAQ</span>
-              <h2 className="page-title text-slate-50">How can we help you?</h2>
+              <PageSubTitle className="!text-slate-50">FAQ</PageSubTitle>
+              <PageTitle className="!text-slate-50">
+                {" "}
+                How can we help you?
+              </PageTitle>
             </div>
             <Accordion
               className="mx-auto max-w-4xl"
