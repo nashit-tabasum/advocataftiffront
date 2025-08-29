@@ -12,20 +12,34 @@ import Footer from "@/src/components/footer";
 import BrandLogo from "@/public/assets/images/logos/brand-logo.svg";
 import navbarImg from "@/public/assets/images/nav-dropdown-img.jpg";
 
+// 👇 Import fonts
+import {
+  inter,
+  montserrat,
+  manrope,
+  playfair,
+  sourceCodePro,
+  baskervville,
+} from "@/src/lib/fonts";
+
 export default function MyApp({ Component, pageProps }: AppProps) {
   const router = useRouter();
 
   return (
     <FaustProvider pageProps={pageProps}>
-      <HeaderNav
-        logoSrc={BrandLogo.src}
-        navDropdownImage={navbarImg.src}
-        onSearch={(q) => console.log("search:", q)}
-      />
+      <div
+        className={`${inter.variable} ${montserrat.variable} ${manrope.variable} ${playfair.variable} ${sourceCodePro.variable} ${baskervville.variable}`}
+      >
+        <HeaderNav
+          logoSrc={BrandLogo.src}
+          navDropdownImage={navbarImg.src}
+          onSearch={(q) => console.log("search:", q)}
+        />
 
-      <Component {...pageProps} key={router.asPath} />
+        <Component {...pageProps} key={router.asPath} />
 
-      <Footer />
+        <Footer />
+      </div>
     </FaustProvider>
   );
 }

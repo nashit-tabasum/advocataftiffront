@@ -48,13 +48,12 @@ export default function Components() {
             <FilterCarousel />
           </div>
         </div>
-        <Cards />
+        {/* <Cards /> */}
         <ButtonGroup />
         <Buttons />
         <Breadcrumbs
           items={[{ label: "Sample Item" }, { label: "Sample Item 2" }]}
         />
-        <Cards />
         <DownloadCards />
         <HeroBlocks />
         <InputFields />

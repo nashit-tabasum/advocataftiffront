@@ -12,6 +12,26 @@ interface CardType5Props {
 const stripParagraphTags = (html?: string) =>
   html ? html.replace(/<\/?p>/g, "") : "";
 
+// Function to format date as "24th August 2025"
+const formatDate = (dateStr: string) => {
+  const date = new Date(dateStr);
+  const day = date.getDate();
+  const month = date.toLocaleString("en-GB", { month: "long" });
+  const year = date.getFullYear();
+
+  // Add suffix for day
+  const suffix =
+    day % 10 === 1 && day !== 11
+      ? "st"
+      : day % 10 === 2 && day !== 12
+        ? "nd"
+        : day % 10 === 3 && day !== 13
+          ? "rd"
+          : "th";
+
+  return `${day}${suffix} ${month} ${year}`;
+};
+
 const CardType5: React.FC<CardType5Props> = ({
   title,
   excerpt,
@@ -46,13 +66,7 @@ const CardType5: React.FC<CardType5Props> = ({
 
           {/* Title with permalink only */}
           <h2 className="mt-3 text-xl md:text-2xl font-semibold font-family-montserrat text-slate-950 line-clamp-3">
-            {uri ? (
-              <Link href={uri} className="hover:text-brand-2-500">
-                {title}
-              </Link>
-            ) : (
-              title
-            )}
+            {uri ? <Link href={uri}>{title}</Link> : title}
           </h2>
 
           {excerpt && (
@@ -62,29 +76,17 @@ const CardType5: React.FC<CardType5Props> = ({
           )}
         </div>
 
-        <div className="mt-9 flex items-center justify-between">
-          <div className="flex justify-between w-full items-center space-x-1 text-xs font-family-sourcecodepro text-slate-600">
-            <div className="flex items-center space-x-1.5 text-sm">
-              <svg
-                className="size-6"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-              >
-                <path d="M9.04 17.59h5.93c.19 0 .35-.07.49-.21.14-.14.21-.3.21-.48 0-.19-.07-.35-.21-.49a.68.68 0 00-.49-.2H9.04c-.19 0-.35.07-.49.2a.68.68 0 00-.21.49c0 .18.07.34.21.48.14.14.3.21.49.21zm0-3.96h5.93c.19 0 .35-.07.49-.21.14-.14.21-.3.21-.48 0-.19-.07-.35-.21-.49a.68.68 0 00-.49-.2H9.04c-.19 0-.35.07-.49.2a.68.68 0 00-.21.49c0 .18.07.34.21.48.14.14.3.21.49.21z" />
-              </svg>
-              <span>csv,json,xml,excel</span>
-            </div>
-            {postDate && (
-              <time
-                className="text-xs font-family-baskervville text-slate-600"
-                dateTime={postDate}
-              >
-                {postDate}
-              </time>
-            )}
+        {/* Footer with just the formatted date */}
+        {postDate && (
+          <div className="mt-9">
+            <time
+              className="text-xs font-family-baskervville text-slate-600"
+              dateTime={postDate}
+            >
+              {formatDate(postDate)}
+            </time>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
