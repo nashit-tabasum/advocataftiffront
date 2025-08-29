@@ -128,7 +128,7 @@ export default function ArchivePage(props: ArchivePageProps) {
   };
 
   return (
-    <Layout title={`${archiveType}: ${name}`}>
+    <Layout>
       <main className="max-w-6xl mx-auto px-4">
         <EntryHeader title={`Archive for ${archiveType}: ${name}`} />
 
