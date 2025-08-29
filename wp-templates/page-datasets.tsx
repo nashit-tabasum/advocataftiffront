@@ -1,7 +1,8 @@
 import { gql } from "@apollo/client";
 import type { GetStaticPropsContext } from "next";
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/router";
 import Pagination from "../src/components/Pagination";
 import CardType6 from "../src/components/Cards/CardType6";
 import HeroBasic from "../src/components/HeroBlocks/HeroBasic";
@@ -93,22 +94,55 @@ const datasetBgPattern = "/assets/images/patterns/dataset-bg-pattern.jpg";
 
 export default function DatasetsPage({ data }: DatasetsPageProps) {
   const page = data?.page;
+  const router = useRouter();
   if (!page) return <p>Datasets page not found.</p>;
 
   const [currentPage, setCurrentPage] = useState(1);
   const [activeCategory, setActiveCategory] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState<string>("");
 
-  // ✅ categories from WPGraphQL + prepend "All"
-  const categories = useMemo(() => {
-    const cats = data?.dataSetsCategories?.nodes ?? [];
-    return [...cats.map((c) => c.name ?? "").filter(Boolean)];
-  }, [data?.dataSetsCategories]);
+  // Raw categories from WPGraphQL
+  const rawCats = data?.dataSetsCategories?.nodes ?? [];
 
-  // ✅ datasets
+  // Build name <-> slug maps
+  const nameToSlug = useMemo(() => {
+    const m = new Map<string, string>();
+    m.set("All", "");
+    rawCats.forEach((c) => {
+      if (c?.name && c?.slug) m.set(c.name, c.slug);
+    });
+    return m;
+  }, [rawCats]);
+
+  const slugToName = useMemo(() => {
+    const m = new Map<string, string>();
+    m.set("", "All");
+    rawCats.forEach((c) => {
+      if (c?.slug && c?.name) m.set(String(c.slug).toLowerCase(), c.name);
+    });
+    return m;
+  }, [rawCats]);
+
+  // Labels for the carousel (prepend "All")
+  const categories = useMemo(() => {
+    return ["All", ...rawCats.map((c) => c.name ?? "").filter(Boolean)];
+  }, [rawCats]);
+
+  // Sync active tab from the URL (client-side)
+  useEffect(() => {
+    const clean = router.asPath.split("?")[0].split("#")[0];
+    const parts = clean.replace(/\/+$/, "").split("/").filter(Boolean);
+    // expecting ["datasets", "<slug?>"]
+    const maybeSlug = parts[0] === "datasets" ? parts[1] || "" : "";
+    const fromUrl = slugToName.get(maybeSlug.toLowerCase()) || "All";
+    setActiveCategory(fromUrl);
+    setCurrentPage(1);
+  }, [router.asPath, slugToName]);
+
+  // datasets
   const datasetCards = data?.dataSets?.nodes ?? [];
 
-  // ✅ filter datasets (category + search)
+  // filter datasets (category + search)
   const filteredCards = useMemo(() => {
     let filtered = datasetCards;
 
@@ -135,13 +169,14 @@ export default function DatasetsPage({ data }: DatasetsPageProps) {
     return filtered;
   }, [activeCategory, searchQuery, datasetCards]);
 
-  // ✅ pagination
+  // pagination
   const pageSize = 6;
   const totalItems = filteredCards.length;
   const paginatedCards = filteredCards.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
+  const hasResults = totalItems > 0;
 
   return (
     <main>
@@ -179,7 +214,12 @@ export default function DatasetsPage({ data }: DatasetsPageProps) {
               initialActiveIndex={0}
               onChangeActive={(label) => {
                 setActiveCategory(label);
-                setCurrentPage(1); // reset to page 1 on filter change
+                setCurrentPage(1);
+
+                // Update the URL without reload
+                const slug = nameToSlug.get(label) ?? "";
+                const href = slug ? `/datasets/${slug}` : `/datasets`;
+                router.push(href, href, { shallow: true, scroll: false });
               }}
             />
           )}
@@ -191,37 +231,54 @@ export default function DatasetsPage({ data }: DatasetsPageProps) {
         dangerouslySetInnerHTML={{ __html: page?.content ?? "" }}
       />
 
-      {/* Cards */}
+      {/* Cards / Empty state */}
       <section className="bg-white py-12 md:py-16 xl:py-20">
         <div className="mx-auto max-w-7xl px-5 md:px-10 xl:px-16">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-            {paginatedCards.map((c) => {
-              const fileUrl =
-                c.dataSetFields?.dataSetFile?.node?.mediaItemUrl ?? "";
-              return (
-                <CardType6
-                  key={c.id}
-                  title={c.title ?? ""}
-                  excerpt={c.excerpt ?? ""}
-                  fileUrl={fileUrl}
-                  postDate={c.date ?? ""}
-                  uri={c.uri ?? undefined}
-                />
-              );
-            })}
-          </div>
+          {hasResults ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+              {paginatedCards.map((c) => {
+                const fileUrl =
+                  c.dataSetFields?.dataSetFile?.node?.mediaItemUrl ?? "";
+                return (
+                  <CardType6
+                    key={c.id}
+                    title={c.title ?? ""}
+                    excerpt={c.excerpt ?? ""}
+                    fileUrl={fileUrl}
+                    postDate={c.date ?? ""}
+                    uri={c.uri ?? undefined}
+                  />
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-16" aria-live="polite">
+              <h3 className="text-xl font-semibold tracking-wide">
+                {activeCategory === "All"
+                  ? "No datasets found."
+                  : `No datasets for “${activeCategory}”.`}
+              </h3>
+              {searchQuery.trim() ? (
+                <p className="mt-2 text-gray-600">
+                  Try clearing the search or selecting another category.
+                </p>
+              ) : null}
+            </div>
+          )}
         </div>
       </section>
 
-      {/* Pagination */}
-      <section className="mx-auto max-w-7xl px-5 md:px-10 xl:px-16 pb-16">
-        <Pagination
-          currentPage={currentPage}
-          totalItems={totalItems}
-          pageSize={pageSize}
-          onPageChange={setCurrentPage}
-        />
-      </section>
+      {/* Pagination (only when results exist) */}
+      {hasResults && (
+        <section className="mx-auto max-w-7xl px-5 md:px-10 xl:px-16 pb-16">
+          <Pagination
+            currentPage={currentPage}
+            totalItems={totalItems}
+            pageSize={pageSize}
+            onPageChange={setCurrentPage}
+          />
+        </section>
+      )}
     </main>
   );
 }

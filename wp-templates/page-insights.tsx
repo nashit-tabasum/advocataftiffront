@@ -121,10 +121,9 @@ export default function InsightsPage({ data }: InsightsPageProps) {
     return ["All", ...rawCats.map((c) => c.name ?? "").filter(Boolean)];
   }, [rawCats]);
 
+  // Sync active tab from URL (client-side)
   useEffect(() => {
-    // strip query/hash
     const clean = router.asPath.split("?")[0].split("#")[0];
-    // normalize trailing slash
     const parts = clean.replace(/\/+$/, "").split("/").filter(Boolean);
     // expecting ["insights", "<slug?>"]
     const maybeSlug = parts[0] === "insights" ? parts[1] || "" : "";
@@ -182,6 +181,7 @@ export default function InsightsPage({ data }: InsightsPageProps) {
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
+  const hasResults = totalItems > 0;
 
   return (
     <main>
@@ -223,7 +223,6 @@ export default function InsightsPage({ data }: InsightsPageProps) {
                 // Update URL without a full reload
                 const slug = nameToSlug.get(label) ?? "";
                 const href = slug ? `/insights/${slug}` : `/insights`;
-                // Shallow route, don't scroll to top
                 router.push(href, href, { shallow: true, scroll: false });
               }}
             />
@@ -232,34 +231,51 @@ export default function InsightsPage({ data }: InsightsPageProps) {
       </div>
       {/* Search & Filter Section End */}
 
-      {/* Cards */}
+      {/* Cards / Empty state */}
       <div className="bg-white py-12 md:py-16 xl:py-20">
         <div className="mx-auto max-w-7xl px-5 md:px-10 xl:px-16">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-            {paginated.map((c) => (
-              <CardType5
-                key={c.id}
-                title={c.title ?? ""}
-                excerpt={c.excerpt ?? ""}
-                imageUrl={c.featuredImage?.node?.sourceUrl ?? undefined}
-                postDate={c.date ?? ""}
-                uri={c.uri ?? undefined}
-                categories={c.insightsCategories?.nodes ?? []}
-              />
-            ))}
-          </div>
+          {hasResults ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+              {paginated.map((c) => (
+                <CardType5
+                  key={c.id}
+                  title={c.title ?? ""}
+                  excerpt={c.excerpt ?? ""}
+                  imageUrl={c.featuredImage?.node?.sourceUrl ?? undefined}
+                  postDate={c.date ?? ""}
+                  uri={c.uri ?? undefined}
+                  categories={c.insightsCategories?.nodes ?? []}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-16" aria-live="polite">
+              <h3 className="text-xl font-semibold tracking-wide">
+                {activeCategory === "All"
+                  ? "No insights found."
+                  : `No insights for “${activeCategory}”.`}
+              </h3>
+              {searchQuery.trim() ? (
+                <p className="mt-2 text-gray-600">
+                  Try clearing the search or selecting another category.
+                </p>
+              ) : null}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Pagination */}
-      <div className="mx-auto max-w-7xl px-5 md:px-10 xl:px-16 pb-16">
-        <Pagination
-          currentPage={currentPage}
-          totalItems={totalItems}
-          pageSize={pageSize}
-          onPageChange={setCurrentPage}
-        />
-      </div>
+      {/* Pagination (only when results exist) */}
+      {hasResults && (
+        <div className="mx-auto max-w-7xl px-5 md:px-10 xl:px-16 pb-16">
+          <Pagination
+            currentPage={currentPage}
+            totalItems={totalItems}
+            pageSize={pageSize}
+            onPageChange={setCurrentPage}
+          />
+        </div>
+      )}
     </main>
   );
 }
