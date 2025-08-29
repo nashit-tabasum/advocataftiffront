@@ -91,16 +91,30 @@ export default function InsightsPage({ data }: InsightsPageProps) {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const pageSize = 6;
 
-  // ✅ categories from WPGraphQL + prepend "All"
+  // categories from WPGraphQL + prepend "All"
   const categories = useMemo(() => {
     const cats = data?.insightsCategories?.nodes ?? [];
     return ["All", ...cats.map((c) => c.name ?? "").filter(Boolean)];
   }, [data?.insightsCategories]);
 
-  // ✅ insights
-  const cards = data?.insights?.nodes ?? [];
+  // insights
+  const cards = (data?.insights?.nodes ?? []) as Array<{
+    id: string;
+    uri?: string | null;
+    title?: string | null;
+    excerpt?: string | null;
+    date?: string | null;
+    featuredImage?: { node?: { sourceUrl?: string | null } | null } | null;
+    insightsCategories?: {
+      nodes?: Array<{
+        id: string;
+        name?: string | null;
+        slug?: string | null;
+      }> | null;
+    } | null;
+  }>;
 
-  // ✅ filter insights (category + search combined)
+  // filter insights (category + search combined)
   const filteredCards = useMemo(() => {
     let filtered = cards;
 
@@ -188,6 +202,7 @@ export default function InsightsPage({ data }: InsightsPageProps) {
                 imageUrl={c.featuredImage?.node?.sourceUrl ?? undefined}
                 postDate={c.date ?? ""}
                 uri={c.uri ?? undefined}
+                categories={c.insightsCategories?.nodes ?? []} // pass categories
               />
             ))}
           </div>

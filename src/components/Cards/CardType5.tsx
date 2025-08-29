@@ -7,6 +7,7 @@ interface CardType5Props {
   imageUrl?: string;
   postDate?: string;
   uri?: string; // permalink for title
+  categories?: { id: string; name?: string | null; slug?: string | null }[];
 }
 
 const stripParagraphTags = (html?: string) =>
@@ -44,6 +45,7 @@ const CardType5: React.FC<CardType5Props> = ({
   imageUrl = "/assets/images/card-imgs/card-img-5.jpg",
   postDate,
   uri,
+  categories = [], // default empty array
 }) => {
   const isoDate = toISOOrRaw(postDate);
 
@@ -69,9 +71,15 @@ const CardType5: React.FC<CardType5Props> = ({
 
       <div className="flex flex-1 flex-col justify-between p-8 pb-7">
         <div className="flex-1">
-          <span className="text-sm font-family-sourcecodepro text-slate-800 uppercase pb-1">
-            economy
-          </span>
+          {/* ✅ categories*/}
+          {categories.length > 0 && (
+            <span className="text-sm font-family-sourcecodepro text-slate-800 uppercase pb-1">
+              {categories
+                .map((cat) => cat?.name)
+                .filter(Boolean)
+                .join(", ")}
+            </span>
+          )}
 
           {/* Title with permalink only */}
           <h2 className="mt-3 text-xl md:text-2xl font-semibold font-family-montserrat text-slate-950 line-clamp-3">
@@ -91,7 +99,7 @@ const CardType5: React.FC<CardType5Props> = ({
           )}
         </div>
 
-        {/* Footer with just the formatted date */}
+        {/* Footer with date */}
         {postDate && (
           <div className="mt-9">
             <time
