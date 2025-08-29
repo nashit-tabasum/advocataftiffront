@@ -37,7 +37,7 @@ export default function HeroBlocks({
         <h2 className="text-white text-2xl text-center border-b mb-6 mt-14 pb-3 border-white">
           Hero Blocks (White)
         </h2>
-        <HeroWhite />
+        <HeroWhite title={"Sample title"} />
 
         {/* Hero Blocks (Black) */}
         <h2 className="text-white text-2xl text-center border-b mb-6 mt-14 pb-3 border-white">

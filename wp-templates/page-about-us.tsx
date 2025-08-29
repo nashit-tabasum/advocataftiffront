@@ -121,7 +121,6 @@ export default function AboutPage({ data, loading }: AboutPageProps) {
             <div className="mx-auto max-w-2xl text-center">
               <PageSubTitle className="!text-slate-50">FAQ</PageSubTitle>
               <PageTitle className="!text-slate-50">
-                {" "}
                 How can we help you?
               </PageTitle>
             </div>
