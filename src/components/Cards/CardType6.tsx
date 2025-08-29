@@ -1,3 +1,4 @@
+// src/components/Cards/CardType6.tsx
 import React from "react";
 import Link from "next/link";
 
@@ -77,7 +78,10 @@ const CardType6: React.FC<CardType6Props> = ({
               {/* Title with permalink only */}
               <h2 className="mt-2 cursor-pointer text-2xl leading-snug font-semibold font-family-montserrat text-slate-800 transition-colors duration-500 ease-in-out">
                 {uri ? (
-                  <Link href={uri} className="cursor-pointer">
+                  <Link
+                    href={uri}
+                    className="hover:text-brand-2-500 cursor-pointer"
+                  >
                     {title}
                   </Link>
                 ) : (

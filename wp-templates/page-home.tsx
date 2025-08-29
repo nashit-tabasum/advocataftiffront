@@ -236,10 +236,7 @@ export default function PageHome({ data }: HomePageProps): JSX.Element {
           <div className="mx-auto max-w-2xl text-center">
             <PageSubTitle className="page-sub-title">Datasets</PageSubTitle>
             <PageTitle className="page-title">
-              <>
-                Explore Our <br /> <span>Comprehensive Dataset</span> <br />{" "}
-                Collection
-              </>
+              Explore Our Comprehensive Dataset Collection
             </PageTitle>
           </div>
           <div className="mx-auto my-8 md:my-11 grid max-w-2xl grid-cols-1 gap-6 xl:gap-8 lg:mx-0 lg:max-w-none lg:grid-cols-3 md:grid-cols-2">

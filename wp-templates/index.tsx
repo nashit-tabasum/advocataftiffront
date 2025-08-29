@@ -7,6 +7,8 @@ import TestPage from "./page-test";
 import DatasetsPage from "./page-datasets";
 import InsightsPage from "./page-insights";
 import HomePage from "./page-home";
+import SingleInsight from "./single-insights";
+import DatasetInnerPage from "./single-dataset";
 
 export default {
   "front-page": frontPage,
@@ -18,4 +20,6 @@ export default {
   "page-datasets": DatasetsPage,
   "page-insights": InsightsPage,
   "page-home": HomePage,
+  "single-insight": SingleInsight,
+  "single-data-set": DatasetInnerPage,
 };

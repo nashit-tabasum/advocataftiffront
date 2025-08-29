@@ -1,17 +1,22 @@
 "use client";
 import type { JSX } from "react";
 import Breadcrumb from "../Breadcrumb";
+import type { Crumb } from "../Breadcrumb";
 
 type HeroBlackProps = {
   bgUrl?: string;
   title?: string;
   dateText?: string;
+  items?: Crumb[];
+  homeHref?: string;
 };
 
 export default function HeroBlack({
   bgUrl = "/assets/images/hero-black-bg.jpg",
   title = "U.S. Population Projected to Reach 341,145,670 at Midnight EST on January 1",
   dateText = "August 24th, 2025",
+  items,
+  homeHref,
 }: HeroBlackProps): JSX.Element {
   return (
     <section
@@ -25,7 +30,13 @@ export default function HeroBlack({
     >
       <div className="hero-block text-center mx-auto max-w-6xl grid justify-center">
         <div className="mb-5 hero-breadcrumb text-slate-200 flex justify-center">
-          <Breadcrumb light items={[{ label: "Datasets", href: "#" }]} />
+          <Breadcrumb
+            light
+            homeHref={homeHref}
+            items={
+              items && items.length ? items : [{ label: "Datasets", href: "#" }]
+            }
+          />
         </div>
 
         <h1 className="hero-title mb-5 text-slate-50 text-4xl md:text-5xl xl:text-6xl leading-snug font-family-montserrat font-bold max-w-6xl">

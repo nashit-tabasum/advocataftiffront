@@ -6,23 +6,31 @@ export type Crumb = { label: ReactNode; href?: string };
 type BreadcrumbProps = {
   items?: Crumb[]; // ← make optional
   light?: boolean;
+  homeHref?: string;
 };
 
 export default function Breadcrumb({
   items = [], // ← safe default
   light,
+  homeHref = "/",
 }: BreadcrumbProps): JSX.Element {
-  const base = light ? "text-slate-200" : "text-slate-700";
+  const base = light ? "text-slate-200" : "text-slate-600";
   const current = light ? "text-slate-200" : "text-slate-900";
 
   return (
-    <nav className="flex" aria-label="Breadcrumb">
-      <ol role="list" className="breadcrumb inline-flex items-center gap-2">
+    <nav className="flex uppercase" aria-label="Breadcrumb">
+      <ol
+        role="list"
+        className="breadcrumb inline-flex items-center gap-2 text-sm font-family-sourcecodepro"
+      >
         <li>
           <div
             className={`breadcrumb-item inline-flex items-center gap-2 ${base}`}
           >
-            <a href="#" className="inline-flex items-center">
+            <a
+              href={homeHref}
+              className="inline-flex items-center hover:text-slate-900 transition-colors"
+            >
               <svg
                 viewBox="0 0 20 20"
                 fill="currentColor"
@@ -66,7 +74,7 @@ export default function Breadcrumb({
               {item.href ? (
                 <a
                   href={item.href}
-                  className={`breadcrumb-current ${current}`}
+                  className={`breadcrumb-current ${current} hover:text-slate-900 transition-colors`}
                   aria-current="page"
                 >
                   {item.label}
