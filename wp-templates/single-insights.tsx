@@ -5,6 +5,7 @@ import HeroBlack from "@/src/components/HeroBlocks/HeroBlack";
 import { SingleInner } from "@/src/components/SingleInner";
 import CardType5 from "@/src/components/Cards/CardType5";
 import { PageSubTitle, PageTitle } from "@/src/components/Typography";
+import PostContent from "@/src/components/PostContent";
 
 const SINGLE_INSIGHT_QUERY = gql`
   query GetSingleInsight($slug: ID!) {
@@ -133,12 +134,12 @@ export default function SingleInsight({ data }: SingleInsightProps) {
       <div className="bg-white py-10 md:py-16 xl:py-20">
         <div className="mx-auto max-w-full">
           <div className="mx-auto max-w-4xl px-5 md:px-10 xl:px-16">
-            <SingleInner>
-              {insight.title && <h2>{insight.title}</h2>}
-              <div
-                dangerouslySetInnerHTML={{ __html: insight.content ?? "" }}
-              />
-            </SingleInner>
+            {insight.title && (
+              <h2 className="text-slate-950 font-montserrat font-normal text-2xl leading-8 lg:leading-10 lg:text-3xl mb-6">
+                {insight.title}
+              </h2>
+            )}
+            <PostContent content={insight.content ?? ""} variant="single" />
           </div>
         </div>
       </div>
