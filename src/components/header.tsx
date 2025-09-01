@@ -11,6 +11,8 @@ export type HeaderNavProps = {
   onSearch?: (query: string) => void;
   /** Optional className to style the surrounding header wrapper */
   className?: string;
+  /** Optional: override site URL for logo redirect */
+  siteUrl?: string;
 };
 
 const SidebarItem: React.FC<{
@@ -27,8 +29,8 @@ const SidebarItem: React.FC<{
 const SearchForm: React.FC<{
   id?: string;
   initialHidden?: boolean;
-  widthClass?: string; // e.g. 'w-64', 'w-52'
-  alignClass?: string; // e.g. 'absolute -left-60 mt-2'
+  widthClass?: string;
+  alignClass?: string;
   onSubmit?: (query: string) => void;
 }> = ({
   id,
@@ -356,6 +358,7 @@ const dashboardIcons: React.ReactNode[] = [
     />
   </svg>,
 ];
+
 const DashboardDropdown: React.FC<{ imageUrl: string; items?: MenuItem[] }> = ({
   imageUrl,
   items = [],
@@ -620,8 +623,12 @@ const HeaderNav: React.FC<HeaderNavProps> = ({
   navDropdownImage,
   onSearch,
   className,
+  siteUrl,
 }) => {
   const { data } = useQuery(HEADER_MENU_QUERY);
+
+  const baseUrl =
+    siteUrl || (typeof window !== "undefined" ? window.location.origin : "/");
 
   const allMenuItems: MenuItem[] = data?.menu?.menuItems?.nodes ?? [];
   const dashboardsItem = allMenuItems.find(
@@ -647,7 +654,7 @@ const HeaderNav: React.FC<HeaderNavProps> = ({
       <div className="max-w-full mx-auto px-6 md:px-6 lg:px-8 flex items-center justify-between py-3 lg:py-3">
         {/* Logo */}
         <a
-          href="/home"
+          href={baseUrl}
           className="brand-logo text-2xl leading-snug font-bold text-gray-800 w-full sm:w-40 md:w-52 lg:w-64"
           aria-label="Homepage"
         >
