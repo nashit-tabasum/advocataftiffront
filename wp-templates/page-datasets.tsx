@@ -118,8 +118,23 @@ export default function DatasetsPage({ data }: DatasetsPageProps) {
     [rawCats]
   );
 
-  // Initialize from path (/datasets/:slug?) and ?q=
+  // ✅ helper: detect listing routes (/datasets or /datasets/<category>)
+  const isListingView = React.useCallback(() => {
+    const clean = router.asPath.split("?")[0].split("#")[0];
+    const parts = clean.replace(/\/+$/, "").split("/").filter(Boolean);
+    const base = parts[0] || "";
+    const maybeSlug = base === "datasets" ? parts[1] || "" : "";
+    const looksLikeDatasets = base === "datasets";
+    const isKnownCategory =
+      slugToName.has(maybeSlug.toLowerCase()) || maybeSlug === "";
+    // listing is /datasets or /datasets/<category>, i.e. <= 2 segments and (empty or known category)
+    return looksLikeDatasets && isKnownCategory && parts.length <= 2;
+  }, [router.asPath, slugToName]);
+
+  // ✅ Initialize filters from URL only on listing
   useEffect(() => {
+    if (!isListingView()) return;
+
     const clean = router.asPath.split("?")[0].split("#")[0];
     const parts = clean.replace(/\/+$/, "").split("/").filter(Boolean);
     const maybeSlug = parts[0] === "datasets" ? parts[1] || "" : "";
@@ -130,7 +145,7 @@ export default function DatasetsPage({ data }: DatasetsPageProps) {
     const qp = router.query?.q;
     const qStr = Array.isArray(qp) ? qp[0] : qp;
     if (typeof qStr === "string") setSearchQuery(qStr);
-  }, [router.asPath, router.query?.q, slugToName]);
+  }, [router.asPath, router.query?.q, slugToName, isListingView]);
 
   const datasetCards = data?.dataSets?.nodes ?? [];
 
@@ -156,19 +171,25 @@ export default function DatasetsPage({ data }: DatasetsPageProps) {
     return datasetCards;
   }, [activeCategory, searchQuery, datasetCards]);
 
-  // Debounced URL sync
+  // ✅ Debounced URL sync — only on listing view
   const syncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
+    if (!isListingView()) return;
+
     if (syncTimer.current) clearTimeout(syncTimer.current);
     syncTimer.current = setTimeout(() => {
       const q = searchQuery.trim();
       if (q) {
         const href = `/datasets/?q=${encodeURIComponent(q)}`;
-        router.replace(href, href, { shallow: true, scroll: false });
+        if (router.asPath !== href) {
+          router.replace(href, href, { shallow: true, scroll: false });
+        }
       } else {
         const slug = nameToSlug.get(activeCategory) ?? "";
         const href = slug ? `/datasets/${slug}/` : `/datasets/`;
-        router.replace(href, href, { shallow: true, scroll: false });
+        if (router.asPath !== href) {
+          router.replace(href, href, { shallow: true, scroll: false });
+        }
       }
     }, 250);
 
@@ -178,7 +199,7 @@ export default function DatasetsPage({ data }: DatasetsPageProps) {
         syncTimer.current = null;
       }
     };
-  }, [searchQuery, activeCategory, nameToSlug, router]);
+  }, [searchQuery, activeCategory, nameToSlug, router.asPath, isListingView]);
 
   const pageSize = 6;
   const totalItems = filteredCards.length;
@@ -238,6 +259,7 @@ export default function DatasetsPage({ data }: DatasetsPageProps) {
         </div>
       </section>
 
+      {/* Optional page content from WP */}
       <div
         className="prose max-w-none mx-auto px-4"
         dangerouslySetInnerHTML={{ __html: page?.content ?? "" }}

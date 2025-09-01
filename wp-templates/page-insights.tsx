@@ -108,8 +108,23 @@ export default function InsightsPage({ data }: InsightsPageProps) {
     [rawCats]
   );
 
-  // Initialize from path (/insights/:slug?) and ?q=
+  // ✅ helper: are we on the listing (/, /insights, /insights/<category>)?
+  const isListingView = React.useCallback(() => {
+    const clean = router.asPath.split("?")[0].split("#")[0];
+    const parts = clean.replace(/\/+$/, "").split("/").filter(Boolean);
+    const base = parts[0] || "";
+    const maybeSlug = base === "insights" ? parts[1] || "" : "";
+    const looksLikeInsights = base === "insights";
+    const isKnownCategory =
+      slugToName.has(maybeSlug.toLowerCase()) || maybeSlug === "";
+    // listing is /insights or /insights/<category>, i.e. <= 2 segments and (empty or known category)
+    return looksLikeInsights && isKnownCategory && parts.length <= 2;
+  }, [router.asPath, slugToName]);
+
+  // ✅ Initialize from path only when on the listing view
   useEffect(() => {
+    if (!isListingView()) return;
+
     const clean = router.asPath.split("?")[0].split("#")[0];
     const parts = clean.replace(/\/+$/, "").split("/").filter(Boolean);
     const maybeSlug = parts[0] === "insights" ? parts[1] || "" : "";
@@ -120,7 +135,7 @@ export default function InsightsPage({ data }: InsightsPageProps) {
     const qp = router.query?.q;
     const qStr = Array.isArray(qp) ? qp[0] : qp;
     if (typeof qStr === "string") setSearchQuery(qStr);
-  }, [router.asPath, router.query?.q, slugToName]);
+  }, [router.asPath, router.query?.q, slugToName, isListingView]);
 
   const cards = (data?.insights?.nodes ?? []) as Array<{
     id: string;
@@ -160,19 +175,25 @@ export default function InsightsPage({ data }: InsightsPageProps) {
     return cards;
   }, [activeCategory, searchQuery, cards]);
 
-  // Debounced URL sync
+  // ✅ Debounced URL sync — only on listing view
   const syncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
+    if (!isListingView()) return;
+
     if (syncTimer.current) clearTimeout(syncTimer.current);
     syncTimer.current = setTimeout(() => {
       const q = searchQuery.trim();
       if (q) {
         const href = `/insights/?q=${encodeURIComponent(q)}`;
-        router.replace(href, href, { shallow: true, scroll: false });
+        if (router.asPath !== href) {
+          router.replace(href, href, { shallow: true, scroll: false });
+        }
       } else {
         const slug = nameToSlug.get(activeCategory) ?? "";
         const href = slug ? `/insights/${slug}/` : `/insights/`;
-        router.replace(href, href, { shallow: true, scroll: false });
+        if (router.asPath !== href) {
+          router.replace(href, href, { shallow: true, scroll: false });
+        }
       }
     }, 250);
 
@@ -182,7 +203,7 @@ export default function InsightsPage({ data }: InsightsPageProps) {
         syncTimer.current = null;
       }
     };
-  }, [searchQuery, activeCategory, nameToSlug, router]);
+  }, [searchQuery, activeCategory, nameToSlug, router.asPath, isListingView]);
 
   const totalItems = filteredCards.length;
   const paginated = filteredCards.slice(
