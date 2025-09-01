@@ -20,7 +20,6 @@ const formatDate = (dateStr: string) => {
   const month = date.toLocaleString("en-GB", { month: "long" });
   const year = date.getFullYear();
 
-  // Add suffix for day
   const suffix =
     day % 10 === 1 && day !== 11
       ? "st"
@@ -45,7 +44,7 @@ const CardType5: React.FC<CardType5Props> = ({
   imageUrl = "/assets/images/card-imgs/card-img-5.jpg",
   postDate,
   uri,
-  categories = [], // default empty array
+  categories = [],
 }) => {
   const isoDate = toISOOrRaw(postDate);
 
@@ -71,7 +70,6 @@ const CardType5: React.FC<CardType5Props> = ({
 
       <div className="flex flex-1 flex-col justify-between p-8 pb-7">
         <div className="flex-1">
-          {/* ✅ categories*/}
           {categories.length > 0 && (
             <span className="text-sm font-family-sourcecodepro text-slate-800 uppercase pb-1">
               {categories
@@ -81,10 +79,14 @@ const CardType5: React.FC<CardType5Props> = ({
             </span>
           )}
 
-          {/* Title with permalink only */}
           <h2 className="mt-3 text-xl md:text-2xl font-semibold font-family-montserrat text-slate-950 line-clamp-3">
             {uri ? (
-              <Link href={uri} className="focus:outline-none">
+              <Link
+                href={uri}
+                prefetch={false}
+                className="focus:outline-none"
+                aria-label={title}
+              >
                 {title}
               </Link>
             ) : (
@@ -99,7 +101,6 @@ const CardType5: React.FC<CardType5Props> = ({
           )}
         </div>
 
-        {/* Footer with date */}
         {postDate && (
           <div className="mt-9">
             <time

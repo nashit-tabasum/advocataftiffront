@@ -1,4 +1,3 @@
-// src/components/Cards/CardType6.tsx
 import React from "react";
 import Link from "next/link";
 import { downloadCsvFile } from "@/src/lib/downloadUtils";
@@ -35,25 +34,6 @@ const getFileNameFromUrl = (url: string) => {
 // Required fixed label per spec
 const FIXED_DOWNLOAD_LABEL = "csv,json,xml,excel";
 
-// Force browser to download the file using a blob URL
-const triggerDownload = async (url: string) => {
-  try {
-    const filename = getFileNameFromUrl(url);
-    const apiUrl = `/api/download?url=${encodeURIComponent(
-      url
-    )}&filename=${encodeURIComponent(filename)}`;
-    const anchor = document.createElement("a");
-    anchor.href = apiUrl;
-    anchor.setAttribute("download", filename);
-    document.body.appendChild(anchor);
-    anchor.click();
-    anchor.remove();
-  } catch (error) {
-    // eslint-disable-next-line no-alert
-    alert("Could not download the file. Please try again.");
-  }
-};
-
 const CardType6: React.FC<CardType6Props> = ({
   title,
   excerpt,
@@ -76,12 +56,14 @@ const CardType6: React.FC<CardType6Props> = ({
         <div className="card-body flex flex-1 flex-col justify-between bg-white px-6 py-5">
           <div className="flex-1">
             <div>
-              {/* Title with permalink only */}
+              {/* Title with permalink only — mirrors CardType5 pattern */}
               <h2 className="mt-2 cursor-pointer text-2xl leading-snug font-semibold font-family-montserrat text-slate-800 transition-colors duration-500 ease-in-out">
                 {uri ? (
                   <Link
                     href={uri}
-                    className="hover:text-brand-2-500 cursor-pointer"
+                    prefetch={false}
+                    className="hover:text-brand-2-500 cursor-pointer focus:outline-none"
+                    aria-label={title}
                   >
                     {title}
                   </Link>
