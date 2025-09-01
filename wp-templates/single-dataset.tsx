@@ -7,6 +7,7 @@ import SecondaryButton from "@/src/components/Buttons/SecondaryBtn";
 import CardType6 from "@/src/components/Cards/CardType6";
 import { downloadCsvFile, downloadExcelFromCsv } from "@/src/lib/download";
 import { InnerPageTitle, PageSubTitle } from "@/src/components/Typography";
+import CsvTable from "@/src/components/CsvTable";
 
 const SINGLE_DATASET_QUERY = gql`
   query GetSingleDataset($slug: ID!) {
@@ -92,107 +93,6 @@ interface SingleDatasetProps {
   };
 }
 
-function parseCsv(text: string): string[][] {
-  const rows: string[][] = [];
-  let current: string[] = [];
-  let field = "";
-  let inQuotes = false;
-  for (let i = 0; i < text.length; i++) {
-    const char = text[i];
-    const next = text[i + 1];
-    if (inQuotes) {
-      if (char === '"' && next === '"') {
-        field += '"';
-        i++;
-      } else if (char === '"') {
-        inQuotes = false;
-      } else {
-        field += char;
-      }
-    } else {
-      if (char === '"') {
-        inQuotes = true;
-      } else if (char === ",") {
-        current.push(field);
-        field = "";
-      } else if (char === "\n") {
-        current.push(field);
-        rows.push(current);
-        current = [];
-        field = "";
-      } else if (char === "\r") {
-        // ignore CR
-      } else {
-        field += char;
-      }
-    }
-  }
-  // push last field/row
-  if (field.length > 0 || current.length > 0) {
-    current.push(field);
-    rows.push(current);
-  }
-  return rows;
-}
-
-function CsvTable({ url }: { url: string }): JSX.Element | null {
-  const [rows, setRows] = useState<string[][] | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  useEffect(() => {
-    let active = true;
-    async function load() {
-      try {
-        const res = await fetch(url);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const text = await res.text();
-        if (!active) return;
-        const parsed = parseCsv(text);
-        setRows(parsed);
-      } catch (e: any) {
-        setError(e?.message || "Failed to load CSV");
-      }
-    }
-    load();
-    return () => {
-      active = false;
-    };
-  }, [url]);
-
-  if (error)
-    return (
-      <WysiwygInner>
-        <p>{error}</p>
-      </WysiwygInner>
-    );
-  if (!rows) return null;
-
-  const [head = [], ...body] = rows;
-  return (
-    <div id="table-wrapper" className="overflow-auto rounded-lg shadow-inner">
-      <table className="min-w-full text-left">
-        {head.length > 0 && (
-          <thead>
-            <tr>
-              {head.map((h, i) => (
-                <th key={i}>{h}</th>
-              ))}
-            </tr>
-          </thead>
-        )}
-        <tbody>
-          {(body.length > 0 ? body : rows).map((r, ri) => (
-            <tr key={ri}>
-              {r.map((c, ci) => (
-                <td key={ci}>{c}</td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
 const DatasetInnerPage: React.FC<SingleDatasetProps> = ({ data }) => {
   const dataset = data?.dataSet;
   const related = data?.dataSets?.nodes ?? [];
@@ -235,7 +135,7 @@ const DatasetInnerPage: React.FC<SingleDatasetProps> = ({ data }) => {
       {downloadUrl?.toLowerCase().endsWith(".csv") && (
         <section className="bg-white py-8">
           <div className="mx-auto max-w-7xl px-5 md:px-10 xl:px-16">
-            <CsvTable url={downloadUrl} />
+            <CsvTable csvUrl={downloadUrl} />
           </div>
         </section>
       )}
