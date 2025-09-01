@@ -3,7 +3,6 @@ import type { GetStaticPropsContext } from "next";
 import React from "react";
 import HeroBlack from "@/src/components/HeroBlocks/HeroBlack";
 import { SingleInner } from "@/src/components/SingleInner";
-import { WysiwygInner } from "@/src/components/WyisiwygInner";
 import CardType5 from "@/src/components/Cards/CardType5";
 import { PageSubTitle, PageTitle } from "@/src/components/Typography";
 
@@ -123,16 +122,15 @@ export default function SingleInsight({ data }: SingleInsightProps) {
         items={[{ label: "Insights", href: "/insights" }]}
       />
 
-      {/* Title again + content (Wysiwyg styles) */}
       <div className="bg-white py-10 md:py-16 xl:py-20">
         <div className="mx-auto max-w-full">
           <div className="mx-auto max-w-4xl px-5 md:px-10 xl:px-16">
-            <WysiwygInner>
+            <SingleInner>
               {insight.title && <h2>{insight.title}</h2>}
               <div
                 dangerouslySetInnerHTML={{ __html: insight.content ?? "" }}
               />
-            </WysiwygInner>
+            </SingleInner>
           </div>
         </div>
       </div>
@@ -157,6 +155,7 @@ export default function SingleInsight({ data }: SingleInsightProps) {
                   imageUrl={post.featuredImage?.node?.sourceUrl ?? undefined}
                   postDate={post.date ?? ""}
                   uri={post.uri ?? undefined}
+                  categories={post.insightsCategories?.nodes ?? []}
                 />
               ))}
             </div>
@@ -187,7 +186,5 @@ export default function SingleInsight({ data }: SingleInsightProps) {
       ? ctx.params?.slug[0]
       : ctx.params?.slug) || seedNode?.slug;
 
-  return {
-    slug,
-  };
+  return { slug };
 };
