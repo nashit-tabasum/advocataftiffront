@@ -27,10 +27,10 @@ interface HomePageProps {
       title?: string | null;
       content?: string | null;
 
-      // ✅ Gutenberg blocks from WPGraphQL Content Blocks
+      // Gutenberg blocks from WPGraphQL Content Blocks
       editorBlocks?: GutenbergBlock[] | null;
 
-      // keep ACF for AI section if you're still using it
+      // Keep ACF for AI section
       homeAiSection?: {
         aiTitle?: string | null;
         aiDescription?: string | null;
@@ -79,7 +79,6 @@ const PAGE_QUERY = gql`
       title
       content
 
-      # ✅ this is the field exposed by your plugin version
       editorBlocks {
         name
         renderedHtml
@@ -137,7 +136,7 @@ export default function PageHome({ data }: HomePageProps): JSX.Element {
   const homeHeroBg = "/assets/images/patterns/home-hero-bg.jpg";
   const imageSectionSrc = "/assets/images/home-img.jpg";
 
-  // pull hero from Gutenberg
+  // Pull hero from Gutenberg
   const heroTitleHTML =
     data?.page?.editorBlocks?.find((b) => b?.name === "core/heading")
       ?.renderedHtml ?? "Connecting the dots on Public Data";
@@ -172,16 +171,18 @@ export default function PageHome({ data }: HomePageProps): JSX.Element {
         <div className="absolute inset-0 flex items-center">
           <div className="px-5 md:px-10 xl:px-16 py-12 md:py-16 xl:py-20 mx-auto w/full">
             <div className="text-center mx-auto max-w-6xl grid place-items-center">
-              <h1
-                className="mb-5 md:mb-0 text-slate-50 text-4xl md:text-5xl xl:text-6xl leading-snug font-montserrat font-bold whitespace-pre-line"
+              <div
+                role="heading"
+                aria-level={1}
+                className="mb-5 md:mb-0 text-slate-50 text-4xl md:text-5xl xl:text-6xl leading-snug font-montserrat font-bold"
                 dangerouslySetInnerHTML={{ __html: heroTitleHTML }}
               />
 
               <div className="space-y-2.5">
-                <p
+                <div
                   className="text-slate-200 text-base/6 lg:text-lg/7 font-playfair font-normal max-w-2xl"
                   dangerouslySetInnerHTML={{ __html: heroDescriptionHTML }}
-                ></p>
+                />
               </div>
 
               <div className="pb-8 w/full max-w-2xl">
