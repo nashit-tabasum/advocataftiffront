@@ -155,6 +155,7 @@ export default function SingleInsight({ data }: SingleInsightProps) {
                   imageUrl={post.featuredImage?.node?.sourceUrl ?? undefined}
                   postDate={post.date ?? ""}
                   uri={post.uri ?? undefined}
+                  categories={post.insightsCategories?.nodes ?? []}
                 />
               ))}
             </div>
