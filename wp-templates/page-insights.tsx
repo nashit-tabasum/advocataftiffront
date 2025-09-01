@@ -1,3 +1,4 @@
+// pages/insights.tsx
 import { gql } from "@apollo/client";
 import type { GetStaticPropsContext } from "next";
 import React, { useState, useMemo, useEffect, useRef } from "react";
@@ -8,11 +9,69 @@ import HeroBasic from "../src/components/HeroBlocks/HeroBasic";
 import SearchField from "../src/components/InputFields/SearchField";
 import FilterCarousel from "../src/components/FilterCarousel";
 
+/* ---------- Utils ---------- */
+/** Convert Gutenberg HTML to plain text for HeroBasic props */
+function htmlToPlain(input?: string | null): string {
+  if (!input) return "";
+  return input
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/(p|div|h[1-6]|li)>/gi, "\n")
+    .replace(/<[^>]+>/g, "")
+    .replace(/\u00a0/g, " ")
+    .replace(/\n{2,}/g, "\n")
+    .trim();
+}
+
+/* ---------- Types ---------- */
+interface GutenbergBlock {
+  name?: string | null; // "core/heading", "core/paragraph", etc.
+  renderedHtml?: string | null; // HTML from WPGraphQL Content Blocks
+}
+
+interface InsightsPageProps {
+  data?: {
+    page?: {
+      title?: string | null;
+      content?: string | null;
+      editorBlocks?: GutenbergBlock[] | null; // Gutenberg blocks
+    } | null;
+
+    insights?: {
+      nodes?: Array<{
+        id: string;
+        uri?: string | null;
+        title?: string | null;
+        excerpt?: string | null;
+        content?: string | null;
+        date?: string | null;
+        featuredImage?: { node?: { sourceUrl?: string | null } | null } | null;
+        insightsCategories?: {
+          nodes?: Array<{
+            id: string;
+            name?: string | null;
+            slug?: string | null;
+          }> | null;
+        } | null;
+      }>;
+    };
+
+    insightsCategories?: {
+      nodes?: Array<{ id: string; name?: string | null; slug?: string | null }>;
+    };
+  };
+  loading?: boolean;
+}
+
+/* ---------- GraphQL ---------- */
 const PAGE_QUERY = gql`
   query GetInsightsPage($databaseId: ID!, $asPreview: Boolean = false) {
     page(id: $databaseId, idType: DATABASE_ID, asPreview: $asPreview) {
       title
       content
+      editorBlocks {
+        name
+        renderedHtml
+      }
     }
     insights(first: 100) {
       nodes {
@@ -46,39 +105,27 @@ const PAGE_QUERY = gql`
   }
 `;
 
-interface InsightsPageProps {
-  data?: {
-    page?: { title?: string | null; content?: string | null } | null;
-    insights?: {
-      nodes?: Array<{
-        id: string;
-        uri?: string | null;
-        title?: string | null;
-        excerpt?: string | null;
-        date?: string | null;
-        featuredImage?: { node?: { sourceUrl?: string | null } | null } | null;
-        insightsCategories?: {
-          nodes?: Array<{
-            id: string;
-            name?: string | null;
-            slug?: string | null;
-          }> | null;
-        } | null;
-      }>;
-    };
-    insightsCategories?: {
-      nodes?: Array<{ id: string; name?: string | null; slug?: string | null }>;
-    };
-  };
-  loading?: boolean;
-}
-
+/* ---------- Page ---------- */
 const insightBgPattern = "/assets/images/patterns/insight-bg-pattern.jpg";
 
 export default function InsightsPage({ data }: InsightsPageProps) {
   const page = data?.page;
   const router = useRouter();
   if (!page) return <p>Insights page not found.</p>;
+
+  // Pull ONLY sub-heading + paragraph from Gutenberg
+  const headingHtml =
+    page.editorBlocks?.find((b) => b?.name === "core/heading")?.renderedHtml ??
+    "Exploring Insights";
+
+  const paragraphHtml =
+    page.editorBlocks?.find((b) => b?.name === "core/paragraph")
+      ?.renderedHtml ??
+    "A dataset is a structured collection of data that is organized and stored for analysis, processing, or reference. Datasets typically consist of related data points grouped into tables, files, or arrays, making it easier to work with them in research, analytics, or machine learning.";
+
+  // Convert to plain strings for HeroBasic props
+  const heroTitle = htmlToPlain(headingHtml);
+  const heroParagraph = htmlToPlain(paragraphHtml);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [activeCategory, setActiveCategory] = useState<string>("All");
@@ -138,7 +185,7 @@ export default function InsightsPage({ data }: InsightsPageProps) {
     } | null;
   }>;
 
-  // Global search; category filter applies only when search is empty
+  // Search + category filter
   const filteredCards = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     if (q) {
@@ -202,8 +249,8 @@ export default function InsightsPage({ data }: InsightsPageProps) {
     <main>
       <HeroBasic
         bgUrl={insightBgPattern}
-        title="Exploring Insights"
-        paragraph="A dataset is a structured collection of data that is organized and stored for analysis, processing, or reference. Datasets typically consist of related data points grouped into tables, files, or arrays, making it easier to work with them in research, analytics, or machine learning."
+        title={heroTitle}
+        paragraph={heroParagraph}
       />
 
       <div className="bg-white">
