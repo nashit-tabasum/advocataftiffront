@@ -16,27 +16,20 @@ import {
 } from "@/src/components/Typography";
 import SearchFieldHome from "@/src/components/InputFields/SearchFieldHome";
 
-interface GutenbergBlock {
-  name?: string | null; // e.g. "core/heading"
-  renderedHtml?: string | null; // plugin renders safe HTML per block
-}
-
 interface HomePageProps {
   data?: {
     page?: {
       title?: string | null;
       content?: string | null;
-
-      // Gutenberg blocks from WPGraphQL Content Blocks
-      editorBlocks?: GutenbergBlock[] | null;
-
-      // Keep ACF for AI section
+      homeHeroSection?: {
+        homeHeroTitle?: string | null;
+        homeHeroDescription?: string | null;
+      } | null;
       homeAiSection?: {
         aiTitle?: string | null;
         aiDescription?: string | null;
       } | null;
     } | null;
-
     dataSets?: {
       nodes?: Array<{
         id: string;
@@ -51,7 +44,6 @@ interface HomePageProps {
         } | null;
       }> | null;
     } | null;
-
     insights?: {
       nodes?: Array<{
         id: string;
@@ -60,13 +52,6 @@ interface HomePageProps {
         excerpt?: string | null;
         date?: string | null;
         featuredImage?: { node?: { sourceUrl?: string | null } | null } | null;
-        insightsCategories?: {
-          nodes?: Array<{
-            id: string;
-            name?: string | null;
-            slug?: string | null;
-          }> | null;
-        } | null;
       }> | null;
     } | null;
   };
@@ -78,18 +63,15 @@ const PAGE_QUERY = gql`
     page(id: $databaseId, idType: DATABASE_ID, asPreview: $asPreview) {
       title
       content
-
-      editorBlocks {
-        name
-        renderedHtml
+      homeHeroSection {
+        homeHeroTitle
+        homeHeroDescription
       }
-
       homeAiSection {
         aiTitle
         aiDescription
       }
     }
-
     dataSets(first: 6) {
       nodes {
         id
@@ -106,7 +88,6 @@ const PAGE_QUERY = gql`
         }
       }
     }
-
     insights(first: 3) {
       nodes {
         id
@@ -119,31 +100,34 @@ const PAGE_QUERY = gql`
             sourceUrl
           }
         }
-        insightsCategories {
-          nodes {
-            id
-            name
-            slug
-          }
-        }
       }
     }
   }
 `;
+
+/** Convert ACF WYSIWYG/HTML to plain text */
+function htmlToPlain(input?: string | null): string {
+  if (!input) return "";
+  return input
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/(p|div|h[1-6]|li)>/gi, "\n")
+    .replace(/<[^>]+>/g, "")
+    .replace(/\u00a0/g, " ")
+    .replace(/\n{2,}/g, "\n")
+    .trim();
+}
 
 export default function PageHome({ data }: HomePageProps): JSX.Element {
   const router = useRouter();
   const homeHeroBg = "/assets/images/patterns/home-hero-bg.jpg";
   const imageSectionSrc = "/assets/images/home-img.jpg";
 
-  // Pull hero from Gutenberg
-  const heroTitleHTML =
-    data?.page?.editorBlocks?.find((b) => b?.name === "core/heading")
-      ?.renderedHtml ?? "Connecting the dots on Public Data";
+  const heroTitle =
+    htmlToPlain(data?.page?.homeHeroSection?.homeHeroTitle) ||
+    "Connecting the dots on Public Data";
 
-  const heroDescriptionHTML =
-    data?.page?.editorBlocks?.find((b) => b?.name === "core/paragraph")
-      ?.renderedHtml ??
+  const heroDescription =
+    htmlToPlain(data?.page?.homeHeroSection?.homeHeroDescription) ||
     "Powered by Advocata’s cutting-edge AI, our platform leverages advanced data insights to help you connect with people who share your values and interests.";
 
   return (
@@ -155,7 +139,7 @@ export default function PageHome({ data }: HomePageProps): JSX.Element {
             src={homeHeroBg}
             width={1628}
             height={700}
-            className="h/full w/full object-cover"
+            className="h-full w-full object-cover"
             alt="home-hero-bg"
           />
         </div>
@@ -169,23 +153,19 @@ export default function PageHome({ data }: HomePageProps): JSX.Element {
         />
 
         <div className="absolute inset-0 flex items-center">
-          <div className="px-5 md:px-10 xl:px-16 py-12 md:py-16 xl:py-20 mx-auto w/full">
+          <div className="px-5 md:px-10 xl:px-16 py-12 md:py-16 xl:py-20 mx-auto w-full">
             <div className="text-center mx-auto max-w-6xl grid place-items-center">
-              <div
-                role="heading"
-                aria-level={1}
-                className="mb-5 md:mb-0 text-slate-50 text-4xl md:text-5xl xl:text-6xl leading-snug font-montserrat font-bold"
-                dangerouslySetInnerHTML={{ __html: heroTitleHTML }}
-              />
+              <h1 className="mb-5 md:mb-0 text-slate-50 text-4xl md:text-5xl xl:text-6xl leading-snug font-montserrat font-bold whitespace-pre-line">
+                {heroTitle}
+              </h1>
 
               <div className="space-y-2.5">
-                <div
-                  className="text-slate-200 text-base/6 lg:text-lg/7 font-playfair font-normal max-w-2xl"
-                  dangerouslySetInnerHTML={{ __html: heroDescriptionHTML }}
-                />
+                <p className="text-slate-200 text-base/6 lg:text-lg/7 font-playfair font-normal max-w-2xl">
+                  {heroDescription}
+                </p>
               </div>
 
-              <div className="pb-8 w/full max-w-2xl">
+              <div className="pb-8 w-full max-w-2xl">
                 <SearchFieldHome />
               </div>
             </div>
@@ -199,7 +179,7 @@ export default function PageHome({ data }: HomePageProps): JSX.Element {
           <div className="ring-1 ring-black/10 rounded-3xl relative -top-32 md:-top-40 xl:-top-48 z-20">
             <img
               src={imageSectionSrc}
-              className="rounded-3xl h/full w/full object-cover"
+              className="rounded-3xl h-full w-full object-cover"
               width={1120}
               height={713}
               loading="lazy"
@@ -276,7 +256,7 @@ export default function PageHome({ data }: HomePageProps): JSX.Element {
           </div>
           <div className="mx-auto my-8 md:my-11 grid max-w-2xl grid-cols-1 gap-6 xl:gap-8 lg:mx-0 lg:max-w-none lg:grid-cols-3 md:grid-cols-2">
             {(data?.dataSets?.nodes ?? []).map((c) => (
-              <div key={c.id} className="h/full">
+              <div key={c.id} className="h-full">
                 <CardType6
                   title={c.title ?? ""}
                   excerpt={c.excerpt ?? ""}
@@ -307,14 +287,13 @@ export default function PageHome({ data }: HomePageProps): JSX.Element {
           </div>
           <div className="mx-auto my-8 md:my-11 grid max-w-2xl grid-cols-1 gap-6 xl:gap-8 lg:mx-0 lg:max-w-none lg:grid-cols-3 md:grid-cols-2">
             {(data?.insights?.nodes ?? []).map((c) => (
-              <div key={c.id} className="h/full">
+              <div key={c.id} className="h-full">
                 <CardType5
                   title={c.title ?? ""}
                   excerpt={c.excerpt ?? ""}
                   imageUrl={c.featuredImage?.node?.sourceUrl ?? ""}
                   postDate={c.date ?? ""}
                   uri={c.uri ?? undefined}
-                  categories={c.insightsCategories?.nodes ?? []}
                 />
               </div>
             ))}
