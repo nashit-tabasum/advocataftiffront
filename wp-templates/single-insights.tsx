@@ -29,7 +29,8 @@ const SINGLE_INSIGHT_QUERY = gql`
         }
       }
     }
-    insights(first: 3, where: { orderby: { field: DATE, order: DESC } }) {
+    # grab a few extra so we can filter out the current post and still have up to 3
+    insights(first: 10, where: { orderby: { field: DATE, order: DESC } }) {
       nodes {
         id
         title
@@ -100,7 +101,7 @@ interface SingleInsightProps {
 
 export default function SingleInsight({ data }: SingleInsightProps) {
   const insight = data?.insight;
-  const related = data?.insights?.nodes ?? [];
+  const allRelated = data?.insights?.nodes ?? [];
 
   if (!insight) return <p>Insight not found.</p>;
 
@@ -111,6 +112,13 @@ export default function SingleInsight({ data }: SingleInsightProps) {
         year: "numeric",
       })
     : "";
+
+  // filter out the current post from "related"
+  const related = allRelated
+    .filter(
+      (p) => p.id !== insight.id && (p.slug ? p.slug !== insight.slug : true)
+    )
+    .slice(0, 3);
 
   return (
     <main>
@@ -147,7 +155,7 @@ export default function SingleInsight({ data }: SingleInsightProps) {
 
             {/* Cards */}
             <div className="mt-11 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {related.slice(0, 3).map((post) => (
+              {related.map((post) => (
                 <CardType5
                   key={post.id}
                   title={post.title ?? ""}

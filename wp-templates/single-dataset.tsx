@@ -1,4 +1,4 @@
-import React, { JSX, useEffect, useState } from "react";
+import React, { JSX } from "react";
 import { gql } from "@apollo/client";
 import type { GetStaticPropsContext } from "next";
 import HeroWhite from "@/src/components/HeroBlocks/HeroWhite";
@@ -45,13 +45,15 @@ const SINGLE_DATASET_QUERY = gql`
         }
       }
     }
-    dataSets(first: 3, where: { orderby: { field: DATE, order: DESC } }) {
+
+    dataSets(first: 10, where: { orderby: { field: DATE, order: DESC } }) {
       nodes {
         id
         uri
         title
         excerpt
         date
+        slug
         dataSetFields {
           dataSetFile {
             node {
@@ -88,6 +90,7 @@ interface SingleDatasetProps {
         title?: string | null;
         excerpt?: string | null;
         date?: string | null;
+        slug?: string | null;
         dataSetFields?: {
           dataSetFile?: {
             node?: { mediaItemUrl?: string | null } | null;
@@ -100,17 +103,26 @@ interface SingleDatasetProps {
 
 const DatasetInnerPage: React.FC<SingleDatasetProps> = ({ data }) => {
   const dataset = data?.dataSet;
-  const related = data?.dataSets?.nodes ?? [];
+  const allRelated = data?.dataSets?.nodes ?? [];
   if (!dataset) return <p>Dataset not found.</p>;
 
+  // Trim WYSIWYG to a short paragraph for the hero
   const _rawExcerpt = dataset.excerpt || dataset.content || "";
   const _plainExcerpt = _rawExcerpt.replace(/<[^>]+>/g, "").trim();
   const heroParagraph =
     _plainExcerpt.length > 260
       ? `${_plainExcerpt.slice(0, 260).trimEnd()}…`
       : _plainExcerpt;
+
   const downloadUrl =
     dataset.dataSetFields?.dataSetFile?.node?.mediaItemUrl ?? "";
+
+  // filter out the current dataset from related; keep up to 3
+  const related = allRelated
+    .filter(
+      (d) => d.id !== dataset.id && (d.slug ? d.slug !== dataset.slug : true)
+    )
+    .slice(0, 3);
 
   return (
     <main>
@@ -290,24 +302,28 @@ const DatasetInnerPage: React.FC<SingleDatasetProps> = ({ data }) => {
       </div>
 
       {/* Related Datasets */}
-      <section className="bg-pink-100 py-12 md:py-16 xl:py-20">
-        <div className="mx-auto max-w-7xl px-5 md:px-10 xl:px-16">
-          <PageSubTitle>Advocata ai suggestions</PageSubTitle>
-          <InnerPageTitle className="mb-8">Related Datasets</InnerPageTitle>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {(related ?? []).map((c) => (
-              <CardType6
-                key={c.id}
-                title={c.title ?? ""}
-                excerpt={c.excerpt ?? ""}
-                fileUrl={c.dataSetFields?.dataSetFile?.node?.mediaItemUrl ?? ""}
-                postDate={c.date ?? ""}
-                uri={c.uri ?? undefined}
-              />
-            ))}
+      {related.length > 0 && (
+        <section className="bg-pink-100 py-12 md:py-16 xl:py-20">
+          <div className="mx-auto max-w-7xl px-5 md:px-10 xl:px-16">
+            <PageSubTitle>Advocata ai suggestions</PageSubTitle>
+            <InnerPageTitle className="mb-8">Related Datasets</InnerPageTitle>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {related.map((c) => (
+                <CardType6
+                  key={c.id}
+                  title={c.title ?? ""}
+                  excerpt={c.excerpt ?? ""}
+                  fileUrl={
+                    c.dataSetFields?.dataSetFile?.node?.mediaItemUrl ?? ""
+                  }
+                  postDate={c.date ?? ""}
+                  uri={c.uri ?? undefined}
+                />
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
     </main>
   );
 };
