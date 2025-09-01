@@ -16,20 +16,27 @@ import {
 } from "@/src/components/Typography";
 import SearchFieldHome from "@/src/components/InputFields/SearchFieldHome";
 
+interface GutenbergBlock {
+  name?: string | null; // e.g. "core/heading"
+  renderedHtml?: string | null; // plugin renders safe HTML per block
+}
+
 interface HomePageProps {
   data?: {
     page?: {
       title?: string | null;
       content?: string | null;
-      homeHeroSection?: {
-        homeHeroTitle?: string | null;
-        homeHeroDescription?: string | null;
-      } | null;
+
+      // ✅ Gutenberg blocks from WPGraphQL Content Blocks
+      editorBlocks?: GutenbergBlock[] | null;
+
+      // keep ACF for AI section if you're still using it
       homeAiSection?: {
         aiTitle?: string | null;
         aiDescription?: string | null;
       } | null;
     } | null;
+
     dataSets?: {
       nodes?: Array<{
         id: string;
@@ -44,6 +51,7 @@ interface HomePageProps {
         } | null;
       }> | null;
     } | null;
+
     insights?: {
       nodes?: Array<{
         id: string;
@@ -70,15 +78,19 @@ const PAGE_QUERY = gql`
     page(id: $databaseId, idType: DATABASE_ID, asPreview: $asPreview) {
       title
       content
-      homeHeroSection {
-        homeHeroTitle
-        homeHeroDescription
+
+      # ✅ this is the field exposed by your plugin version
+      editorBlocks {
+        name
+        renderedHtml
       }
+
       homeAiSection {
         aiTitle
         aiDescription
       }
     }
+
     dataSets(first: 6) {
       nodes {
         id
@@ -95,6 +107,7 @@ const PAGE_QUERY = gql`
         }
       }
     }
+
     insights(first: 3) {
       nodes {
         id
@@ -119,29 +132,19 @@ const PAGE_QUERY = gql`
   }
 `;
 
-/** Convert ACF WYSIWYG/HTML to plain text */
-function htmlToPlain(input?: string | null): string {
-  if (!input) return "";
-  return input
-    .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<\/(p|div|h[1-6]|li)>/gi, "\n")
-    .replace(/<[^>]+>/g, "")
-    .replace(/\u00a0/g, " ")
-    .replace(/\n{2,}/g, "\n")
-    .trim();
-}
-
 export default function PageHome({ data }: HomePageProps): JSX.Element {
   const router = useRouter();
   const homeHeroBg = "/assets/images/patterns/home-hero-bg.jpg";
   const imageSectionSrc = "/assets/images/home-img.jpg";
 
-  const heroTitle =
-    htmlToPlain(data?.page?.homeHeroSection?.homeHeroTitle) ||
-    "Connecting the dots on Public Data";
+  // pull hero from Gutenberg
+  const heroTitleHTML =
+    data?.page?.editorBlocks?.find((b) => b?.name === "core/heading")
+      ?.renderedHtml ?? "Connecting the dots on Public Data";
 
-  const heroDescription =
-    htmlToPlain(data?.page?.homeHeroSection?.homeHeroDescription) ||
+  const heroDescriptionHTML =
+    data?.page?.editorBlocks?.find((b) => b?.name === "core/paragraph")
+      ?.renderedHtml ??
     "Powered by Advocata’s cutting-edge AI, our platform leverages advanced data insights to help you connect with people who share your values and interests.";
 
   return (
@@ -169,14 +172,16 @@ export default function PageHome({ data }: HomePageProps): JSX.Element {
         <div className="absolute inset-0 flex items-center">
           <div className="px-5 md:px-10 xl:px-16 py-12 md:py-16 xl:py-20 mx-auto w/full">
             <div className="text-center mx-auto max-w-6xl grid place-items-center">
-              <h1 className="mb-5 md:mb-0 text-slate-50 text-4xl md:text-5xl xl:text-6xl leading-snug font-montserrat font-bold whitespace-pre-line">
-                {heroTitle}
-              </h1>
+              <h1
+                className="mb-5 md:mb-0 text-slate-50 text-4xl md:text-5xl xl:text-6xl leading-snug font-montserrat font-bold whitespace-pre-line"
+                dangerouslySetInnerHTML={{ __html: heroTitleHTML }}
+              />
 
               <div className="space-y-2.5">
-                <p className="text-slate-200 text-base/6 lg:text-lg/7 font-playfair font-normal max-w-2xl">
-                  {heroDescription}
-                </p>
+                <p
+                  className="text-slate-200 text-base/6 lg:text-lg/7 font-playfair font-normal max-w-2xl"
+                  dangerouslySetInnerHTML={{ __html: heroDescriptionHTML }}
+                ></p>
               </div>
 
               <div className="pb-8 w/full max-w-2xl">
