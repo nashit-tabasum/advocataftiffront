@@ -108,7 +108,6 @@ export default function InsightsPage({ data }: InsightsPageProps) {
     [rawCats]
   );
 
-  // ✅ helper: are we on the listing (/, /insights, /insights/<category>)?
   const isListingView = React.useCallback(() => {
     const clean = router.asPath.split("?")[0].split("#")[0];
     const parts = clean.replace(/\/+$/, "").split("/").filter(Boolean);
@@ -117,11 +116,10 @@ export default function InsightsPage({ data }: InsightsPageProps) {
     const looksLikeInsights = base === "insights";
     const isKnownCategory =
       slugToName.has(maybeSlug.toLowerCase()) || maybeSlug === "";
-    // listing is /insights or /insights/<category>, i.e. <= 2 segments and (empty or known category)
+
     return looksLikeInsights && isKnownCategory && parts.length <= 2;
   }, [router.asPath, slugToName]);
 
-  // ✅ Initialize from path only when on the listing view
   useEffect(() => {
     if (!isListingView()) return;
 
@@ -175,7 +173,6 @@ export default function InsightsPage({ data }: InsightsPageProps) {
     return cards;
   }, [activeCategory, searchQuery, cards]);
 
-  // ✅ Debounced URL sync — only on listing view
   const syncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     if (!isListingView()) return;
