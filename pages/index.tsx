@@ -1,14 +1,11 @@
-import Link from "next/link";
+import { getWordPressProps, WordPressTemplate } from "@faustwp/core";
+import type { GetStaticPropsContext } from "next";
 
-// This is a temporary simplification to debug the home page issue.
-export default function Home() {
-  return (
-    <div>
-      <h1>Hello from the simplified Home page!</h1>
-      {/* <Link href="/components" className="text-blue-400 underline">
-        Components Page
-      </Link> */}
-    </div>
-  );
+export default function Index(props: any) {
+  return <WordPressTemplate {...props} />;
 }
-Home.title = "Home";
+
+export async function getStaticProps(ctx: GetStaticPropsContext) {
+  const props = await getWordPressProps({ ctx });
+  return { ...props, revalidate: 120 };
+}
