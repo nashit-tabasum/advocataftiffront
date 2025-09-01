@@ -317,6 +317,7 @@ export default function PageHome({ data }: HomePageProps): JSX.Element {
                     c.dataSetFields?.dataSetFile?.node?.mediaItemUrl ?? ""
                   }
                   postDate={c.date ?? ""}
+                  uri={c.uri ?? undefined}
                 />
               </div>
             ))}
