@@ -17,8 +17,8 @@ import {
 import SearchFieldHome from "@/src/components/InputFields/SearchFieldHome";
 
 interface GutenbergBlock {
-  name?: string | null; // e.g. "core/heading"
-  renderedHtml?: string | null; // plugin renders safe HTML per block
+  name?: string | null;
+  renderedHtml?: string | null;
 }
 
 interface HomePageProps {
@@ -26,14 +26,20 @@ interface HomePageProps {
     page?: {
       title?: string | null;
       content?: string | null;
-
-      // Gutenberg blocks from WPGraphQL Content Blocks
       editorBlocks?: GutenbergBlock[] | null;
-
-      // Keep ACF for AI section
       homeAiSection?: {
         aiTitle?: string | null;
         aiDescription?: string | null;
+      } | null;
+      homeHeroThumbnail?: {
+        homeHeroThumbnail?: {
+          heroSectionImage?: {
+            node?: { mediaItemUrl?: string | null } | null;
+          } | null;
+          heroSectionVideo?: {
+            node?: { mediaItemUrl?: string | null } | null;
+          } | null;
+        } | null;
       } | null;
     } | null;
 
@@ -78,52 +84,25 @@ const PAGE_QUERY = gql`
     page(id: $databaseId, idType: DATABASE_ID, asPreview: $asPreview) {
       title
       content
-
       editorBlocks {
         name
         renderedHtml
       }
-
       homeAiSection {
         aiTitle
         aiDescription
       }
-    }
-
-    dataSets(first: 6) {
-      nodes {
-        id
-        uri
-        title
-        excerpt
-        date
-        dataSetFields {
-          dataSetFile {
+      homeHeroThumbnail {
+        homeHeroThumbnail {
+          heroSectionImage {
             node {
               mediaItemUrl
             }
           }
-        }
-      }
-    }
-
-    insights(first: 3) {
-      nodes {
-        id
-        uri
-        title
-        excerpt
-        date
-        featuredImage {
-          node {
-            sourceUrl
-          }
-        }
-        insightsCategories {
-          nodes {
-            id
-            name
-            slug
+          heroSectionVideo {
+            node {
+              mediaItemUrl
+            }
           }
         }
       }
@@ -136,7 +115,6 @@ export default function PageHome({ data }: HomePageProps): JSX.Element {
   const homeHeroBg = "/assets/images/patterns/home-hero-bg.jpg";
   const imageSectionSrc = "/assets/images/home-img.jpg";
 
-  // Pull hero from Gutenberg
   const heroTitleHTML =
     data?.page?.editorBlocks?.find((b) => b?.name === "core/heading")
       ?.renderedHtml ?? "Connecting the dots on Public Data";
@@ -145,6 +123,13 @@ export default function PageHome({ data }: HomePageProps): JSX.Element {
     data?.page?.editorBlocks?.find((b) => b?.name === "core/paragraph")
       ?.renderedHtml ??
     "Powered by Advocata’s cutting-edge AI, our platform leverages advanced data insights to help you connect with people who share your values and interests.";
+
+  const heroVideo =
+    data?.page?.homeHeroThumbnail?.homeHeroThumbnail?.heroSectionVideo?.node
+      ?.mediaItemUrl;
+  const heroImage =
+    data?.page?.homeHeroThumbnail?.homeHeroThumbnail?.heroSectionImage?.node
+      ?.mediaItemUrl ?? homeHeroBg;
 
   return (
     <div className="bg-gray-400 overflow-x-hidden">
@@ -196,15 +181,33 @@ export default function PageHome({ data }: HomePageProps): JSX.Element {
       {/* Image section */}
       <div className="bg-white pb-0">
         <div className="mx-auto max-w-7xl px-5 md:px-10 xl:px-16">
-          <div className="ring-1 ring-black/10 rounded-3xl relative -top-32 md:-top-40 xl:-top-48 z-20">
-            <img
-              src={imageSectionSrc}
-              className="rounded-3xl h/full w/full object-cover"
-              width={1120}
-              height={713}
-              loading="lazy"
-              alt="Home Image"
-            />
+          <div className="ring-1 ring-black/10 rounded-3xl relative -top-32 md:-top-40 xl:-top-48 z-20 overflow-hidden">
+            {data?.page?.homeHeroThumbnail?.homeHeroThumbnail?.heroSectionVideo
+              ?.node?.mediaItemUrl ? (
+              <video
+                src={
+                  data.page.homeHeroThumbnail.homeHeroThumbnail.heroSectionVideo
+                    .node.mediaItemUrl
+                }
+                autoPlay
+                muted
+                loop
+                playsInline
+                className="rounded-3xl h/full w/full object-cover"
+              />
+            ) : (
+              <img
+                src={
+                  data?.page?.homeHeroThumbnail?.homeHeroThumbnail
+                    ?.heroSectionImage?.node?.mediaItemUrl ?? imageSectionSrc
+                }
+                className="rounded-3xl h/full w/full object-cover"
+                width={1120}
+                height={713}
+                loading="lazy"
+                alt="Home Image"
+              />
+            )}
           </div>
         </div>
       </div>
