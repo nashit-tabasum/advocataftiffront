@@ -5,9 +5,9 @@ export default function Home() {
   return (
     <div>
       <h1>Hello from the simplified Home page!</h1>
-      <Link href="/components" className="text-blue-400 underline">
+      {/* <Link href="/components" className="text-blue-400 underline">
         Components Page
-      </Link>
+      </Link> */}
     </div>
   );
 }

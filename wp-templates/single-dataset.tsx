@@ -2,7 +2,6 @@ import React, { JSX, useEffect, useState } from "react";
 import { gql } from "@apollo/client";
 import type { GetStaticPropsContext } from "next";
 import HeroWhite from "@/src/components/HeroBlocks/HeroWhite";
-import Breadcrumb from "@/src/components/Breadcrumb";
 import { WysiwygInner } from "@/src/components/WyisiwygInner";
 import SecondaryButton from "@/src/components/Buttons/SecondaryBtn";
 import CardType6 from "@/src/components/Cards/CardType6";
