@@ -1,42 +1,27 @@
+// pages/about-us.tsx
 import { gql } from "@apollo/client";
 import type { GetStaticPropsContext } from "next";
 import React from "react";
 import Accordion from "../src/components/Accordion";
-import TextBlock from "../src/components/TextBlock";
 import { PageSubTitle, PageTitle } from "@/src/components/Typography";
 
-const PAGE_QUERY = gql`
-  query GetAboutPage($databaseId: ID!, $asPreview: Boolean = false) {
-    page(id: $databaseId, idType: DATABASE_ID, asPreview: $asPreview) {
-      title
-      content
-      aboutIntroSection {
-        aboutIntroTitle
-        aboutIntroDescription
-      }
-      aboutFaqSection {
-        aboutFaqDetails {
-          aboutFaqItemTitle
-          aboutFaqItemDescription
-        }
-      }
-      aboutHeroSection {
-        aboutUsHeroBackgroundImage {
-          node {
-            sourceUrl
-            altText
-          }
-        }
-      }
-    }
-  }
-`;
+/* ── Types ─────────────────────────────────────────────── */
+
+interface GutenbergBlock {
+  name?: string | null; // e.g. "core/heading", "core/paragraph"
+  renderedHtml?: string | null; // HTML from WPGraphQL Content Blocks
+}
 
 interface AboutPageProps {
   data?: {
     page?: {
       title?: string | null;
       content?: string | null;
+
+      // Gutenberg blocks
+      editorBlocks?: GutenbergBlock[] | null;
+
+      // ACF sections
       aboutIntroSection?: {
         aboutIntroTitle?: string | null;
         aboutIntroDescription?: string | null;
@@ -59,6 +44,45 @@ interface AboutPageProps {
   };
   loading?: boolean;
 }
+
+/* ── GraphQL ──────────────────────────────────────────── */
+
+const PAGE_QUERY = gql`
+  query GetAboutPage($databaseId: ID!, $asPreview: Boolean = false) {
+    page(id: $databaseId, idType: DATABASE_ID, asPreview: $asPreview) {
+      title
+      content
+
+      # Matches your Home page approach
+      editorBlocks {
+        name
+        renderedHtml
+      }
+
+      # ACF (fallbacks + other sections)
+      aboutIntroSection {
+        aboutIntroTitle
+        aboutIntroDescription
+      }
+      aboutFaqSection {
+        aboutFaqDetails {
+          aboutFaqItemTitle
+          aboutFaqItemDescription
+        }
+      }
+      aboutHeroSection {
+        aboutUsHeroBackgroundImage {
+          node {
+            sourceUrl
+            altText
+          }
+        }
+      }
+    }
+  }
+`;
+
+/* ── UI bits ──────────────────────────────────────────── */
 
 function AboutHero({
   image,
@@ -88,17 +112,28 @@ function AboutHero({
   );
 }
 
-export default function AboutPage({ data, loading }: AboutPageProps) {
+/* ── Page ─────────────────────────────────────────────── */
+
+export default function AboutPage({ data }: AboutPageProps) {
   const page = data?.page;
 
-  const title = page?.title ?? "";
-  const html: string = page?.content ?? "";
-  const introTitle = page?.aboutIntroSection?.aboutIntroTitle ?? "";
-  const introDescription = page?.aboutIntroSection?.aboutIntroDescription ?? "";
-
+  // Hero image (ACF)
   const heroImage =
     page?.aboutHeroSection?.aboutUsHeroBackgroundImage?.node ?? undefined;
 
+  // Intro content from Gutenberg with ACF fallbacks
+  const introHeadingHTML =
+    page?.editorBlocks?.find((b) => b?.name === "core/heading")?.renderedHtml ??
+    page?.aboutIntroSection?.aboutIntroTitle ??
+    "";
+
+  const introParagraphHTML =
+    page?.editorBlocks?.find((b) => b?.name === "core/paragraph")
+      ?.renderedHtml ??
+    page?.aboutIntroSection?.aboutIntroDescription ??
+    "";
+
+  // FAQ (ACF)
   const faqItems =
     page?.aboutFaqSection?.aboutFaqDetails?.map((item) => ({
       title: item?.aboutFaqItemTitle ?? "",
@@ -108,14 +143,34 @@ export default function AboutPage({ data, loading }: AboutPageProps) {
   return (
     <main>
       <div className="overflow-x-hidden">
+        {/* Hero */}
         <AboutHero image={heroImage} />
-        <TextBlock
-          subtitle="who we are"
-          title={introTitle}
-          className="mx-auto max-w-7xl px-5 md:px-10 xl:px-24"
-          paragraphs={[introDescription]}
-        />
 
+        <section className="mx-auto max-w-7xl px-5 md:px-10 xl:px-24 py-16 md:py-20">
+          <div className="text-left">
+            <span className="uppercase text-xs tracking-wide text-slate-500">
+              who we are
+            </span>
+
+            <div className="mt-4">
+              <div
+                role="heading"
+                aria-level={2}
+                className="text-3xl md:text-4xl xl:text-5xl font-playfair font-semibold"
+                dangerouslySetInnerHTML={{ __html: introHeadingHTML }}
+              />
+            </div>
+
+            <div className="mt-6 max-w-3xl">
+              <div
+                className="text-slate-700 text-base/6 md:text-lg/7"
+                dangerouslySetInnerHTML={{ __html: introParagraphHTML }}
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* FAQ */}
         <section className="relative overflow-hidden py-24 sm:py-32 bg-brand-2-900">
           <div className="mx-auto max-w-7xl px-5 md:px-10 xl:px-16">
             <div className="mx-auto max-w-2xl text-center">
@@ -124,22 +179,25 @@ export default function AboutPage({ data, loading }: AboutPageProps) {
                 How can we help you?
               </PageTitle>
             </div>
-            <Accordion
-              className="mx-auto max-w-4xl"
-              defaultOpenIndex={0}
-              items={faqItems.map((item) => ({
-                title: (
-                  <span className="text-lg/7 md:text-xl/7 font-family-montserrat font-medium">
-                    {item.title}
-                  </span>
-                ),
-                content: (
-                  <p className="text-base/6 md:text-lg/7 pt-4 max-w-72 md:max-w-xl">
-                    {item.content}
-                  </p>
-                ),
-              }))}
-            />
+
+            <div className="mx-auto max-w-4xl mt-10">
+              <Accordion
+                className="w-full"
+                defaultOpenIndex={0}
+                items={faqItems.map((item) => ({
+                  title: (
+                    <span className="text-lg/7 md:text-xl/7 font-family-montserrat font-medium">
+                      {item.title}
+                    </span>
+                  ),
+                  content: (
+                    <p className="text-base/6 md:text-lg/7 pt-4 max-w-72 md:max-w-xl">
+                      {item.content}
+                    </p>
+                  ),
+                }))}
+              />
+            </div>
           </div>
         </section>
       </div>
