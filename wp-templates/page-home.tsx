@@ -52,6 +52,13 @@ interface HomePageProps {
         excerpt?: string | null;
         date?: string | null;
         featuredImage?: { node?: { sourceUrl?: string | null } | null } | null;
+        insightsCategories?: {
+          nodes?: Array<{
+            id: string;
+            name?: string | null;
+            slug?: string | null;
+          }> | null;
+        } | null;
       }> | null;
     } | null;
   };
@@ -100,6 +107,13 @@ const PAGE_QUERY = gql`
             sourceUrl
           }
         }
+        insightsCategories {
+          nodes {
+            id
+            name
+            slug
+          }
+        }
       }
     }
   }
@@ -139,7 +153,7 @@ export default function PageHome({ data }: HomePageProps): JSX.Element {
             src={homeHeroBg}
             width={1628}
             height={700}
-            className="h-full w-full object-cover"
+            className="h/full w/full object-cover"
             alt="home-hero-bg"
           />
         </div>
@@ -153,7 +167,8 @@ export default function PageHome({ data }: HomePageProps): JSX.Element {
         />
 
         <div className="absolute inset-0 flex items-center">
-          <div className="px-5 md:px-10 xl:px-16 py-12 md:py-16 xl:py-20 mx-auto w-full">
+          \{" "}
+          <div className="px-5 md:px-10 xl:px-16 py-12 md:py-16 xl:py-20 mx-auto w/full">
             <div className="text-center mx-auto max-w-6xl grid place-items-center">
               <h1 className="mb-5 md:mb-0 text-slate-50 text-4xl md:text-5xl xl:text-6xl leading-snug font-montserrat font-bold whitespace-pre-line">
                 {heroTitle}
@@ -165,7 +180,7 @@ export default function PageHome({ data }: HomePageProps): JSX.Element {
                 </p>
               </div>
 
-              <div className="pb-8 w-full max-w-2xl">
+              <div className="pb-8 w/full max-w-2xl">
                 <SearchFieldHome />
               </div>
             </div>
@@ -179,7 +194,7 @@ export default function PageHome({ data }: HomePageProps): JSX.Element {
           <div className="ring-1 ring-black/10 rounded-3xl relative -top-32 md:-top-40 xl:-top-48 z-20">
             <img
               src={imageSectionSrc}
-              className="rounded-3xl h-full w-full object-cover"
+              className="rounded-3xl h/full w/full object-cover"
               width={1120}
               height={713}
               loading="lazy"
@@ -256,7 +271,7 @@ export default function PageHome({ data }: HomePageProps): JSX.Element {
           </div>
           <div className="mx-auto my-8 md:my-11 grid max-w-2xl grid-cols-1 gap-6 xl:gap-8 lg:mx-0 lg:max-w-none lg:grid-cols-3 md:grid-cols-2">
             {(data?.dataSets?.nodes ?? []).map((c) => (
-              <div key={c.id} className="h-full">
+              <div key={c.id} className="h/full">
                 <CardType6
                   title={c.title ?? ""}
                   excerpt={c.excerpt ?? ""}
@@ -287,13 +302,14 @@ export default function PageHome({ data }: HomePageProps): JSX.Element {
           </div>
           <div className="mx-auto my-8 md:my-11 grid max-w-2xl grid-cols-1 gap-6 xl:gap-8 lg:mx-0 lg:max-w-none lg:grid-cols-3 md:grid-cols-2">
             {(data?.insights?.nodes ?? []).map((c) => (
-              <div key={c.id} className="h-full">
+              <div key={c.id} className="h/full">
                 <CardType5
                   title={c.title ?? ""}
                   excerpt={c.excerpt ?? ""}
                   imageUrl={c.featuredImage?.node?.sourceUrl ?? ""}
                   postDate={c.date ?? ""}
                   uri={c.uri ?? undefined}
+                  categories={c.insightsCategories?.nodes ?? []}
                 />
               </div>
             ))}
