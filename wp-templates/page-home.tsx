@@ -29,7 +29,18 @@ interface HomePageProps {
         aiTitle?: string | null;
         aiDescription?: string | null;
       } | null;
+      homeHeroThumbnail?: {
+        homeHeroThumbnail?: {
+          heroSectionImage?: {
+            node?: { mediaItemUrl?: string | null } | null;
+          } | null;
+          heroSectionVideo?: {
+            node?: { mediaItemUrl?: string | null } | null;
+          } | null;
+        } | null;
+      } | null;
     } | null;
+
     dataSets?: {
       nodes?: Array<{
         id: string;
@@ -44,6 +55,7 @@ interface HomePageProps {
         } | null;
       }> | null;
     } | null;
+
     insights?: {
       nodes?: Array<{
         id: string;
@@ -64,6 +76,7 @@ interface HomePageProps {
   };
   loading?: boolean;
 }
+
 const PAGE_QUERY = gql`
   query GetHomePage($databaseId: ID!, $asPreview: Boolean = false) {
     page(id: $databaseId, idType: DATABASE_ID, asPreview: $asPreview) {
@@ -76,6 +89,20 @@ const PAGE_QUERY = gql`
       homeAiSection {
         aiTitle
         aiDescription
+      }
+      homeHeroThumbnail {
+        homeHeroThumbnail {
+          heroSectionImage {
+            node {
+              mediaItemUrl
+            }
+          }
+          heroSectionVideo {
+            node {
+              mediaItemUrl
+            }
+          }
+        }
       }
     }
     dataSets(first: 6) {
@@ -138,10 +165,17 @@ export default function PageHome({ data }: HomePageProps): JSX.Element {
   const heroTitle =
     htmlToPlain(data?.page?.homeHeroSection?.homeHeroTitle) ||
     "Connecting the dots on Public Data";
-
   const heroDescription =
     htmlToPlain(data?.page?.homeHeroSection?.homeHeroDescription) ||
     "Powered by Advocata’s cutting-edge AI, our platform leverages advanced data insights to help you connect with people who share your values and interests.";
+
+  const heroVideo =
+    data?.page?.homeHeroThumbnail?.homeHeroThumbnail?.heroSectionVideo?.node
+      ?.mediaItemUrl;
+  const heroImage =
+    data?.page?.homeHeroThumbnail?.homeHeroThumbnail?.heroSectionImage?.node
+      ?.mediaItemUrl ?? imageSectionSrc;
+
   return (
     <div className="bg-gray-400 overflow-x-hidden">
       {/* Hero */}
@@ -163,13 +197,11 @@ export default function PageHome({ data }: HomePageProps): JSX.Element {
           }}
         />
         <div className="absolute inset-0 flex items-center">
-          \{" "}
           <div className="px-5 md:px-10 xl:px-16 py-12 md:py-16 xl:py-20 mx-auto w/full">
             <div className="text-center mx-auto max-w-6xl grid place-items-center">
               <h1 className="mb-5 md:mb-0 text-slate-50 text-4xl md:text-5xl xl:text-6xl leading-snug font-montserrat font-bold whitespace-pre-line">
                 {heroTitle}
               </h1>
-
               <div className="space-y-2.5">
                 <p className="text-slate-200 text-base/6 lg:text-lg/7 font-playfair font-normal max-w-2xl">
                   {heroDescription}
@@ -182,21 +214,34 @@ export default function PageHome({ data }: HomePageProps): JSX.Element {
           </div>
         </div>
       </div>
+
       {/* Image section */}
       <div className="bg-white pb-0">
         <div className="mx-auto max-w-7xl px-5 md:px-10 xl:px-16">
-          <div className="ring-1 ring-black/10 rounded-3xl relative -top-32 md:-top-40 xl:-top-48 z-20">
-            <img
-              src={imageSectionSrc}
-              className="rounded-3xl h/full w/full object-cover"
-              width={1120}
-              height={713}
-              loading="lazy"
-              alt="Home Image"
-            />
+          <div className="ring-1 ring-black/10 rounded-3xl relative -top-32 md:-top-40 xl:-top-48 z-20 overflow-hidden">
+            {heroVideo ? (
+              <video
+                src={heroVideo}
+                autoPlay
+                muted
+                loop
+                playsInline
+                className="rounded-3xl h/full w/full object-cover"
+              />
+            ) : (
+              <img
+                src={heroImage}
+                className="rounded-3xl h/full w/full object-cover"
+                width={1120}
+                height={713}
+                loading="lazy"
+                alt="Home Image"
+              />
+            )}
           </div>
         </div>
       </div>
+
       {/* Dashboards */}
       <div className="bg-white pb-24 sm:pb-32 -mt-18">
         <div className="mx-auto max-w-7xl px-5 md:px-10 xl:px-16">
@@ -227,6 +272,7 @@ export default function PageHome({ data }: HomePageProps): JSX.Element {
           </div>
         </div>
       </div>
+
       {/* AI intro */}
       <div
         className="relative overflow-hidden bg-white py-24 sm:py-32"
@@ -251,6 +297,7 @@ export default function PageHome({ data }: HomePageProps): JSX.Element {
           </div>
         </div>
       </div>
+
       {/* Datasets */}
       <div className="bg-white py-12 md:py-16 xl:py-20">
         <div className="mx-auto max-w-7xl px-5 md:px-10 xl:px-16">
@@ -281,6 +328,7 @@ export default function PageHome({ data }: HomePageProps): JSX.Element {
           </div>
         </div>
       </div>
+
       {/* Insights */}
       <div className="bg-pink-100 py-12 md:py-16 xl:py-24">
         <div className="mx-auto max-w-7xl px-5 md:px-10 xl:px-16">
@@ -314,6 +362,7 @@ export default function PageHome({ data }: HomePageProps): JSX.Element {
     </div>
   );
 }
+
 (PageHome as any).query = PAGE_QUERY;
 (PageHome as any).variables = (
   _seedNode: { databaseId?: number | string } = {},
