@@ -15,6 +15,7 @@ import {
   PageTitleText,
 } from "@/src/components/Typography";
 import SearchFieldHome from "@/src/components/InputFields/SearchFieldHome";
+
 interface HomePageProps {
   data?: {
     page?: {
@@ -116,6 +117,7 @@ const PAGE_QUERY = gql`
     }
   }
 `;
+
 /** Convert ACF WYSIWYG/HTML to plain text */
 function htmlToPlain(input?: string | null): string {
   if (!input) return "";
@@ -127,13 +129,16 @@ function htmlToPlain(input?: string | null): string {
     .replace(/\n{2,}/g, "\n")
     .trim();
 }
+
 export default function PageHome({ data }: HomePageProps): JSX.Element {
   const router = useRouter();
   const homeHeroBg = "/assets/images/patterns/home-hero-bg.jpg";
   const imageSectionSrc = "/assets/images/home-img.jpg";
+
   const heroTitle =
     htmlToPlain(data?.page?.homeHeroSection?.homeHeroTitle) ||
     "Connecting the dots on Public Data";
+
   const heroDescription =
     htmlToPlain(data?.page?.homeHeroSection?.homeHeroDescription) ||
     "Powered by Advocata’s cutting-edge AI, our platform leverages advanced data insights to help you connect with people who share your values and interests.";
@@ -164,6 +169,7 @@ export default function PageHome({ data }: HomePageProps): JSX.Element {
               <h1 className="mb-5 md:mb-0 text-slate-50 text-4xl md:text-5xl xl:text-6xl leading-snug font-montserrat font-bold whitespace-pre-line">
                 {heroTitle}
               </h1>
+
               <div className="space-y-2.5">
                 <p className="text-slate-200 text-base/6 lg:text-lg/7 font-playfair font-normal max-w-2xl">
                   {heroDescription}
