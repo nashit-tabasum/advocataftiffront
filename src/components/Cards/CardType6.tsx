@@ -1,6 +1,7 @@
 // src/components/Cards/CardType6.tsx
 import React from "react";
 import Link from "next/link";
+import { downloadCsvFile } from "@/src/lib/downloadUtils";
 
 interface CardType6Props {
   title: string;
@@ -115,7 +116,7 @@ const CardType6: React.FC<CardType6Props> = ({
                 {fileUrl ? (
                   <button
                     type="button"
-                    onClick={() => triggerDownload(fileUrl)}
+                    onClick={() => downloadCsvFile(fileUrl, title || "dataset")}
                     className="underline font-medium font-family-sourcecodepro text-slate-600 cursor-pointer"
                   >
                     {FIXED_DOWNLOAD_LABEL}

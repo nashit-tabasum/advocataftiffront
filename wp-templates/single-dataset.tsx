@@ -5,7 +5,12 @@ import HeroWhite from "@/src/components/HeroBlocks/HeroWhite";
 import { WysiwygInner } from "@/src/components/WyisiwygInner";
 import SecondaryButton from "@/src/components/Buttons/SecondaryBtn";
 import CardType6 from "@/src/components/Cards/CardType6";
-import { downloadCsvFile, downloadExcelFromCsv } from "@/src/lib/download";
+import {
+  downloadCsvFile,
+  downloadExcelFromCsv,
+  downloadPdfFromCsv,
+} from "@/src/lib/downloadUtils";
+
 import { InnerPageTitle, PageSubTitle } from "@/src/components/Typography";
 import CsvTable from "@/src/components/CsvTable";
 
@@ -152,7 +157,7 @@ const DatasetInnerPage: React.FC<SingleDatasetProps> = ({ data }) => {
             <div className="flex gap-3 md:gap-2">
               <SecondaryButton
                 onClick={() =>
-                  downloadCsvFile(downloadUrl, dataset.slug || "dataset")
+                  downloadPdfFromCsv(downloadUrl, dataset.slug || "dataset")
                 }
               >
                 PDF

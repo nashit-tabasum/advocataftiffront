@@ -16,6 +16,8 @@
     "@tailwindcss/postcss": "^4.1.12",
     "clsx": "^2.1.1",
     "graphql": "^16.10.0",
+    "jspdf": "^3.0.2",
+    "jspdf-autotable": "^5.0.2",
     "next": "^15.3.1",
     "papaparse": "^5.5.3",
     "postcss": "^8.5.6",
@@ -23,13 +25,16 @@
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "tailwindcss": "^4.1.12",
-    "tiny-slider": "^2.9.4"
+    "tiny-slider": "^2.9.4",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.13",
+    "@types/jspdf": "^2.0.0",
     "@types/node": "^24.3.0",
     "@types/papaparse": "^5.3.16",
     "@types/react": "^19.1.10",
+    "@types/xlsx": "^0.0.36",
     "cross-env": "^10.0.0",
     "dotenv-cli": "^10.0.0",
     "typescript": "^5.9.2"
