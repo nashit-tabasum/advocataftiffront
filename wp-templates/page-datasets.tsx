@@ -86,6 +86,25 @@ interface DatasetsPageProps {
 
 const datasetBgPattern = "/assets/images/patterns/dataset-bg-pattern.jpg";
 
+/** Return the first NON-EMPTY <p> from Gutenberg HTML as plain text */
+function firstParagraphFromHtml(html?: string | null): string {
+  if (!html) return "";
+  const matches = html.match(/<p\b[^>]*>[\s\S]*?<\/p>/gi) || [];
+  for (const p of matches) {
+    const inner = p
+      .replace(/^<p\b[^>]*>/i, "")
+      .replace(/<\/p>$/i, "")
+      .replace(/<br\s*\/?>/gi, "\n")
+      .replace(/<[^>]+>/g, "")
+      .replace(/\u00a0/g, " ")
+      .replace(/\s+\n/g, "\n")
+      .replace(/\n{2,}/g, "\n")
+      .trim();
+    if (inner) return inner;
+  }
+  return "";
+}
+
 export default function DatasetsPage({ data }: DatasetsPageProps) {
   const page = data?.page;
   const router = useRouter();
@@ -118,7 +137,7 @@ export default function DatasetsPage({ data }: DatasetsPageProps) {
     [rawCats]
   );
 
-  // ✅ helper: detect listing routes (/datasets or /datasets/<category>)
+  // Detect listing routes (/datasets or /datasets/<category>)
   const isListingView = React.useCallback(() => {
     const clean = router.asPath.split("?")[0].split("#")[0];
     const parts = clean.replace(/\/+$/, "").split("/").filter(Boolean);
@@ -127,11 +146,10 @@ export default function DatasetsPage({ data }: DatasetsPageProps) {
     const looksLikeDatasets = base === "datasets";
     const isKnownCategory =
       slugToName.has(maybeSlug.toLowerCase()) || maybeSlug === "";
-    // listing is /datasets or /datasets/<category>, i.e. <= 2 segments and (empty or known category)
     return looksLikeDatasets && isKnownCategory && parts.length <= 2;
   }, [router.asPath, slugToName]);
 
-  // ✅ Initialize filters from URL only on listing
+  // Initialize filters from URL only on listing
   useEffect(() => {
     if (!isListingView()) return;
 
@@ -171,7 +189,7 @@ export default function DatasetsPage({ data }: DatasetsPageProps) {
     return datasetCards;
   }, [activeCategory, searchQuery, datasetCards]);
 
-  // ✅ Debounced URL sync — only on listing view
+  // Debounced URL sync — only on listing view
   const syncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     if (!isListingView()) return;
@@ -216,6 +234,9 @@ export default function DatasetsPage({ data }: DatasetsPageProps) {
     return idx >= 0 ? idx : 0;
   }, [categories, displayActiveCategory]);
 
+  // Gutenberg description: use only the first paragraph
+  const heroParagraph = firstParagraphFromHtml(page?.content);
+
   return (
     <main>
       <section className="dataset-hero relative">
@@ -223,7 +244,7 @@ export default function DatasetsPage({ data }: DatasetsPageProps) {
         <HeroBasic
           bgUrl={datasetBgPattern}
           title="Research Datasets"
-          paragraph="A dataset is a structured collection of data that is organized and stored for analysis, processing, or reference. Datasets typically consist of related data points grouped into tables, files, or arrays, making it easier to work with them in research, analytics, or machine learning."
+          paragraph={heroParagraph}
         />
       </section>
 
@@ -258,12 +279,6 @@ export default function DatasetsPage({ data }: DatasetsPageProps) {
           )}
         </div>
       </section>
-
-      {/* Optional page content from WP */}
-      <div
-        className="prose max-w-none mx-auto px-4"
-        dangerouslySetInnerHTML={{ __html: page?.content ?? "" }}
-      />
 
       <section className="bg-white py-12 md:py-16 xl:py-20">
         <div className="mx-auto max-w-7xl px-5 md:px-10 xl:px-16">

@@ -75,6 +75,26 @@ interface InsightsPageProps {
 
 const insightBgPattern = "/assets/images/patterns/insight-bg-pattern.jpg";
 
+/** Return the first NON-EMPTY <p> from Gutenberg HTML as plain text */
+function firstParagraphFromHtml(html?: string | null): string {
+  if (!html) return "";
+  // Grab all <p> blocks
+  const matches = html.match(/<p\b[^>]*>[\s\S]*?<\/p>/gi) || [];
+  for (const p of matches) {
+    const inner = p
+      .replace(/^<p\b[^>]*>/i, "")
+      .replace(/<\/p>$/i, "")
+      .replace(/<br\s*\/?>/gi, "\n")
+      .replace(/<[^>]+>/g, "")
+      .replace(/\u00a0/g, " ")
+      .replace(/\s+\n/g, "\n")
+      .replace(/\n{2,}/g, "\n")
+      .trim();
+    if (inner) return inner;
+  }
+  return "";
+}
+
 export default function InsightsPage({ data }: InsightsPageProps) {
   const page = data?.page;
   const router = useRouter();
@@ -216,12 +236,15 @@ export default function InsightsPage({ data }: InsightsPageProps) {
     return idx >= 0 ? idx : 0;
   }, [categories, displayActiveCategory]);
 
+  // Get only the page description from Gutenberg content
+  const heroParagraph = firstParagraphFromHtml(page?.content);
+
   return (
     <main>
       <HeroBasic
         bgUrl={insightBgPattern}
         title="Exploring Insights"
-        paragraph="A dataset is a structured collection of data that is organized and stored for analysis, processing, or reference. Datasets typically consist of related data points grouped into tables, files, or arrays, making it easier to work with them in research, analytics, or machine learning."
+        paragraph={heroParagraph}
       />
 
       <div className="bg-white">
