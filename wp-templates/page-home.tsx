@@ -20,7 +20,7 @@ interface HomePageProps {
   data?: {
     page?: {
       title?: string | null;
-      content?: string | null;
+      content?: string | null; // Gutenberg HTML for hero section
       homeHeroSection?: {
         homeHeroTitle?: string | null;
         homeHeroDescription?: string | null;
@@ -145,36 +145,19 @@ const PAGE_QUERY = gql`
   }
 `;
 
-/** Convert ACF WYSIWYG/HTML to plain text */
-function htmlToPlain(input?: string | null): string {
-  if (!input) return "";
-  return input
-    .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<\/(p|div|h[1-6]|li)>/gi, "\n")
-    .replace(/<[^>]+>/g, "")
-    .replace(/\u00a0/g, " ")
-    .replace(/\n{2,}/g, "\n")
-    .trim();
-}
-
 export default function PageHome({ data }: HomePageProps): JSX.Element {
   const router = useRouter();
   const homeHeroBg = "/assets/images/patterns/home-hero-bg.jpg";
-  const imageSectionSrc = "/assets/images/home-img.jpg";
 
-  const heroTitle =
-    htmlToPlain(data?.page?.homeHeroSection?.homeHeroTitle) ||
-    "Connecting the dots on Public Data";
-  const heroDescription =
-    htmlToPlain(data?.page?.homeHeroSection?.homeHeroDescription) ||
-    "Powered by Advocata’s cutting-edge AI, our platform leverages advanced data insights to help you connect with people who share your values and interests.";
+  // Gutenberg HTML for the hero text (H1 + paragraph, etc.)
+  const heroHtml = data?.page?.content ?? undefined;
 
   const heroVideo =
     data?.page?.homeHeroThumbnail?.homeHeroThumbnail?.heroSectionVideo?.node
       ?.mediaItemUrl;
   const heroImage =
     data?.page?.homeHeroThumbnail?.homeHeroThumbnail?.heroSectionImage?.node
-      ?.mediaItemUrl ?? imageSectionSrc;
+      ?.mediaItemUrl;
 
   return (
     <div className="bg-gray-400 overflow-x-hidden">
@@ -199,14 +182,12 @@ export default function PageHome({ data }: HomePageProps): JSX.Element {
         <div className="absolute inset-0 flex items-center">
           <div className="px-5 md:px-10 xl:px-16 py-12 md:py-16 xl:py-20 mx-auto w/full">
             <div className="text-center mx-auto max-w-6xl grid place-items-center">
-              <h1 className="mb-5 md:mb-0 text-slate-50 text-4xl md:text-5xl xl:text-6xl leading-snug font-montserrat font-bold whitespace-pre-line">
-                {heroTitle}
-              </h1>
-              <div className="space-y-2.5">
-                <p className="text-slate-200 text-base/6 lg:text-lg/7 font-playfair font-normal max-w-2xl">
-                  {heroDescription}
-                </p>
-              </div>
+              {heroHtml && (
+                <div
+                  className="prose prose-invert prose-lg md:prose-xl max-w-none mb-6"
+                  dangerouslySetInnerHTML={{ __html: heroHtml }}
+                />
+              )}
               <div className="pb-8 w/full max-w-2xl">
                 <SearchFieldHome />
               </div>
@@ -215,32 +196,36 @@ export default function PageHome({ data }: HomePageProps): JSX.Element {
         </div>
       </div>
 
-      {/* Image section */}
-      <div className="bg-white pb-0">
-        <div className="mx-auto max-w-7xl px-5 md:px-10 xl:px-16">
-          <div className="ring-1 ring-black/10 rounded-3xl relative -top-32 md:-top-40 xl:-top-48 z-20 overflow-hidden">
-            {heroVideo ? (
-              <video
-                src={heroVideo}
-                autoPlay
-                muted
-                loop
-                playsInline
-                className="rounded-3xl h/full w/full object-cover"
-              />
-            ) : (
-              <img
-                src={heroImage}
-                className="rounded-3xl h/full w/full object-cover"
-                width={1120}
-                height={713}
-                loading="lazy"
-                alt="Home Image"
-              />
-            )}
+      {/* Image/Video section */}
+      {(heroVideo || heroImage) && (
+        <div className="bg-white pb-0">
+          <div className="mx-auto max-w-7xl px-5 md:px-10 xl:px-16">
+            <div className="ring-1 ring-black/10 rounded-3xl relative -top-32 md:-top-40 xl:-top-48 z-20 overflow-hidden">
+              {heroVideo ? (
+                <video
+                  src={heroVideo}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  className="rounded-3xl h/full w/full object-cover"
+                />
+              ) : (
+                heroImage && (
+                  <img
+                    src={heroImage}
+                    className="rounded-3xl h/full w/full object-cover"
+                    width={1120}
+                    height={713}
+                    loading="lazy"
+                    alt="Home Image"
+                  />
+                )
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Dashboards */}
       <div className="bg-white pb-24 sm:pb-32 -mt-18">
@@ -285,13 +270,16 @@ export default function PageHome({ data }: HomePageProps): JSX.Element {
           <div className="mx-auto grid max-w-2xl grid-cols-1 gap-x-8 gap-y-16 sm:gap-y-20 lg:mx-0 lg:max-w-none lg:grid-cols-2 lg:items-start">
             <div className="lg:pt-4 lg:pr-4 lg:w-2xl">
               <div className="max-w-lg lg:max-w-none">
-                <span className="text-xs font-semibold text-white bg-white/25 py-2 px-3 rounded-full uppercase font-manrope">
-                  {data?.page?.homeAiSection?.aiTitle ?? "advanced AI"}
-                </span>
-                <h2 className="mt-5 xl:text-6xl sm:text-5xl text-3xl leading-9 md:leading-14 xl:leading-16 font-normal font-playfair text-pretty text-white">
-                  {data?.page?.homeAiSection?.aiDescription ??
-                    "Discover meaningful connections with the power of Advocata's advanced AI technology."}
-                </h2>
+                {data?.page?.homeAiSection?.aiTitle && (
+                  <span className="text-xs font-semibold text-white bg-white/25 py-2 px-3 rounded-full uppercase font-manrope">
+                    {data.page.homeAiSection.aiTitle}
+                  </span>
+                )}
+                {data?.page?.homeAiSection?.aiDescription && (
+                  <h2 className="mt-5 xl:text-6xl sm:text-5xl text-3xl leading-9 md:leading-14 xl:leading-16 font-normal font-playfair text-pretty text-white">
+                    {data.page.homeAiSection.aiDescription}
+                  </h2>
+                )}
               </div>
             </div>
           </div>
