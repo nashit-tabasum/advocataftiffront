@@ -21,10 +21,6 @@ interface HomePageProps {
     page?: {
       title?: string | null;
       content?: string | null; // Gutenberg HTML for hero section
-      homeHeroSection?: {
-        homeHeroTitle?: string | null;
-        homeHeroDescription?: string | null;
-      } | null;
       homeAiSection?: {
         aiTitle?: string | null;
         aiDescription?: string | null;
@@ -82,10 +78,6 @@ const PAGE_QUERY = gql`
     page(id: $databaseId, idType: DATABASE_ID, asPreview: $asPreview) {
       title
       content
-      homeHeroSection {
-        homeHeroTitle
-        homeHeroDescription
-      }
       homeAiSection {
         aiTitle
         aiDescription
@@ -145,12 +137,46 @@ const PAGE_QUERY = gql`
   }
 `;
 
+/* --- Extract hero title/description from Gutenberg HTML --- */
+function stripHtml(html: string): string {
+  return html
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<[^>]+>/g, "")
+    .replace(/\u00a0/g, " ")
+    .replace(/\s+\n/g, "\n")
+    .replace(/\n{2,}/g, "\n")
+    .trim();
+}
+
+function extractHeroFromGutenberg(html?: string | null): {
+  title?: string;
+  description?: string;
+} {
+  if (!html) return {};
+  const h = html.match(/<h[1-6]\b[^>]*>([\s\S]*?)<\/h[1-6]>/i);
+  const title = h ? stripHtml(h[1]) : undefined;
+
+  const pMatches = html.match(/<p\b[^>]*>[\s\S]*?<\/p>/gi) || [];
+  let description: string | undefined;
+  for (const p of pMatches) {
+    const inner = stripHtml(
+      p.replace(/^<p\b[^>]*>/i, "").replace(/<\/p>$/i, "")
+    );
+    if (inner) {
+      description = inner;
+      break;
+    }
+  }
+  return { title, description };
+}
+
 export default function PageHome({ data }: HomePageProps): JSX.Element {
   const router = useRouter();
   const homeHeroBg = "/assets/images/patterns/home-hero-bg.jpg";
 
-  // Gutenberg HTML for the hero text (H1 + paragraph, etc.)
   const heroHtml = data?.page?.content ?? undefined;
+  const { title: heroTitle, description: heroDescription } =
+    extractHeroFromGutenberg(heroHtml);
 
   const heroVideo =
     data?.page?.homeHeroThumbnail?.homeHeroThumbnail?.heroSectionVideo?.node
@@ -182,12 +208,18 @@ export default function PageHome({ data }: HomePageProps): JSX.Element {
         <div className="absolute inset-0 flex items-center">
           <div className="px-5 md:px-10 xl:px-16 py-12 md:py-16 xl:py-20 mx-auto w/full">
             <div className="text-center mx-auto max-w-6xl grid place-items-center">
-              {heroHtml && (
-                <div
-                  className="prose prose-invert prose-lg md:prose-xl max-w-none mb-6"
-                  dangerouslySetInnerHTML={{ __html: heroHtml }}
-                />
-              )}
+              {heroTitle ? (
+                <h1 className="mb-5 md:mb-0 text-slate-50 text-4xl md:text-5xl xl:text-6xl leading-snug font-montserrat font-bold whitespace-pre-line">
+                  {heroTitle}
+                </h1>
+              ) : null}
+              {heroDescription ? (
+                <div className="space-y-2.5">
+                  <p className="text-slate-200 text-base/6 lg:text-lg/7 font-playfair font-normal max-w-2xl">
+                    {heroDescription}
+                  </p>
+                </div>
+              ) : null}
               <div className="pb-8 w/full max-w-2xl">
                 <SearchFieldHome />
               </div>
