@@ -2,7 +2,6 @@ import { gql } from "@apollo/client";
 import type { GetStaticPropsContext } from "next";
 import React from "react";
 import Accordion from "../src/components/Accordion";
-import TextBlock from "../src/components/TextBlock";
 import { PageSubTitle, PageTitle } from "@/src/components/Typography";
 
 const PAGE_QUERY = gql`
@@ -10,10 +9,6 @@ const PAGE_QUERY = gql`
     page(id: $databaseId, idType: DATABASE_ID, asPreview: $asPreview) {
       title
       content
-      aboutIntroSection {
-        aboutIntroTitle
-        aboutIntroDescription
-      }
       aboutFaqSection {
         aboutFaqDetails {
           aboutFaqItemTitle
@@ -36,11 +31,7 @@ interface AboutPageProps {
   data?: {
     page?: {
       title?: string | null;
-      content?: string | null;
-      aboutIntroSection?: {
-        aboutIntroTitle?: string | null;
-        aboutIntroDescription?: string | null;
-      } | null;
+      content?: string | null; // Gutenberg HTML
       aboutFaqSection?: {
         aboutFaqDetails?: Array<{
           aboutFaqItemTitle?: string | null;
@@ -91,30 +82,31 @@ function AboutHero({
 export default function AboutPage({ data, loading }: AboutPageProps) {
   const page = data?.page;
 
-  const title = page?.title ?? "";
-  const html: string = page?.content ?? "";
-  const introTitle = page?.aboutIntroSection?.aboutIntroTitle ?? "";
-  const introDescription = page?.aboutIntroSection?.aboutIntroDescription ?? "";
+  const html = page?.content ?? undefined;
 
   const heroImage =
     page?.aboutHeroSection?.aboutUsHeroBackgroundImage?.node ?? undefined;
 
   const faqItems =
     page?.aboutFaqSection?.aboutFaqDetails?.map((item) => ({
-      title: item?.aboutFaqItemTitle ?? "",
-      content: item?.aboutFaqItemDescription ?? "",
+      title: item?.aboutFaqItemTitle,
+      content: item?.aboutFaqItemDescription,
     })) ?? [];
 
   return (
     <main>
       <div className="overflow-x-hidden">
         <AboutHero image={heroImage} />
-        <TextBlock
-          subtitle="who we are"
-          title={introTitle}
-          className="mx-auto max-w-7xl px-5 md:px-10 xl:px-24"
-          paragraphs={[introDescription]}
-        />
+
+        {/* Intro section renders Gutenberg content directly */}
+        {html && (
+          <section className="mx-auto max-w-7xl px-5 md:px-10 xl:px-24 py-14 md:py-20">
+            <div
+              className="prose prose-lg md:prose-xl max-w-none"
+              dangerouslySetInnerHTML={{ __html: html }}
+            />
+          </section>
+        )}
 
         <section className="relative overflow-hidden py-24 sm:py-32 bg-brand-2-900">
           <div className="mx-auto max-w-7xl px-5 md:px-10 xl:px-16">
