@@ -8,7 +8,8 @@ import HeroBasic from "../src/components/HeroBlocks/HeroBasic";
 import SearchField from "../src/components/InputFields/SearchField";
 import FilterCarousel from "../src/components/FilterCarousel";
 
-const PAGE_QUERY = gql`
+/** Page + datasets + categories */
+export const PAGE_QUERY = gql`
   query GetDatasetsPage($databaseId: ID!, $asPreview: Boolean = false) {
     page(id: $databaseId, idType: DATABASE_ID, asPreview: $asPreview) {
       title
@@ -86,7 +87,7 @@ interface DatasetsPageProps {
 
 const datasetBgPattern = "/assets/images/patterns/dataset-bg-pattern.jpg";
 
-/** Return the first NON-EMPTY <p> from Gutenberg HTML as plain text */
+/** First non-empty <p> from Gutenberg HTML (as plain text) */
 function firstParagraphFromHtml(html?: string | null): string {
   if (!html) return "";
   const matches = html.match(/<p\b[^>]*>[\s\S]*?<\/p>/gi) || [];
@@ -105,17 +106,20 @@ function firstParagraphFromHtml(html?: string | null): string {
   return "";
 }
 
-export default function DatasetsPage({ data }: DatasetsPageProps) {
+/** Datasets listing page */
+const DatasetsPage: React.FC<DatasetsPageProps> = ({ data }) => {
   const page = data?.page;
   const router = useRouter();
   if (!page) return <p>Datasets page not found.</p>;
 
+  // UI state
   const [currentPage, setCurrentPage] = useState(1);
   const [activeCategory, setActiveCategory] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState<string>("");
 
   const rawCats = data?.dataSetsCategories?.nodes ?? [];
 
+  // Category name <-> slug maps
   const nameToSlug = useMemo(() => {
     const m = new Map<string, string>();
     m.set("All", "");
@@ -137,7 +141,7 @@ export default function DatasetsPage({ data }: DatasetsPageProps) {
     [rawCats]
   );
 
-  // Detect listing routes (/datasets or /datasets/<category>)
+  // Route detection: /datasets or /datasets/<category>
   const isListingView = React.useCallback(() => {
     const clean = router.asPath.split("?")[0].split("#")[0];
     const parts = clean.replace(/\/+$/, "").split("/").filter(Boolean);
@@ -149,7 +153,7 @@ export default function DatasetsPage({ data }: DatasetsPageProps) {
     return looksLikeDatasets && isKnownCategory && parts.length <= 2;
   }, [router.asPath, slugToName]);
 
-  // Initialize filters from URL only on listing
+  // Initialize from URL on listing routes
   useEffect(() => {
     if (!isListingView()) return;
 
@@ -167,7 +171,7 @@ export default function DatasetsPage({ data }: DatasetsPageProps) {
 
   const datasetCards = data?.dataSets?.nodes ?? [];
 
-  // Global search; category filter applies only when search is empty
+  // Search overrides category filter; otherwise filter by active category
   const filteredCards = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     if (q) {
@@ -189,7 +193,7 @@ export default function DatasetsPage({ data }: DatasetsPageProps) {
     return datasetCards;
   }, [activeCategory, searchQuery, datasetCards]);
 
-  // Debounced URL sync — only on listing view
+  // Debounced URL sync (listing view only)
   const syncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     if (!isListingView()) return;
@@ -219,6 +223,7 @@ export default function DatasetsPage({ data }: DatasetsPageProps) {
     };
   }, [searchQuery, activeCategory, nameToSlug, router.asPath, isListingView]);
 
+  // Pagination
   const pageSize = 6;
   const totalItems = filteredCards.length;
   const paginatedCards = filteredCards.slice(
@@ -227,6 +232,7 @@ export default function DatasetsPage({ data }: DatasetsPageProps) {
   );
   const hasResults = totalItems > 0;
 
+  // Category carousel state
   const isSearching = searchQuery.trim().length > 0;
   const displayActiveCategory = isSearching ? "All" : activeCategory;
   const initialIndex = useMemo(() => {
@@ -234,7 +240,7 @@ export default function DatasetsPage({ data }: DatasetsPageProps) {
     return idx >= 0 ? idx : 0;
   }, [categories, displayActiveCategory]);
 
-  // Gutenberg description: use only the first paragraph
+  // Hero text: first paragraph from Gutenberg content
   const heroParagraph = firstParagraphFromHtml(page?.content);
 
   return (
@@ -330,8 +336,11 @@ export default function DatasetsPage({ data }: DatasetsPageProps) {
       )}
     </main>
   );
-}
+};
 
+export default DatasetsPage;
+
+/** Attach query + variables for build/runtime data fetching */
 (DatasetsPage as any).query = PAGE_QUERY;
 (DatasetsPage as any).variables = (
   seedNode: { databaseId?: number | string } = {},
