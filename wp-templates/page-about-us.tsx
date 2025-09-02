@@ -5,7 +5,8 @@ import Accordion from "../src/components/Accordion";
 import { PageSubTitle, PageTitle } from "@/src/components/Typography";
 import TextBlock from "../src/components/TextBlock";
 
-const PAGE_QUERY = gql`
+/** Page + sections data */
+export const PAGE_QUERY = gql`
   query GetAboutPage($databaseId: ID!, $asPreview: Boolean = false) {
     page(id: $databaseId, idType: DATABASE_ID, asPreview: $asPreview) {
       title
@@ -52,11 +53,10 @@ interface AboutPageProps {
   loading?: boolean;
 }
 
-function AboutHero({
-  image,
-}: {
+/** Hero background image + overlay */
+const AboutHero: React.FC<{
   image?: { sourceUrl?: string | null; altText?: string | null };
-}) {
+}> = ({ image }) => {
   if (!image?.sourceUrl) return null;
   return (
     <div className="about-hero relative">
@@ -66,7 +66,7 @@ function AboutHero({
           width={1628}
           height={700}
           className="h-full w-full object-cover"
-          alt={image.altText || ""}
+          alt={image.altText || "About hero"}
         />
       </div>
       <div
@@ -78,9 +78,9 @@ function AboutHero({
       />
     </div>
   );
-}
+};
 
-/** Strip HTML and normalise whitespace */
+/** Strip HTML & normalise whitespace */
 function toPlainText(html: string): string {
   return html
     .replace(/<br\s*\/?>/gi, "\n")
@@ -91,18 +91,16 @@ function toPlainText(html: string): string {
     .trim();
 }
 
-/** Extract first heading text + all paragraph texts from Gutenberg HTML */
+/** First heading + all paragraph texts from Gutenberg HTML */
 function extractIntro(html?: string | null): {
   heading?: string;
   paragraphs: string[];
 } {
   if (!html) return { paragraphs: [] };
 
-  // First heading h1..h6
   const hMatch = html.match(/<h[1-6]\b[^>]*>([\s\S]*?)<\/h[1-6]>/i);
   const heading = hMatch ? toPlainText(hMatch[1]) : undefined;
 
-  // All <p> blocks
   const pMatches = html.match(/<p\b[^>]*>[\s\S]*?<\/p>/gi) || [];
   const paragraphs = pMatches
     .map((p) =>
@@ -113,7 +111,8 @@ function extractIntro(html?: string | null): {
   return { heading, paragraphs };
 }
 
-export default function AboutPage({ data }: AboutPageProps) {
+/** About page */
+const AboutPage: React.FC<AboutPageProps> = ({ data }) => {
   const page = data?.page;
 
   const html = page?.content ?? undefined;
@@ -134,7 +133,7 @@ export default function AboutPage({ data }: AboutPageProps) {
       <div className="overflow-x-hidden">
         <AboutHero image={heroImage} />
 
-        {/* Intro section renders Gutenberg content directly */}
+        {/* Intro (derived from Gutenberg) */}
         {(introTitle || introParagraphs.length > 0) && (
           <TextBlock
             subtitle="who we are"
@@ -144,6 +143,7 @@ export default function AboutPage({ data }: AboutPageProps) {
           />
         )}
 
+        {/* FAQ */}
         <section className="relative overflow-hidden py-24 sm:py-32 bg-brand-2-900">
           <div className="mx-auto max-w-7xl px-5 md:px-10 xl:px-16">
             <div className="mx-auto max-w-2xl text-center">
@@ -152,17 +152,18 @@ export default function AboutPage({ data }: AboutPageProps) {
                 How can we help you?
               </PageTitle>
             </div>
+
             <Accordion
               className="mx-auto max-w-4xl"
               defaultOpenIndex={0}
               items={faqItems.map((item) => ({
                 title: (
-                  <span className="text-lg/7 md:text-xl/7 font-family-montserrat font-medium">
+                  <span className="text-lg/7 md:text-xl/7 font-montserrat font-medium">
                     {item.title}
                   </span>
                 ),
                 content: (
-                  <p className="text-base/6 md:text-lg/7 pt-4 max-w-72 md:max-w-xl">
+                  <p className="text-base/6 md:text-lg/7 pt-4 max-w-sm md:max-w-xl">
                     {item.content}
                   </p>
                 ),
@@ -173,8 +174,11 @@ export default function AboutPage({ data }: AboutPageProps) {
       </div>
     </main>
   );
-}
+};
 
+export default AboutPage;
+
+/** Attach query + variables for build/runtime data fetching */
 (AboutPage as any).query = PAGE_QUERY;
 (AboutPage as any).variables = (
   seedNode: { databaseId?: number | string } = {},
