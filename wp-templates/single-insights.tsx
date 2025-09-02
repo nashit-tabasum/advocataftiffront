@@ -2,12 +2,12 @@ import { gql } from "@apollo/client";
 import type { GetStaticPropsContext } from "next";
 import React from "react";
 import HeroBlack from "@/src/components/HeroBlocks/HeroBlack";
-import { SingleInner } from "@/src/components/SingleInner";
 import CardType5 from "@/src/components/Cards/CardType5";
 import { PageSubTitle, PageTitle } from "@/src/components/Typography";
 import PostContent from "@/src/components/PostContent";
 
-const SINGLE_INSIGHT_QUERY = gql`
+/** Single insight + small related list */
+export const SINGLE_INSIGHT_QUERY = gql`
   query GetSingleInsight($slug: ID!) {
     insight(id: $slug, idType: SLUG) {
       id
@@ -100,7 +100,8 @@ interface SingleInsightProps {
   };
 }
 
-export default function SingleInsight({ data }: SingleInsightProps) {
+/** Insight details page */
+const SingleInsight: React.FC<SingleInsightProps> = ({ data }) => {
   const insight = data?.insight;
   const allRelated = data?.insights?.nodes ?? [];
 
@@ -114,16 +115,17 @@ export default function SingleInsight({ data }: SingleInsightProps) {
       })
     : "";
 
-  // filter out the current post from "related"
-  const related = allRelated
-    .filter(
-      (p) => p.id !== insight.id && (p.slug ? p.slug !== insight.slug : true)
-    )
-    .slice(0, 3);
+  // Exclude current post; cap to 3 items
+  const related =
+    allRelated
+      .filter(
+        (p) => p.id !== insight.id && (p.slug ? p.slug !== insight.slug : true)
+      )
+      .slice(0, 3) ?? [];
 
   return (
     <main>
-      {/* Hero Section */}
+      {/* Hero */}
       <HeroBlack
         title={insight.title ?? ""}
         dateText={dateText}
@@ -131,6 +133,7 @@ export default function SingleInsight({ data }: SingleInsightProps) {
         items={[{ label: "Insights", href: "/insights" }]}
       />
 
+      {/* Body */}
       <div className="bg-white py-10 md:py-16 xl:py-20">
         <div className="mx-auto max-w-full">
           <div className="mx-auto max-w-4xl px-5 md:px-10 xl:px-16">
@@ -144,17 +147,15 @@ export default function SingleInsight({ data }: SingleInsightProps) {
         </div>
       </div>
 
-      {/* Related Highlights */}
+      {/* Related highlights */}
       {related.length > 0 && (
         <div className="bg-pink-100 py-12 md:py-16 xl:py-20">
           <div className="mx-auto max-w-full px-5 md:px-10 xl:px-16">
-            {/* Title */}
             <div className="max-w-2xl text-left">
               <PageSubTitle>highlights</PageSubTitle>
               <PageTitle className="!text-4xl">See other Highlights</PageTitle>
             </div>
 
-            {/* Cards */}
             <div className="mt-11 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
               {related.map((post) => (
                 <CardType5
@@ -173,13 +174,12 @@ export default function SingleInsight({ data }: SingleInsightProps) {
       )}
     </main>
   );
-}
+};
 
-/**
- * Next.js GraphQL integration
- */
+export default SingleInsight;
+
+/** Attach query + variables for build/runtime data fetching */
 (SingleInsight as any).query = SINGLE_INSIGHT_QUERY;
-
 (SingleInsight as any).variables = (
   seedNode: { slug?: string } = {},
   ctx: GetStaticPropsContext
