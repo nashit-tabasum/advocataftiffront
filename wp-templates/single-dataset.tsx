@@ -2,7 +2,7 @@ import React, { JSX } from "react";
 import { gql } from "@apollo/client";
 import type { GetStaticPropsContext } from "next";
 import HeroWhite from "@/src/components/HeroBlocks/HeroWhite";
-import { WysiwygInner } from "@/src/components/WyisiwygInner";
+import { WysiwygInner } from "@/src/components/WysiwygInner";
 import SecondaryButton from "@/src/components/Buttons/SecondaryBtn";
 import CardType6 from "@/src/components/Cards/CardType6";
 import {
