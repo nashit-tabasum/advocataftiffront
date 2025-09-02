@@ -2,6 +2,8 @@ import React, { JSX } from "react";
 import { gql } from "@apollo/client";
 import type { GetStaticPropsContext } from "next";
 import { useRouter } from "next/router";
+
+// Components
 import CardType1 from "@/src/components/Cards/CardType1";
 import CardType2 from "@/src/components/Cards/CardType2";
 import CardType3 from "@/src/components/Cards/CardType3";
@@ -20,19 +22,15 @@ interface HomePageProps {
   data?: {
     page?: {
       title?: string | null;
-      content?: string | null; // Gutenberg HTML for hero section
+      content?: string | null; // Gutenberg HTML
       homeAiSection?: {
         aiTitle?: string | null;
         aiDescription?: string | null;
       } | null;
       homeHeroThumbnail?: {
         homeHeroThumbnail?: {
-          heroSectionImage?: {
-            node?: { mediaItemUrl?: string | null } | null;
-          } | null;
-          heroSectionVideo?: {
-            node?: { mediaItemUrl?: string | null } | null;
-          } | null;
+          heroSectionImage?: { node?: { mediaItemUrl?: string | null } | null };
+          heroSectionVideo?: { node?: { mediaItemUrl?: string | null } | null };
         } | null;
       } | null;
     } | null;
@@ -45,9 +43,7 @@ interface HomePageProps {
         excerpt?: string | null;
         date?: string | null;
         dataSetFields?: {
-          dataSetFile?: {
-            node?: { mediaItemUrl?: string | null } | null;
-          } | null;
+          dataSetFile?: { node?: { mediaItemUrl?: string | null } | null };
         } | null;
       }> | null;
     } | null;
@@ -73,6 +69,7 @@ interface HomePageProps {
   loading?: boolean;
 }
 
+/** GraphQL query for page, datasets, and insights */
 const PAGE_QUERY = gql`
   query GetHomePage($databaseId: ID!, $asPreview: Boolean = false) {
     page(id: $databaseId, idType: DATABASE_ID, asPreview: $asPreview) {
@@ -137,7 +134,7 @@ const PAGE_QUERY = gql`
   }
 `;
 
-/* --- Extract hero title/description from Gutenberg HTML --- */
+/** Strip tags and normalize text from Gutenberg HTML */
 function stripHtml(html: string): string {
   return html
     .replace(/<br\s*\/?>/gi, "\n")
@@ -148,6 +145,7 @@ function stripHtml(html: string): string {
     .trim();
 }
 
+/** Extract first heading + first non-empty paragraph */
 function extractHeroFromGutenberg(html?: string | null): {
   title?: string;
   description?: string;
@@ -170,6 +168,7 @@ function extractHeroFromGutenberg(html?: string | null): {
   return { title, description };
 }
 
+/** Main Home Page component */
 export default function PageHome({ data }: HomePageProps): JSX.Element {
   const router = useRouter();
   const homeHeroBg = "/assets/images/patterns/home-hero-bg.jpg";
@@ -187,14 +186,14 @@ export default function PageHome({ data }: HomePageProps): JSX.Element {
 
   return (
     <div className="bg-gray-400 overflow-x-hidden">
-      {/* Hero */}
+      {/* Hero section */}
       <div className="home-hero relative bg-cover bg-center bg-no-repeat text-white">
         <div>
           <img
             src={homeHeroBg}
             width={1628}
             height={700}
-            className="h/full w/full object-cover"
+            className="h-full w-full object-cover"
             alt="home-hero-bg"
           />
         </div>
@@ -206,21 +205,21 @@ export default function PageHome({ data }: HomePageProps): JSX.Element {
           }}
         />
         <div className="absolute inset-0 flex items-center">
-          <div className="px-5 md:px-10 xl:px-16 py-12 md:py-16 xl:py-20 mx-auto w/full">
+          <div className="px-5 md:px-10 xl:px-16 py-12 md:py-16 xl:py-20 mx-auto w-full">
             <div className="text-center mx-auto max-w-6xl grid place-items-center">
-              {heroTitle ? (
+              {heroTitle && (
                 <h1 className="mb-5 md:mb-0 text-slate-50 text-4xl md:text-5xl xl:text-6xl leading-snug font-montserrat font-bold whitespace-pre-line">
                   {heroTitle}
                 </h1>
-              ) : null}
-              {heroDescription ? (
+              )}
+              {heroDescription && (
                 <div className="space-y-2.5">
                   <p className="text-slate-200 text-base/6 lg:text-lg/7 font-playfair font-normal max-w-2xl">
                     {heroDescription}
                   </p>
                 </div>
-              ) : null}
-              <div className="pb-8 w/full max-w-2xl">
+              )}
+              <div className="pb-8 w-full max-w-2xl">
                 <SearchFieldHome />
               </div>
             </div>
@@ -228,7 +227,7 @@ export default function PageHome({ data }: HomePageProps): JSX.Element {
         </div>
       </div>
 
-      {/* Image/Video section */}
+      {/* Hero media (video or image) */}
       {(heroVideo || heroImage) && (
         <div className="bg-white pb-0">
           <div className="mx-auto max-w-7xl px-5 md:px-10 xl:px-16">
@@ -240,17 +239,17 @@ export default function PageHome({ data }: HomePageProps): JSX.Element {
                   muted
                   loop
                   playsInline
-                  className="rounded-3xl h/full w/full object-cover"
+                  className="rounded-3xl h-full w-full object-cover"
                 />
               ) : (
                 heroImage && (
                   <img
                     src={heroImage}
-                    className="rounded-3xl h/full w/full object-cover"
+                    className="rounded-3xl h-full w-full object-cover"
                     width={1120}
                     height={713}
                     loading="lazy"
-                    alt="Home Image"
+                    alt="Home hero"
                   />
                 )
               )}
@@ -329,7 +328,7 @@ export default function PageHome({ data }: HomePageProps): JSX.Element {
           </div>
           <div className="mx-auto my-8 md:my-11 grid max-w-2xl grid-cols-1 gap-6 xl:gap-8 lg:mx-0 lg:max-w-none lg:grid-cols-3 md:grid-cols-2">
             {(data?.dataSets?.nodes ?? []).map((c) => (
-              <div key={c.id} className="h/full">
+              <div key={c.id} className="h-full">
                 <CardType6
                   title={c.title ?? ""}
                   excerpt={c.excerpt ?? ""}
@@ -361,7 +360,7 @@ export default function PageHome({ data }: HomePageProps): JSX.Element {
           </div>
           <div className="mx-auto my-8 md:my-11 grid max-w-2xl grid-cols-1 gap-6 xl:gap-8 lg:mx-0 lg:max-w-none lg:grid-cols-3 md:grid-cols-2">
             {(data?.insights?.nodes ?? []).map((c) => (
-              <div key={c.id} className="h/full">
+              <div key={c.id} className="h-full">
                 <CardType5
                   title={c.title ?? ""}
                   excerpt={c.excerpt ?? ""}
@@ -384,6 +383,7 @@ export default function PageHome({ data }: HomePageProps): JSX.Element {
   );
 }
 
+/** Attach query + variables for Next.js data fetching */
 (PageHome as any).query = PAGE_QUERY;
 (PageHome as any).variables = (
   _seedNode: { databaseId?: number | string } = {},
