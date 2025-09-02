@@ -1,4 +1,4 @@
-import React, { JSX } from "react";
+import React from "react";
 import { gql } from "@apollo/client";
 import type { GetStaticPropsContext } from "next";
 import HeroWhite from "@/src/components/HeroBlocks/HeroWhite";
@@ -10,11 +10,11 @@ import {
   downloadExcelFromCsv,
   downloadPdfFromCsv,
 } from "@/src/lib/downloadUtils";
-
 import { InnerPageTitle, PageSubTitle } from "@/src/components/Typography";
 import CsvTable from "@/src/components/CsvTable";
 
-const SINGLE_DATASET_QUERY = gql`
+/** Single dataset + a small related list */
+export const SINGLE_DATASET_QUERY = gql`
   query GetSingleDataset($slug: ID!) {
     dataSet(id: $slug, idType: SLUG) {
       id
@@ -101,32 +101,34 @@ interface SingleDatasetProps {
   };
 }
 
+/** Dataset details page */
 const DatasetInnerPage: React.FC<SingleDatasetProps> = ({ data }) => {
   const dataset = data?.dataSet;
   const allRelated = data?.dataSets?.nodes ?? [];
   if (!dataset) return <p>Dataset not found.</p>;
 
-  // Trim WYSIWYG to a short paragraph for the hero
-  const _rawExcerpt = dataset.excerpt || dataset.content || "";
-  const _plainExcerpt = _rawExcerpt.replace(/<[^>]+>/g, "").trim();
+  // Short hero paragraph from WYSIWYG/excerpt
+  const rawExcerpt = dataset.excerpt || dataset.content || "";
+  const plainExcerpt = rawExcerpt.replace(/<[^>]+>/g, "").trim();
   const heroParagraph =
-    _plainExcerpt.length > 260
-      ? `${_plainExcerpt.slice(0, 260).trimEnd()}…`
-      : _plainExcerpt;
+    plainExcerpt.length > 260
+      ? `${plainExcerpt.slice(0, 260).trimEnd()}…`
+      : plainExcerpt;
 
   const downloadUrl =
     dataset.dataSetFields?.dataSetFile?.node?.mediaItemUrl ?? "";
 
-  // filter out the current dataset from related; keep up to 3
-  const related = allRelated
-    .filter(
-      (d) => d.id !== dataset.id && (d.slug ? d.slug !== dataset.slug : true)
-    )
-    .slice(0, 3);
+  // Exclude current dataset; cap to 3 items
+  const related =
+    allRelated
+      .filter(
+        (d) => d.id !== dataset.id && (d.slug ? d.slug !== dataset.slug : true)
+      )
+      .slice(0, 3) ?? [];
 
   return (
     <main>
-      {/* Hero - White with default breadcrumb colors */}
+      {/* Hero */}
       <section className="bg-white">
         <div className="px-5 md:px-10 xl:px-16 py-12 md:py-16 xl:py-20 mx-auto w-full">
           <div className="mx-auto max-w-6xl">
@@ -139,7 +141,7 @@ const DatasetInnerPage: React.FC<SingleDatasetProps> = ({ data }) => {
         </div>
       </section>
 
-      {/* Body Content */}
+      {/* Body content */}
       <section className="bg-white">
         <div className="mx-auto max-w-7xl px-5 md:px-10 xl:px-16">
           <WysiwygInner>
@@ -148,7 +150,7 @@ const DatasetInnerPage: React.FC<SingleDatasetProps> = ({ data }) => {
         </div>
       </section>
 
-      {/* Dataset Table (from dataset file) */}
+      {/* Preview table if CSV source is available */}
       {downloadUrl?.toLowerCase().endsWith(".csv") && (
         <section className="bg-white py-8">
           <div className="mx-auto max-w-7xl px-5 md:px-10 xl:px-16">
@@ -157,151 +159,151 @@ const DatasetInnerPage: React.FC<SingleDatasetProps> = ({ data }) => {
         </section>
       )}
 
-      {/* Download Buttons */}
+      {/* Download actions */}
       <div className="mx-auto max-w-7xl px-5 md:px-10 xl:px-16 pt-6 md:pt-9 pb-16">
-        <div>
-          <div className="grid md:flex gap-7 items-center justify-start md:justify-end w-full">
-            <div>
-              <p className="text-base/6 font-medium font-family-sourcecodepro text-slate-600">
-                Download data sources :
-              </p>
-            </div>
-            <div className="flex gap-3 md:gap-2">
-              <SecondaryButton
-                onClick={() =>
-                  downloadPdfFromCsv(downloadUrl, dataset.slug || "dataset")
-                }
+        <div className="grid md:flex gap-7 items-center justify-start md:justify-end w-full">
+          <div>
+            <p className="text-base/6 font-medium font-sourcecodepro text-slate-600">
+              Download data sources :
+            </p>
+          </div>
+          <div className="flex gap-3 md:gap-2">
+            <SecondaryButton
+              onClick={() =>
+                downloadPdfFromCsv(downloadUrl, dataset.slug || "dataset")
+              }
+            >
+              PDF
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 20 20"
+                fill="none"
               >
-                PDF
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 20 20"
-                  fill="none"
-                >
-                  <path
-                    d="M7.5 9.16663V14.1666L9.16667 12.5"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M7.50016 14.1667L5.8335 12.5"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M18.3332 8.33329V12.5C18.3332 16.6666 16.6665 18.3333 12.4998 18.3333H7.49984C3.33317 18.3333 1.6665 16.6666 1.6665 12.5V7.49996C1.6665 3.33329 3.33317 1.66663 7.49984 1.66663H11.6665"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M18.3332 8.33329H14.9998C12.4998 8.33329 11.6665 7.49996 11.6665 4.99996V1.66663L18.3332 8.33329Z"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </SecondaryButton>
-              <SecondaryButton
-                onClick={() =>
-                  downloadCsvFile(downloadUrl, dataset.slug || "dataset")
-                }
+                <path
+                  d="M7.5 9.16663V14.1666L9.16667 12.5"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M7.50016 14.1667L5.8335 12.5"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M18.3332 8.33329V12.5C18.3332 16.6666 16.6665 18.3333 12.4998 18.3333H7.49984C3.33317 18.3333 1.6665 16.6666 1.6665 12.5V7.49996C1.6665 3.33329 3.33317 1.66663 7.49984 1.66663H11.6665"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M18.3332 8.33329H14.9998C12.4998 8.33329 11.6665 7.49996 11.6665 4.99996V1.66663L18.3332 8.33329Z"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </SecondaryButton>
+
+            <SecondaryButton
+              onClick={() =>
+                downloadCsvFile(downloadUrl, dataset.slug || "dataset")
+              }
+            >
+              CSV
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 20 20"
+                fill="none"
               >
-                CSV
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 20 20"
-                  fill="none"
-                >
-                  <path
-                    d="M7.5 9.16663V14.1666L9.16667 12.5"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M7.50016 14.1667L5.8335 12.5"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M18.3332 8.33329V12.5C18.3332 16.6666 16.6665 18.3333 12.4998 18.3333H7.49984C3.33317 18.3333 1.6665 16.6666 1.6665 12.5V7.49996C1.6665 3.33329 3.33317 1.66663 7.49984 1.66663H11.6665"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M18.3332 8.33329H14.9998C12.4998 8.33329 11.6665 7.49996 11.6665 4.99996V1.66663L18.3332 8.33329Z"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </SecondaryButton>
-              <SecondaryButton
-                onClick={() =>
-                  downloadExcelFromCsv(downloadUrl, dataset.slug || "dataset")
-                }
+                <path
+                  d="M7.5 9.16663V14.1666L9.16667 12.5"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M7.50016 14.1667L5.8335 12.5"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M18.3332 8.33329V12.5C18.3332 16.6666 16.6665 18.3333 12.4998 18.3333H7.49984C3.33317 18.3333 1.6665 16.6666 1.6665 12.5V7.49996C1.6665 3.33329 3.33317 1.66663 7.49984 1.66663H11.6665"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M18.3332 8.33329H14.9998C12.4998 8.33329 11.6665 7.49996 11.6665 4.99996V1.66663L18.3332 8.33329Z"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </SecondaryButton>
+
+            <SecondaryButton
+              onClick={() =>
+                downloadExcelFromCsv(downloadUrl, dataset.slug || "dataset")
+              }
+            >
+              Excel
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 20 20"
+                fill="none"
               >
-                Excel
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 20 20"
-                  fill="none"
-                >
-                  <path
-                    d="M7.5 9.16663V14.1666L9.16667 12.5"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M7.50016 14.1667L5.8335 12.5"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M18.3332 8.33329V12.5C18.3332 16.6666 16.6665 18.3333 12.4998 18.3333H7.49984C3.33317 18.3333 1.6665 16.6666 1.6665 12.5V7.49996C1.6665 3.33329 3.33317 1.66663 7.49984 1.66663H11.6665"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M18.3332 8.33329H14.9998C12.4998 8.33329 11.6665 7.49996 11.6665 4.99996V1.66663L18.3332 8.33329Z"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </SecondaryButton>
-            </div>
+                <path
+                  d="M7.5 9.16663V14.1666L9.16667 12.5"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M7.50016 14.1667L5.8335 12.5"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M18.3332 8.33329V12.5C18.3332 16.6666 16.6665 18.3333 12.4998 18.3333H7.49984C3.33317 18.3333 1.6665 16.6666 1.6665 12.5V7.49996C1.6665 3.33329 3.33317 1.66663 7.49984 1.66663H11.6665"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M18.3332 8.33329H14.9998C12.4998 8.33329 11.6665 7.49996 11.6665 4.99996V1.66663L18.3332 8.33329Z"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </SecondaryButton>
           </div>
         </div>
       </div>
 
-      {/* Related Datasets */}
+      {/* Related datasets */}
       {related.length > 0 && (
         <section className="bg-pink-100 py-12 md:py-16 xl:py-20">
           <div className="mx-auto max-w-7xl px-5 md:px-10 xl:px-16">
@@ -330,7 +332,7 @@ const DatasetInnerPage: React.FC<SingleDatasetProps> = ({ data }) => {
 
 export default DatasetInnerPage;
 
-// Attach Faust query & variables like other templates
+/** Attach query + variables for build/runtime data fetching */
 (DatasetInnerPage as any).query = SINGLE_DATASET_QUERY;
 (DatasetInnerPage as any).variables = (
   seedNode: { slug?: string } = {},
