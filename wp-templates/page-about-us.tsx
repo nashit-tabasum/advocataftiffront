@@ -3,6 +3,7 @@ import type { GetStaticPropsContext } from "next";
 import React from "react";
 import Accordion from "../src/components/Accordion";
 import { PageSubTitle, PageTitle } from "@/src/components/Typography";
+import TextBlock from "../src/components/TextBlock";
 
 const PAGE_QUERY = gql`
   query GetAboutPage($databaseId: ID!, $asPreview: Boolean = false) {
@@ -79,10 +80,45 @@ function AboutHero({
   );
 }
 
-export default function AboutPage({ data, loading }: AboutPageProps) {
+/** Strip HTML and normalise whitespace */
+function toPlainText(html: string): string {
+  return html
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<[^>]+>/g, "")
+    .replace(/\u00a0/g, " ")
+    .replace(/\s+\n/g, "\n")
+    .replace(/\n{2,}/g, "\n")
+    .trim();
+}
+
+/** Extract first heading text + all paragraph texts from Gutenberg HTML */
+function extractIntro(html?: string | null): {
+  heading?: string;
+  paragraphs: string[];
+} {
+  if (!html) return { paragraphs: [] };
+
+  // First heading h1..h6
+  const hMatch = html.match(/<h[1-6]\b[^>]*>([\s\S]*?)<\/h[1-6]>/i);
+  const heading = hMatch ? toPlainText(hMatch[1]) : undefined;
+
+  // All <p> blocks
+  const pMatches = html.match(/<p\b[^>]*>[\s\S]*?<\/p>/gi) || [];
+  const paragraphs = pMatches
+    .map((p) =>
+      toPlainText(p.replace(/^<p\b[^>]*>/i, "").replace(/<\/p>$/i, ""))
+    )
+    .filter(Boolean);
+
+  return { heading, paragraphs };
+}
+
+export default function AboutPage({ data }: AboutPageProps) {
   const page = data?.page;
 
   const html = page?.content ?? undefined;
+  const { heading: introTitle, paragraphs: introParagraphs } =
+    extractIntro(html);
 
   const heroImage =
     page?.aboutHeroSection?.aboutUsHeroBackgroundImage?.node ?? undefined;
@@ -99,13 +135,13 @@ export default function AboutPage({ data, loading }: AboutPageProps) {
         <AboutHero image={heroImage} />
 
         {/* Intro section renders Gutenberg content directly */}
-        {html && (
-          <section className="mx-auto max-w-7xl px-5 md:px-10 xl:px-24 py-14 md:py-20">
-            <div
-              className="prose prose-lg md:prose-xl max-w-none"
-              dangerouslySetInnerHTML={{ __html: html }}
-            />
-          </section>
+        {(introTitle || introParagraphs.length > 0) && (
+          <TextBlock
+            subtitle="who we are"
+            title={introTitle ?? ""}
+            paragraphs={introParagraphs}
+            className="mx-auto max-w-7xl px-5 md:px-10 xl:px-24 py-14 md:py-20"
+          />
         )}
 
         <section className="relative overflow-hidden py-24 sm:py-32 bg-brand-2-900">
