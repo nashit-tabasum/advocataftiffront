@@ -10,6 +10,7 @@ import HomePage from "./page-home";
 import SingleInsight from "./single-insights";
 import DatasetInnerPage from "./single-dataset";
 import PageStateOwnedDashboard from "./page-state-owned-dashboard";
+import PageTransparencyDashboard from "./page-transparency-dashboard";
 
 export default {
   "front-page": frontPage,
@@ -24,4 +25,5 @@ export default {
   "single-insight": SingleInsight,
   "single-data-set": DatasetInnerPage,
   "page-state-owned-dashboard": PageStateOwnedDashboard,
+  "page-transparency-dashboard": PageTransparencyDashboard,
 };
