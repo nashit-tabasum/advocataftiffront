@@ -62,7 +62,7 @@ const CardType6: React.FC<CardType6Props> = ({
                   <Link
                     href={uri}
                     prefetch={false}
-                    className="hover:text-brand-2-500 cursor-pointer focus:outline-none"
+                    className="cursor-pointer focus:outline-none"
                     aria-label={title}
                   >
                     {title}
