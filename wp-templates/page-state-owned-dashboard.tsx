@@ -14,6 +14,7 @@ export default function PageStateOwnedDashboard(): JSX.Element {
   const [query, setQuery] = useState("");
   const [industry, setIndustry] = useState<string | null>(null);
   const [year, setYear] = useState<string | null>(null);
+  const [openId, setOpenId] = useState<"one" | "two" | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const totalItems = 97;
   const pageSize = 10;
@@ -71,6 +72,8 @@ export default function PageStateOwnedDashboard(): JSX.Element {
                   { label: "License", onClick: () => setIndustry("License") },
                 ]}
                 align="right"
+                open={openId === "one"}
+                onOpenChange={(v) => setOpenId(v ? "one" : null)}
               />
 
               <DefaultDropdown
@@ -82,6 +85,8 @@ export default function PageStateOwnedDashboard(): JSX.Element {
                   { label: "2026", onClick: () => setYear("2026") },
                 ]}
                 align="right"
+                open={openId === "two"}
+                onOpenChange={(v) => setOpenId(v ? "two" : null)}
               />
             </div>
           </div>
@@ -256,76 +261,81 @@ export default function PageStateOwnedDashboard(): JSX.Element {
         </div>
       </section>
 
-      {/* Indicators legend + Pagination */}
+      {/* Indicators legend */}
       <section className="mx-auto max-w-7xl px-5 md:px-10 xl:px-16 pt-6 md:pt-9 pb-16">
         <div>
-          <p className="text-base/6 font-medium font-family-sourcecodepro text-slate-600">
-            Interpretation of the indicators :
-          </p>
-        </div>
-        <div className="flex items-center gap-3 md:gap-5">
-          <div className="flex items-center gap-3 md:border-r border-slate-300 pr-3 md:pr-4">
-            <span className="text-sm/tight font-medium font-family-sourcecodepro text-slate-600">
-              Good
-            </span>
-            <div className="flex items-center gap-2">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="12"
-                height="12"
-                viewBox="0 0 12 12"
-                fill="none"
-              >
-                <circle cx="6" cy="6" r="6" fill="#22C55E" />
-              </svg>
-              <span className="text-gray-500 font-family-sourcecodepro text-base/6 font-medium">
-                1
-              </span>
+          <div className="grid md:flex gap-7 items-center justify-start md:justify-end w-full">
+            <div>
+              <p className="text-base/6 font-medium font-family-sourcecodepro text-slate-600">
+                Interpretation of the indicators :
+              </p>
             </div>
-          </div>
+            <div className="flex items-center gap-3 md:gap-5">
+              <div className="flex items-center gap-3 md:border-r border-slate-300 pr-3 md:pr-4">
+                <span className="text-sm/tight font-medium font-family-sourcecodepro text-slate-600">
+                  Good
+                </span>
+                <div className="flex items-center gap-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="12"
+                    height="12"
+                    viewBox="0 0 12 12"
+                    fill="none"
+                  >
+                    <circle cx="6" cy="6" r="6" fill="#22C55E" />
+                  </svg>
+                  <span className="text-gray-500 font-family-sourcecodepro text-base/6 font-medium">
+                    1
+                  </span>
+                </div>
+              </div>
 
-          <div className="flex items-center gap-3 md:border-r border-slate-300 pr-3 md:pr-4">
-            <span className="text-sm/tight font-medium font-family-sourcecodepro text-slate-600">
-              Average
-            </span>
-            <div className="flex items-center gap-2">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="12"
-                height="12"
-                viewBox="0 0 12 12"
-                fill="none"
-              >
-                <circle cx="6" cy="6" r="6" fill="#F59E0B" />
-              </svg>
-              <span className="text-gray-500 font-family-sourcecodepro text-base/6 font-medium">
-                0.5
-              </span>
-            </div>
-          </div>
+              <div className="flex items-center gap-3 md:border-r border-slate-300 pr-3 md:pr-4">
+                <span className="text-sm/tight font-medium font-family-sourcecodepro text-slate-600">
+                  Average
+                </span>
+                <div className="flex items-center gap-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="12"
+                    height="12"
+                    viewBox="0 0 12 12"
+                    fill="none"
+                  >
+                    <circle cx="6" cy="6" r="6" fill="#F59E0B" />
+                  </svg>
+                  <span className="text-gray-500 font-family-sourcecodepro text-base/6 font-medium">
+                    0.5
+                  </span>
+                </div>
+              </div>
 
-          <div className="flex items-center gap-3">
-            <span className="text-sm/tight font-medium font-family-sourcecodepro text-slate-600">
-              Poor
-            </span>
-            <div className="flex items-center gap-2">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="12"
-                height="12"
-                viewBox="0 0 12 12"
-                fill="none"
-              >
-                <circle cx="6" cy="6" r="6" fill="#DC2626" />
-              </svg>
-              <span className="text-gray-500 font-family-sourcecodepro text-base/6 font-medium">
-                0
-              </span>
+              <div className="flex items-center gap-3">
+                <span className="text-sm/tight font-medium font-family-sourcecodepro text-slate-600">
+                  Poor
+                </span>
+                <div className="flex items-center gap-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="12"
+                    height="12"
+                    viewBox="0 0 12 12"
+                    fill="none"
+                  >
+                    <circle cx="6" cy="6" r="6" fill="#DC2626" />
+                  </svg>
+                  <span className="text-gray-500 font-family-sourcecodepro text-base/6 font-medium">
+                    0
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
+      {/* Pagination */}
       <section className="mx-auto max-w-7xl px-5 md:px-10 xl:px-16 pt-6 md:pt-9 pb-16">
         <Pagination
           currentPage={currentPage}

@@ -19,6 +19,8 @@ type DefaultDropdownProps = {
   menuClassName?: string;
   buttonClassName?: string;
   idKey?: string; // optional stable id suffix (e.g., "one", "two")
+  open?: boolean; // controlled open state
+  onOpenChange?: (open: boolean) => void; // controlled state setter
 };
 
 function useClickOutside(
@@ -44,8 +46,12 @@ export default function DefaultDropdown({
   menuClassName = "",
   buttonClassName = "",
   idKey,
+  open,
+  onOpenChange,
 }: DefaultDropdownProps): JSX.Element {
-  const [open, setOpen] = useState(false);
+  const isControlled = typeof open === "boolean";
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isOpen = isControlled ? (open as boolean) : internalOpen;
   const btnRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const reactId = useId();
@@ -53,11 +59,16 @@ export default function DefaultDropdown({
   const btnId = idKey ? `default-dropdown-btn-${idKey}` : `default-dropdown-btn-${reactId}`;
   const menuId = idKey ? `default-dropdown-menu-btn-${idKey}` : `default-dropdown-menu-${reactId}`;
 
-  useClickOutside([btnRef, menuRef], () => setOpen(false));
+  const setOpenState = (v: boolean) => {
+    if (isControlled) onOpenChange?.(v);
+    else setInternalOpen(v);
+  };
+
+  useClickOutside([btnRef, menuRef], () => setOpenState(false));
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") setOpenState(false);
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
@@ -71,12 +82,12 @@ export default function DefaultDropdown({
           type="button"
           id={btnId}
           className={["default-dropdown-btn flex items-center gap-1", buttonClassName].join(" ")}
-          aria-expanded={open}
+          aria-expanded={isOpen}
           aria-haspopup="true"
           aria-controls={menuId}
           onClick={(e) => {
             e.stopPropagation();
-            setOpen((v) => !v);
+            setOpenState(!isOpen);
           }}
         >
           {label}
@@ -98,7 +109,7 @@ export default function DefaultDropdown({
           "default-dropdown-menu absolute mt-2 w-56 origin-top-right rounded-md bg-brand-white shadow-lg ring-1 ring-black/50",
           align === "right" ? "right-0" : "left-0",
           "transform transition-all duration-200 ease-out z-30",
-          open ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none",
+          isOpen ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none",
           menuClassName,
         ].join(" ")}
         role="menu"
@@ -121,7 +132,7 @@ export default function DefaultDropdown({
                   href={it.href || "#"}
                   target={it.target}
                   rel={it.rel}
-                  onClick={() => setOpen(false)}
+                  onClick={() => setOpenState(false)}
                 >
                   {it.label}
                 </a>
@@ -133,7 +144,7 @@ export default function DefaultDropdown({
                 type="button"
                 onClick={() => {
                   it.onClick?.();
-                  setOpen(false);
+                  setOpenState(false);
                 }}
               >
                 {it.label}
