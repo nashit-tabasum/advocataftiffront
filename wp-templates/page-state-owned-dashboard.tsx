@@ -1,23 +1,219 @@
-import React, { useEffect, useRef, useState } from "react";
+"use client";
+
+import React, { useEffect, useState } from "react";
 import type { JSX } from "react";
 import SearchField from "@/src/components/InputFields/SearchField";
-import CardType6 from "@/src/components/Cards/CardType6";
 import Pagination from "@/src/components/Pagination";
 import DefaultDropdown from "@/src/components/Dropdowns/DefaultDropdown";
 import HeroWhite from "@/src/components/HeroBlocks/HeroWhite";
 import SecondaryNav from "@/src/components/SecondaryNav";
 import { PageSubTitle, InnerPageTitle } from "@/src/components/Typography";
+import CsvTable from "@/src/components/CsvTable";
+import CardType6 from "@/src/components/Cards/CardType6";
 
-// Using a shared dropdown component
+// ----------------------
+// Types
+// ----------------------
+type TaxNode = { name: string; slug: string };
 
+type SOEPost = {
+  title: string;
+  slug: string;
+  industries: TaxNode[];
+  years: TaxNode[];
+  csvUrl: string | null;
+};
+
+// ----------------------
+// GraphQL fetch helpers
+// ----------------------
+async function gql<T>(query: string): Promise<T> {
+  const url = process.env.NEXT_PUBLIC_WORDPRESS_URL as string | undefined;
+  if (!url) throw new Error("NEXT_PUBLIC_API_URL is not defined");
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ query }),
+    // client component; skip caches to avoid stale taxonomies
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`GraphQL error: ${res.status}`);
+  const json = await res.json();
+  return json.data;
+}
+
+async function fetchSOEYears(): Promise<TaxNode[]> {
+  const data = await gql<{ sOEYears: { nodes: TaxNode[] } }>(`
+    query GetSOEYears {
+      sOEYears(first: 100) {
+        nodes { name slug }
+      }
+    }
+  `);
+  return data?.sOEYears?.nodes ?? [];
+}
+
+async function fetchSOEIndustries(): Promise<TaxNode[]> {
+  const data = await gql<{ soeIndustries: { nodes: TaxNode[] } }>(`
+    query GetSOEIndustries {
+      soeIndustries(first: 100) {
+        nodes { name slug }
+      }
+    }
+  `);
+  return data?.soeIndustries?.nodes ?? [];
+}
+
+async function fetchSOEPosts(): Promise<SOEPost[]> {
+  const data = await gql<{
+    stateOwnedEnterprises: {
+      nodes: Array<{
+        title: string;
+        slug: string;
+        soeIndustries?: { nodes: TaxNode[] };
+        sOEYears?: { nodes: TaxNode[] };
+        dataSetFields?: { dataSetFile?: { node?: { mediaItemUrl?: string } } };
+      }>;
+    };
+  }>(`
+query GetSOEPosts {
+  stateOwnedEnterprises(first: 100) {
+    nodes {
+      title
+      slug
+      soeIndustries { nodes { name slug } }
+      sOEYears { nodes { name slug } }
+      dataSetFields {
+        dataSetFile { node { mediaItemUrl } }
+      }
+    }
+  }
+}
+
+  `);
+
+  return (
+    data?.stateOwnedEnterprises?.nodes?.map((node) => ({
+      title: node.title,
+      slug: node.slug,
+      industries: node.soeIndustries?.nodes ?? [],
+      years: node.sOEYears?.nodes ?? [],
+      csvUrl: node.dataSetFields?.dataSetFile?.node?.mediaItemUrl ?? null,
+    })) ?? []
+  );
+}
+
+function sortYearsDesc(years: TaxNode[]): TaxNode[] {
+  // Robust sort: parse numeric if possible, else fallback to lexicographic
+  return [...years].sort((a, b) => {
+    const an = parseInt(a.name.replace(/\D/g, ""), 10);
+    const bn = parseInt(b.name.replace(/\D/g, ""), 10);
+    if (!Number.isNaN(bn) && !Number.isNaN(an) && bn !== an) return bn - an;
+    return b.name.localeCompare(a.name);
+  });
+}
+
+// ----------------------
+// Component
+// ----------------------
 export default function PageStateOwnedDashboard(): JSX.Element {
   const [query, setQuery] = useState("");
   const [industry, setIndustry] = useState<string | null>(null);
   const [year, setYear] = useState<string | null>(null);
   const [openId, setOpenId] = useState<"one" | "two" | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const totalItems = 97;
+
+  const [yearOptions, setYearOptions] = useState<TaxNode[]>([]);
+  const [industryOptions, setIndustryOptions] = useState<TaxNode[]>([]);
+  const [soePosts, setSoePosts] = useState<SOEPost[]>([]);
+  const [filteredPosts, setFilteredPosts] = useState<SOEPost[]>([]);
+  const [currentCsvUrl, setCurrentCsvUrl] = useState<string | null>(null);
+  const [currentPostTitle, setCurrentPostTitle] = useState("");
+
   const pageSize = 10;
+
+  // Load SOE data
+  useEffect(() => {
+    async function load() {
+      try {
+        const [yearsRaw, industriesRaw, posts] = await Promise.all([
+          fetchSOEYears(),
+          fetchSOEIndustries(),
+          fetchSOEPosts(),
+        ]);
+
+        const years = sortYearsDesc(yearsRaw);
+        setYearOptions(years);
+        setIndustryOptions(industriesRaw);
+        setSoePosts(posts);
+
+        // ✅ Default to latest year and auto-pick the first industry's slug from the first post of that year
+        if (years.length > 0) {
+          const latestYearSlug = years[0].slug;
+          setYear(latestYearSlug);
+
+          const postsForLatestYear = posts.filter((p) =>
+            p.years.some((y) => y.slug === latestYearSlug)
+          );
+
+          if (postsForLatestYear.length > 0) {
+            const first = postsForLatestYear[0];
+            const defaultIndustry = first.industries?.[0]?.slug ?? null;
+            if (defaultIndustry) setIndustry(defaultIndustry);
+            setCurrentCsvUrl(first.csvUrl ?? null);
+            setCurrentPostTitle(first.title ?? "");
+          } else {
+            setCurrentCsvUrl(null);
+            setCurrentPostTitle("");
+          }
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    load();
+  }, []);
+
+  // Filter posts whenever inputs change
+  useEffect(() => {
+    let results = soePosts;
+
+    if (query) {
+      const q = query.toLowerCase();
+      results = results.filter((p) => p.title.toLowerCase().includes(q));
+    }
+
+    if (industry) {
+      results = results.filter((p) =>
+        p.industries.some((ind) => ind.slug === industry)
+      );
+    }
+
+    if (year) {
+      results = results.filter((p) => p.years.some((y) => y.slug === year));
+    }
+
+    setFilteredPosts(results);
+    setCurrentPage(1);
+  }, [query, industry, year, soePosts]);
+
+  // Pick current CSV from the first filtered post
+  useEffect(() => {
+    if (filteredPosts.length > 0) {
+      const post = filteredPosts[0];
+      setCurrentCsvUrl(post.csvUrl);
+      setCurrentPostTitle(post.title);
+    } else {
+      setCurrentCsvUrl(null);
+      setCurrentPostTitle("");
+    }
+  }, [filteredPosts]);
+
+  // Pagination slice
+  const paginatedPosts = filteredPosts.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
 
   return (
     <main>
@@ -25,65 +221,75 @@ export default function PageStateOwnedDashboard(): JSX.Element {
       <div className="bg-white border-b border-slate-300">
         <div className="mx-auto max-w-7xl px-5 md:px-10 xl:px-16 py-4 lg:py-0">
           <SecondaryNav
+            className="!font-baskervville"
             items={[
+              { label: "Macro Economy", href: "#" },
               { label: "Government Fiscal Operations", href: "#" },
-              { label: "Government Fiscal Operations", href: "#" },
-              { label: "Government Fiscal Operations", href: "#" },
+              { label: "Transparency in government Institutions", href: "#" },
+              { label: "State Owned Enterprises", href: "#" },
             ]}
           />
         </div>
       </div>
 
-      {/* Hero (white) */}
+      {/* Hero */}
       <HeroWhite
         title="State Owned Enterprises"
-        paragraph="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam condimentum consequat mi. Maecenas congue enim non dui iaculis condimentum. Interdum et malesuada fames ac ante ipsum primis in faucibus. Curabitur lobortis, mi et facilisis euismod, lacus ligula suscipit nibh, vitae blandit dui dolor vitae sapien. Fusce iaculis urna ligula, nec aliquet nisi consectetur euismod. Nunc dapibus dignissim nulla at tincidunt."
+        paragraph="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
         items={[{ label: "State Owned Dashboard" }]}
       />
 
-      {/* Table Section */}
+      {/* Filters */}
       <section className="bg-white py-3.5 md:py-5 xl:py-6">
         <div className="mx-auto max-w-7xl px-5 md:px-10 xl:px-16">
-          {/* Search + Filters */}
           <div className="lg:flex gap-2 items-center justify-between pb-9">
             {/* Search */}
             <div className="relative w-full xl:w-1/2">
               <SearchField
                 value={query}
                 onChange={setQuery}
-                placeholder="Search..."
+                placeholder="Search SOE..."
               />
             </div>
 
+            {/* Dropdowns */}
             <div className="grid md:flex gap-3 items-center w-full lg:w-[31%] mt-4 xl:mt-0">
-              <span className="text-slate-800 font-medium text-lg/7 font-family-sourcecodepro md:flex md:justify-items-end mt-3 md:mt-0">
+              <span className="text-slate-800 font-medium text-lg/7 font-family-sourcecodepro">
                 Filter by :
               </span>
 
+              {/* Industry Dropdown */}
               <DefaultDropdown
                 idKey="one"
-                label={industry ? `Industry: ${industry}` : "Industry"}
+                label={
+                  industry
+                    ? `Industry: ${industryOptions.find((i) => i.slug === industry)?.name ?? ""}`
+                    : "Industry"
+                }
                 items={[
-                  {
-                    label: "Account settings",
-                    onClick: () => setIndustry("Account settings"),
-                  },
-                  { label: "Support", onClick: () => setIndustry("Support") },
-                  { label: "License", onClick: () => setIndustry("License") },
+                  { label: "All Industries", onClick: () => setIndustry(null) },
+                  ...industryOptions.map((ind) => ({
+                    label: ind.name,
+                    onClick: () => setIndustry(ind.slug),
+                  })),
                 ]}
                 align="right"
                 open={openId === "one"}
                 onOpenChange={(v) => setOpenId(v ? "one" : null)}
               />
 
+              {/* Year Dropdown */}
               <DefaultDropdown
                 idKey="two"
-                label={year ? `Year: ${year}` : "Year"}
-                items={[
-                  { label: "2024", onClick: () => setYear("2024") },
-                  { label: "2025", onClick: () => setYear("2025") },
-                  { label: "2026", onClick: () => setYear("2026") },
-                ]}
+                label={
+                  year
+                    ? `Year: ${yearOptions.find((y) => y.slug === year)?.name ?? ""}`
+                    : "Year"
+                }
+                items={yearOptions.map((y) => ({
+                  label: y.name,
+                  onClick: () => setYear(y.slug),
+                }))}
                 align="right"
                 open={openId === "two"}
                 onOpenChange={(v) => setOpenId(v ? "two" : null)}
@@ -91,247 +297,12 @@ export default function PageStateOwnedDashboard(): JSX.Element {
             </div>
           </div>
 
-          {/* Table */}
-          <div className="shadow-md border p-4 border-gray-200 rounded-lg">
-            <div
-              id="table-wrapper"
-              className="overflow-x-auto overflow-y-auto max-w-full box-content"
-            >
-              <div className="w-[1200px] table-inner">
-                <table className="border-collapse bg-white border-b border-gray-100 min-w-max rounded-lg">
-                  <thead className="bg-brand-1-700 rounded-lg">
-                    <tr>
-                      <th className="sticky top-0 left-0 z-20 rounded-tl-lg bg-brand-1-700 px-3 py-3.5 text-left text-lg/7 font-semibold font-family-sourcecodepro uppercase text-brand-white w-[160px] md:w-[225px] xl:w-[288px]">
-                        SOE
-                      </th>
-                      <th className="sticky top-0 z-10 bg-brand-1-700 px-3 py-3.5 text-left text-lg/7 font-semibold font-family-sourcecodepro uppercase text-brand-white w-[160px] md:w-[225px] xl:w-[288px]">
-                        2024
-                      </th>
-                      <th className="sticky top-0 z-10 bg-brand-1-700 px-3 py-3.5 text-left text-lg/7 font-semibold font-family-sourcecodepro uppercase text-brand-white w-[160px] md:w-[225px] xl:w-[288px]">
-                        Turnover (LKR)
-                      </th>
-                      <th className="sticky top-0 z-10 bg-brand-1-700 px-3 py-3.5 text-left text-lg/7 font-semibold font-family-sourcecodepro uppercase text-brand-white w-[160px] md:w-[225px] xl:w-[288px]">
-                        Total Assets
-                      </th>
-                      <th className="sticky top-0 z-10 bg-brand-1-700 px-3 py-3.5 text-left text-lg/7 font-semibold font-family-sourcecodepro uppercase text-brand-white w-[160px] md:w-[225px] xl:w-[288px]">
-                        Profit/Loss
-                      </th>
-                      <th className="sticky top-0 z-10 bg-brand-1-700 px-3 py-3.5 text-left text-lg/7 font-semibold font-family-sourcecodepro uppercase text-brand-white w-[160px] md:w-[225px] xl:w-[288px]">
-                        Total Debt
-                      </th>
-                      <th className="sticky top-0 z-10 bg-brand-1-700 px-3 py-3.5 text-left text-lg/7 font-semibold font-family-sourcecodepro uppercase text-brand-white w-[160px] md:w-[225px] xl:w-[288px]">
-                        Total Liabilities
-                      </th>
-                      <th className="sticky top-0 z-10 bg-brand-1-700 px-3 py-3.5 text-left text-lg/7 font-semibold font-family-sourcecodepro uppercase text-brand-white w-[160px] md:w-[225px] xl:w-[288px]">
-                        Total Equity
-                      </th>
-                      <th className="sticky top-0 z-10 bg-brand-1-700 px-3 py-3.5 text-left text-lg/7 font-semibold font-family-sourcecodepro uppercase text-brand-white w-[160px] md:w-[225px] xl:w-[288px]">
-                        Operational Profits
-                      </th>
-                      <th className="sticky top-0 z-10 rounded-tr-lg bg-brand-1-700 px-3 py-3.5 text-left text-lg/7 font-semibold font-family-sourcecodepro uppercase text-brand-white w-[160px] md:w-[225px] xl:w-[288px]">
-                        ROA
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-300">
-                    {/* Aviation sector header */}
-                    <tr className="border-gray-100">
-                      <td className="sector sticky top-0 left-0 z-20 bg-brand-white text-brand-1-700 px-3 py-3.5 text-left text-base/6 font-family-sourcecodepro font-semibold w-[160px] md:whitespace-nowrap">
-                        Aviation
-                      </td>
-                      {Array.from({ length: 9 }).map((_, i) => (
-                        <td
-                          key={i}
-                          className="bg-brand-white border-b border-gray-100 px-3 py-3.5 text-left text-base/6 font-medium font-family-sourcecodepro text-gray-500 w-[160px]"
-                        />
-                      ))}
-                    </tr>
-
-                    {/* Row 1 */}
-                    <tr>
-                      <td className="sticky left-0 bg-white border-b border-gray-100 px-3 py-3.5 text-left text-base/6 font-family-sourcecodepro font-medium text-brand-black w-[160px] md:w-[225px] xl:w-[288px] md:whitespace-nowrap">
-                        Airport and Aviation Services (Sri Lanka) Ltd.
-                      </td>
-                      <td className="bg-white border-b border-gray-100 px-3 py-3.5 text-left text-base/6 font-medium font-family-sourcecodepro text-gray-500 w-[160px] md:w-[225px] xl:w-[288px]">
-                        7,575,860
-                      </td>
-                      <td className="bg-white border-b border-gray-100 px-3 py-3.5 text-left text-base/6 font-medium font-family-sourcecodepro text-gray-500 w-[160px] md:w-[225px] xl:w-[288px]">
-                        103,216,071
-                      </td>
-                      <td className="bg-white border-b border-gray-100 px-3 py-3.5 text-left text-base/6 font-medium font-family-sourcecodepro text-gray-500 w-[160px] md:w-[225px] xl:w-[288px]">
-                        -2,504,430
-                      </td>
-                      <td className="bg-white border-b border-gray-100 px-3 py-3.5 text-left text-base/6 font-medium font-family-sourcecodepro text-gray-500 w-[160px] md:w-[225px] xl:w-[288px]">
-                        60,031,623
-                      </td>
-                      <td className="bg-white border-b border-gray-100 px-3 py-3.5 text-left text-base/6 font-medium font-family-sourcecodepro text-gray-500 w-[160px] md:w-[225px] xl:w-[288px]">
-                        66,233,170
-                      </td>
-                      <td className="bg-white border-b border-gray-100 px-3 py-3.5 text-left text-base/6 font-medium font-family-sourcecodepro text-gray-500 w-[160px] md:w-[225px] xl:w-[288px]">
-                        66,233,170
-                      </td>
-                      <td className="bg-white border-b border-gray-100 px-3 py-3.5 text-left text-base/6 font-medium font-family-sourcecodepro text-gray-500 w-[160px] md:w-[225px] xl:w-[288px]">
-                        -4,610,768
-                      </td>
-                      <td className="bg-white border-b border-gray-100 px-3 py-3.5 text-left text-base/6 font-medium font-family-sourcecodepro text-gray-500 w-[160px] md:w-[225px] xl:w-[288px]">
-                        <div className="flex items-center gap-2">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="12"
-                            height="12"
-                            viewBox="0 0 12 12"
-                            fill="none"
-                          >
-                            <circle cx="6" cy="6" r="6" fill="#22C55E" />
-                          </svg>
-                          <span className="text-gray-500 font-family-sourcecodepro text-base/6 font-medium">
-                            1
-                          </span>
-                        </div>
-                      </td>
-                      <td className="bg-white border-b border-gray-100 px-3 py-3.5 text-left text-base/6 font-medium font-family-sourcecodepro text-gray-500 w-[160px] md:w-[225px] xl:w-[288px]">
-                        <div className="flex items-center gap-2">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="12"
-                            height="12"
-                            viewBox="0 0 12 12"
-                            fill="none"
-                          >
-                            <circle cx="6" cy="6" r="6" fill="#DC2626" />
-                          </svg>
-                          <span className="text-gray-500 font-family-sourcecodepro text-base/6 font-medium">
-                            0
-                          </span>
-                        </div>
-                      </td>
-                    </tr>
-
-                    {/* Row 2 */}
-                    <tr>
-                      <td className="sticky left-0 bg-white border-b border-gray-100 px-3 py-3.5 text-left text-base/6 font-family-sourcecodepro font-medium text-brand-black w-[160px] md:w-[225px] xl:w-[288px] md:whitespace-nowrap">
-                        SriLankan Airlines Ltd.
-                      </td>
-                      <td className="bg-white border-b border-gray-100 px-3 py-3.5 text-left text-base/6 font-medium font-family-sourcecodepro text-gray-500 w-[160px] md:w-[225px] xl:w-[288px]">
-                        183,531,820
-                      </td>
-                      <td className="bg-white border-b border-gray-100 px-3 py-3.5 text-left text-base/6 font-medium font-family-sourcecodepro text-gray-500 w-[160px] md:w-[225px] xl:w-[288px]">
-                        186,428,560
-                      </td>
-                      <td className="bg-white border-b border-gray-100 px-3 py-3.5 text-left text-base/6 font-medium font-family-sourcecodepro text-gray-500 w-[160px] md:w-[225px] xl:w-[288px]">
-                        -44,139,400
-                      </td>
-                      <td className="bg-white border-b border-gray-100 px-3 py-3.5 text-left text-base/6 font-medium font-family-sourcecodepro text-gray-500 w-[160px] md:w-[225px] xl:w-[288px]">
-                        213,306,320
-                      </td>
-                      <td className="bg-white border-b border-gray-100 px-3 py-3.5 text-left text-base/6 font-medium font-family-sourcecodepro text-gray-500 w-[160px] md:w-[225px] xl:w-[288px]">
-                        -5,167,240
-                      </td>
-                      <td className="bg-white border-b border-gray-100 px-3 py-3.5 text-left text-base/6 font-medium font-family-sourcecodepro text-gray-500 w-[160px] md:w-[225px] xl:w-[288px]">
-                        447,602,100
-                      </td>
-                      <td className="bg-white border-b border-gray-100 px-3 py-3.5 text-left text-base/6 font-medium font-family-sourcecodepro text-gray-500 w-[160px] md:w-[225px] xl:w-[288px]">
-                        -261,173,540
-                      </td>
-                      <td className="bg-white border-b border-gray-100 px-3 py-3.5 text-left text-base/6 font-medium font-family-sourcecodepro text-gray-500 w-[160px] md:w-[225px] xl:w-[288px]">
-                        -5,167,240
-                      </td>
-                      <td className="bg-white border-b border-gray-100 px-3 py-3.5 text-left text-base/6 font-medium font-family-sourcecodepro text-gray-500 w-[160px] md:w-[225px] xl:w-[288px]">
-                        <div className="flex items-center gap-2">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="12"
-                            height="12"
-                            viewBox="0 0 12 12"
-                            fill="none"
-                          >
-                            <circle cx="6" cy="6" r="6" fill="#F59E0B" />
-                          </svg>
-                          <span className="text-gray-500 font-family-sourcecodepro text-base/6 font-medium">
-                            0.5
-                          </span>
-                        </div>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Indicators legend */}
-      <section className="mx-auto max-w-7xl px-5 md:px-10 xl:px-16 pt-6 md:pt-9 pb-16">
-        <div>
-          <div className="grid md:flex gap-7 items-center justify-start md:justify-end w-full">
-            <div>
-              <p className="text-base/6 font-medium font-family-sourcecodepro text-slate-600">
-                Interpretation of the indicators :
-              </p>
-            </div>
-            <div className="flex items-center gap-3 md:gap-5">
-              <div className="flex items-center gap-3 md:border-r border-slate-300 pr-3 md:pr-4">
-                <span className="text-sm/tight font-medium font-family-sourcecodepro text-slate-600">
-                  Good
-                </span>
-                <div className="flex items-center gap-2">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="12"
-                    height="12"
-                    viewBox="0 0 12 12"
-                    fill="none"
-                  >
-                    <circle cx="6" cy="6" r="6" fill="#22C55E" />
-                  </svg>
-                  <span className="text-gray-500 font-family-sourcecodepro text-base/6 font-medium">
-                    1
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3 md:border-r border-slate-300 pr-3 md:pr-4">
-                <span className="text-sm/tight font-medium font-family-sourcecodepro text-slate-600">
-                  Average
-                </span>
-                <div className="flex items-center gap-2">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="12"
-                    height="12"
-                    viewBox="0 0 12 12"
-                    fill="none"
-                  >
-                    <circle cx="6" cy="6" r="6" fill="#F59E0B" />
-                  </svg>
-                  <span className="text-gray-500 font-family-sourcecodepro text-base/6 font-medium">
-                    0.5
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <span className="text-sm/tight font-medium font-family-sourcecodepro text-slate-600">
-                  Poor
-                </span>
-                <div className="flex items-center gap-2">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="12"
-                    height="12"
-                    viewBox="0 0 12 12"
-                    fill="none"
-                  >
-                    <circle cx="6" cy="6" r="6" fill="#DC2626" />
-                  </svg>
-                  <span className="text-gray-500 font-family-sourcecodepro text-base/6 font-medium">
-                    0
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
+          {/* CSV Table */}
+          {currentCsvUrl ? (
+            <CsvTable csvUrl={currentCsvUrl} />
+          ) : (
+            <p className="text-gray-500">No dataset found for selection.</p>
+          )}
         </div>
       </section>
 
@@ -339,7 +310,7 @@ export default function PageStateOwnedDashboard(): JSX.Element {
       <section className="mx-auto max-w-7xl px-5 md:px-10 xl:px-16 pt-6 md:pt-9 pb-16">
         <Pagination
           currentPage={currentPage}
-          totalItems={totalItems}
+          totalItems={filteredPosts.length}
           pageSize={pageSize}
           onPageChange={setCurrentPage}
         />
@@ -349,34 +320,28 @@ export default function PageStateOwnedDashboard(): JSX.Element {
       <section className="bg-pink-100 py-12 md:py-16 xl:py-20">
         <div className="mx-auto max-w-7xl px-5 md:px-10 xl:px-16">
           <div className="max-w-2xl text-left">
-            <PageSubTitle className="page-sub-title">
-              Advocata ai suggestions
-            </PageSubTitle>
-            <InnerPageTitle className="page-title">
-              Related datasets
-            </InnerPageTitle>
+            <PageSubTitle>Advocata AI Suggestions</PageSubTitle>
+            <InnerPageTitle>Related datasets</InnerPageTitle>
           </div>
 
           <div className="mt-11 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             <CardType6
               title="Sri Lanka - Food Security and Nutrition Indicators"
-              excerpt="By comparison, just before the nation’s independence nearly 250 years ago, the 13 colonies had about 2.5 million residents. The projected world population on January 1, 2025, is 8,092,034,511, up 71,178,087 (0.89%) from New Year’s Day 2024. During January 2025, 4.2 births and 2.0 deaths are expected worldwide every second."
+              excerpt="Indicators covering nutrition, food production, and resilience."
               fileUrl=""
               postDate="2024-08-18"
               uri="#"
             />
-
             <CardType6
               title="TESLA Stock Data 2024"
-              excerpt="By comparison, just before the nation’s independence nearly 250 years ago, the 13 colonies had about 2.5 million residents. The projected world population on January 1, 2025, is 8,092,034,511, up 71,178,087 (0.89%) from New Year’s Day 2024. During January 2025, 4.2 births and 2.0 deaths are expected worldwide every second."
+              excerpt="Financial performance and global stock indicators."
               fileUrl=""
               postDate="2024-08-18"
               uri="#"
             />
-
             <CardType6
-              title="Effective crisis management leads Sri Lanka’s tourism."
-              excerpt="By comparison, just before the nation’s independence nearly 250 years ago, the 13 colonies had about 2.5 million residents. The projected world population on January 1, 2025, is 8,092,034,511, up 71,178,087 (0.89%) from New Year’s Day 2024. During January 2025, 4.2 births and 2.0 deaths are expected worldwide every second."
+              title="Tourism Recovery and Crisis Management"
+              excerpt="How effective crisis management supports tourism recovery."
               fileUrl=""
               postDate="2024-08-18"
               uri="#"
