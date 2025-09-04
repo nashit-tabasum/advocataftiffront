@@ -44,7 +44,11 @@ export default function PageTransparencyDashboard(): JSX.Element {
         <div className="mx-auto max-w-7xl px-5 md:px-10 xl:px-16">
           <div className="lg:flex gap-2 items-center justify-between pb-9">
             <div className="relative w-full xl:w-1/2">
-              <SearchField value={query} onChange={setQuery} placeholder="Search..." />
+              <SearchField
+                value={query}
+                onChange={setQuery}
+                placeholder="Search..."
+              />
             </div>
 
             <div className="grid md:flex gap-3 items-center w-full lg:w-[31%] mt-4 xl:mt-0">
@@ -56,9 +60,18 @@ export default function PageTransparencyDashboard(): JSX.Element {
                 idKey="one"
                 label={industry ? `Industry: ${industry}` : "Industry"}
                 items={[
-                  { label: "Industry 1", onClick: () => setIndustry("Industry 1") },
-                  { label: "Industry 2", onClick: () => setIndustry("Industry 2") },
-                  { label: "Industry 3", onClick: () => setIndustry("Industry 3") },
+                  {
+                    label: "Industry 1",
+                    onClick: () => setIndustry("Industry 1"),
+                  },
+                  {
+                    label: "Industry 2",
+                    onClick: () => setIndustry("Industry 2"),
+                  },
+                  {
+                    label: "Industry 3",
+                    onClick: () => setIndustry("Industry 3"),
+                  },
                 ]}
                 align="right"
                 open={openId === "one"}
@@ -82,7 +95,10 @@ export default function PageTransparencyDashboard(): JSX.Element {
 
           {/* Table */}
           <div className="shadow-md border p-4 border-gray-200 rounded-lg">
-            <div id="table-wrapper" className="overflow-x-auto overflow-y-auto max-w-full box-content">
+            <div
+              id="table-wrapper"
+              className="overflow-x-auto overflow-y-auto max-w-full box-content"
+            >
               <div className="w-[1200px] table-inner">
                 <table className="border-collapse bg-white border-b border-gray-100 min-w-max rounded-lg">
                   <thead className="bg-brand-1-700 rounded-lg">
@@ -94,16 +110,28 @@ export default function PageTransparencyDashboard(): JSX.Element {
                       >
                         SOE
                       </th>
-                      <th className="sticky top-0 z-10 bg-brand-1-700 px-3 py-3.5 text-center border-b border-gray/10 text-lg/7 font-semibold font-family-sourcecodepro uppercase text-brand-white/60" colSpan={3}>
+                      <th
+                        className="sticky top-0 z-10 bg-brand-1-700 px-3 py-3.5 text-center border-b border-gray/10 text-lg/7 font-semibold font-family-sourcecodepro uppercase text-brand-white/60"
+                        colSpan={3}
+                      >
                         Annual report
                       </th>
-                      <th className="sticky top-0 z-10 bg-brand-1-700 px-3 py-3.5 text-center border-b border-gray/10 text-lg/7 font-semibold font-family-sourcecodepro uppercase text-brand-white/60" colSpan={2}>
+                      <th
+                        className="sticky top-0 z-10 bg-brand-1-700 px-3 py-3.5 text-center border-b border-gray/10 text-lg/7 font-semibold font-family-sourcecodepro uppercase text-brand-white/60"
+                        colSpan={2}
+                      >
                         Auditing Standards
                       </th>
-                      <th className="sticky top-0 z-10 bg-brand-1-700 px-3 py-3.5 text-center border-b border-gray/10 text-lg/7 font-semibold font-family-sourcecodepro uppercase text-brand-white/60" colSpan={1}>
+                      <th
+                        className="sticky top-0 z-10 bg-brand-1-700 px-3 py-3.5 text-center border-b border-gray/10 text-lg/7 font-semibold font-family-sourcecodepro uppercase text-brand-white/60"
+                        colSpan={1}
+                      >
                         Right to Information
                       </th>
-                      <th className="sticky top-0 z-10 bg-brand-1-700 px-3 py-3.5 text-center border-b border-gray/10 text-lg/7 font-semibold font-family-sourcecodepro uppercase text-brand-white/60" colSpan={3}>
+                      <th
+                        className="sticky top-0 z-10 bg-brand-1-700 px-3 py-3.5 text-center border-b border-gray/10 text-lg/7 font-semibold font-family-sourcecodepro uppercase text-brand-white/60"
+                        colSpan={3}
+                      >
                         Accessibility of Information
                       </th>
                     </tr>
@@ -114,10 +142,12 @@ export default function PageTransparencyDashboard(): JSX.Element {
                         Year of the most recent Annual Report
                       </th>
                       <th className="sticky top-0 z-10 bg-brand-1-700 px-3 py-3.5 text-left text-base/6 font-semibold font-family-sourcecodepro uppercase text-brand-white w-[160px] md:w-[225px] xl:w-[250px] align-baseline">
-                        Have Annual Reports for the last five years been tabled in Parliament?
+                        Have Annual Reports for the last five years been tabled
+                        in Parliament?
                       </th>
                       <th className="sticky top-0 z-10 bg-brand-1-700 px-3 py-3.5 text-left text-base/6 font-semibold font-family-sourcecodepro uppercase text-brand-white w-[160px] md:w-[225px] xl:w-[250px] align-baseline">
-                        Does the Annual Report include mandatory provisions set out in the PED guidelines?
+                        Does the Annual Report include mandatory provisions set
+                        out in the PED guidelines?
                       </th>
 
                       <th className="sticky top-0 z-10 bg-brand-1-700 px-3 py-3.5 text-left text-base/6 font-semibold font-family-sourcecodepro uppercase text-brand-white w-[160px] md:w-[225px] xl:w-[250px] align-baseline">
@@ -125,20 +155,24 @@ export default function PageTransparencyDashboard(): JSX.Element {
                       </th>
 
                       <th className="sticky top-0 z-10 bg-brand-1-700 px-3 py-3.5 text-left text-base/6 font-semibold font-family-sourcecodepro uppercase text-brand-white w-[160px] md:w-[225px] xl:w-[250px] align-baseline">
-                        Is the information pertaining to the RTI officer available on the website?
+                        Is the information pertaining to the RTI officer
+                        available on the website?
                       </th>
                       <th className="sticky top-0 z-10 bg-brand-1-700 px-3 py-3.5 text-left text-base/6 font-semibold font-family-sourcecodepro uppercase text-brand-white w-[160px] md:w-[225px] xl:w-[250px] align-baseline">
-                        Does the SOE respond to an RTI within the timeframe specified in the Act?
+                        Does the SOE respond to an RTI within the timeframe
+                        specified in the Act?
                       </th>
 
                       <th className="sticky top-0 z-10 bg-brand-1-700 px-3 py-3.5 text-left text-base/6 font-semibold font-family-sourcecodepro uppercase text-brand-white w-[160px] md:w-[225px] xl:w-[250px] align-baseline">
                         Does the SOE have a website?
                       </th>
                       <th className="sticky top-0 z-10 bg-brand-1-700 px-3 py-3.5 text-left text-base/6 font-semibold font-family-sourcecodepro uppercase text-brand-white w-[160px] md:w-[225px] xl:w-[250px] align-baseline">
-                        Does the SOE website contain sufficient organizational details?
+                        Does the SOE website contain sufficient organizational
+                        details?
                       </th>
                       <th className="sticky top-0 z-10 bg-brand-1-700 px-3 py-3.5 text-left text-base/6 font-semibold font-family-sourcecodepro uppercase text-brand-white w-[160px] md:w-[225px] xl:w-[250px] align-baseline">
-                        Does the SOE website contain tender and procurement details?
+                        Does the SOE website contain tender and procurement
+                        details?
                       </th>
                     </tr>
                   </thead>
@@ -150,7 +184,10 @@ export default function PageTransparencyDashboard(): JSX.Element {
                         Aviation
                       </td>
                       {Array.from({ length: 9 }).map((_, i) => (
-                        <td key={i} className="bg-brand-white border-b border-gray-100 px-3 py-3.5 text-left text-base/6 font-medium font-family-sourcecodepro text-gray-500 w-[160px]" />
+                        <td
+                          key={i}
+                          className="bg-brand-white border-b border-gray-100 px-3 py-3.5 text-left text-base/6 font-medium font-family-sourcecodepro text-gray-500 w-[160px]"
+                        />
                       ))}
                     </tr>
 
@@ -159,7 +196,9 @@ export default function PageTransparencyDashboard(): JSX.Element {
                       <td className="sticky left-0 bg-white border-b border-gray-100 px-3 py-3.5 text-left text-base/6 font-family-sourcecodepro font-medium text-brand-black w-[160px] md:whitespace-nowrap">
                         Airport and Aviation Services (Sri Lanka) Ltd.
                       </td>
-                      <td className="bg-white border-b border-gray-100 px-3 py-3.5 text-left text-base/6 font-medium font-family-sourcecodepro text-gray-500 w-[160px]">2024</td>
+                      <td className="bg-white border-b border-gray-100 px-3 py-3.5 text-left text-base/6 font-medium font-family-sourcecodepro text-gray-500 w-[160px]">
+                        2024
+                      </td>
                       {[
                         { color: "#22C55E", text: "Yes" },
                         { color: "#22C55E", text: "Yes" },
@@ -170,12 +209,23 @@ export default function PageTransparencyDashboard(): JSX.Element {
                         { color: "#22C55E", text: "Yes" },
                         { color: "#F59E0B", text: "Partially" },
                       ].map((it, idx) => (
-                        <td key={idx} className="bg-white border-b border-gray-100 px-3 py-3.5 text-left text-base/6 font-medium font-family-sourcecodepro text-gray-500 w-[160px]">
+                        <td
+                          key={idx}
+                          className="bg-white border-b border-gray-100 px-3 py-3.5 text-left text-base/6 font-medium font-family-sourcecodepro text-gray-500 w-[160px]"
+                        >
                           <div className="flex items-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="12"
+                              height="12"
+                              viewBox="0 0 12 12"
+                              fill="none"
+                            >
                               <circle cx="6" cy="6" r="6" fill={it.color} />
                             </svg>
-                            <span className="text-gray-500 font-family-sourcecodepro text-base/6 font-medium">{it.text}</span>
+                            <span className="text-gray-500 font-family-sourcecodepro text-base/6 font-medium">
+                              {it.text}
+                            </span>
                           </div>
                         </td>
                       ))}
@@ -186,7 +236,9 @@ export default function PageTransparencyDashboard(): JSX.Element {
                       <td className="sticky left-0 bg-white border-b border-gray-100 px-3 py-3.5 text-left text-base/6 font-family-sourcecodepro font-medium text-brand-black w-[160px] md:whitespace-nowrap">
                         SriLankan Airlines Ltd.
                       </td>
-                      <td className="bg-white border-b border-gray-100 px-3 py-3.5 text-left text-base/6 font-medium font-family-sourcecodepro text-gray-500 w-[160px]">2024</td>
+                      <td className="bg-white border-b border-gray-100 px-3 py-3.5 text-left text-base/6 font-medium font-family-sourcecodepro text-gray-500 w-[160px]">
+                        2024
+                      </td>
                       {[
                         { color: "#22C55E", text: "Yes" },
                         { color: "#DC2626", text: "No" },
@@ -197,12 +249,23 @@ export default function PageTransparencyDashboard(): JSX.Element {
                         { color: "#22C55E", text: "Yes" },
                         { color: "#22C55E", text: "Yes" },
                       ].map((it, idx) => (
-                        <td key={idx} className="bg-white border-b border-gray-100 px-3 py-3.5 text-left text-base/6 font-medium font-family-sourcecodepro text-gray-500 w-[160px]">
+                        <td
+                          key={idx}
+                          className="bg-white border-b border-gray-100 px-3 py-3.5 text-left text-base/6 font-medium font-family-sourcecodepro text-gray-500 w-[160px]"
+                        >
                           <div className="flex items-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="12"
+                              height="12"
+                              viewBox="0 0 12 12"
+                              fill="none"
+                            >
                               <circle cx="6" cy="6" r="6" fill={it.color} />
                             </svg>
-                            <span className="text-gray-500 font-family-sourcecodepro text-base/6 font-medium">{it.text}</span>
+                            <span className="text-gray-500 font-family-sourcecodepro text-base/6 font-medium">
+                              {it.text}
+                            </span>
                           </div>
                         </td>
                       ))}
@@ -214,7 +277,10 @@ export default function PageTransparencyDashboard(): JSX.Element {
                         Banking and Finance
                       </td>
                       {Array.from({ length: 9 }).map((_, i) => (
-                        <td key={i} className="bg-brand-white border-b border-gray-100 px-3 py-3.5 text-left text-base/6 font-medium font-family-sourcecodepro text-gray-500 w-[160px]" />
+                        <td
+                          key={i}
+                          className="bg-brand-white border-b border-gray-100 px-3 py-3.5 text-left text-base/6 font-medium font-family-sourcecodepro text-gray-500 w-[160px]"
+                        />
                       ))}
                     </tr>
 
@@ -223,7 +289,9 @@ export default function PageTransparencyDashboard(): JSX.Element {
                       <td className="sticky left-0 bg-white border-b border-gray-100 px-3 py-3.5 text-left text-base/6 font-family-sourcecodepro font-medium text-brand-black w-[160px] md:whitespace-nowrap">
                         Bank of Ceylon
                       </td>
-                      <td className="bg-white border-b border-gray-100 px-3 py-3.5 text-left text-base/6 font-medium font-family-sourcecodepro text-gray-500 w-[160px]">2024</td>
+                      <td className="bg-white border-b border-gray-100 px-3 py-3.5 text-left text-base/6 font-medium font-family-sourcecodepro text-gray-500 w-[160px]">
+                        2024
+                      </td>
                       {[
                         { color: "#22C55E", text: "Yes" },
                         { color: "#22C55E", text: "Yes" },
@@ -234,12 +302,23 @@ export default function PageTransparencyDashboard(): JSX.Element {
                         { color: "#22C55E", text: "Yes" },
                         { color: "#DC2626", text: "No" },
                       ].map((it, idx) => (
-                        <td key={idx} className="bg-white border-b border-gray-100 px-3 py-3.5 text-left text-base/6 font-medium font-family-sourcecodepro text-gray-500 w-[160px]">
+                        <td
+                          key={idx}
+                          className="bg-white border-b border-gray-100 px-3 py-3.5 text-left text-base/6 font-medium font-family-sourcecodepro text-gray-500 w-[160px]"
+                        >
                           <div className="flex items-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="12"
+                              height="12"
+                              viewBox="0 0 12 12"
+                              fill="none"
+                            >
                               <circle cx="6" cy="6" r="6" fill={it.color} />
                             </svg>
-                            <span className="text-gray-500 font-family-sourcecodepro text-base/6 font-medium">{it.text}</span>
+                            <span className="text-gray-500 font-family-sourcecodepro text-base/6 font-medium">
+                              {it.text}
+                            </span>
                           </div>
                         </td>
                       ))}
@@ -254,15 +333,24 @@ export default function PageTransparencyDashboard(): JSX.Element {
 
       {/* Pagination */}
       <section className="mx-auto max-w-7xl px-5 md:px-10 xl:px-16 pt-6 md:pt-9 pb-16">
-        <Pagination currentPage={currentPage} totalItems={totalItems} pageSize={pageSize} onPageChange={setCurrentPage} />
+        <Pagination
+          currentPage={currentPage}
+          totalItems={totalItems}
+          pageSize={pageSize}
+          onPageChange={setCurrentPage}
+        />
       </section>
 
       {/* Related datasets */}
       <section className="bg-pink-100 py-12 md:py-16 xl:py-20">
         <div className="mx-auto max-w-7xl px-5 md:px-10 xl:px-16">
           <div className="max-w-2xl text-left">
-            <PageSubTitle className="page-sub-title">Advocata ai suggestions</PageSubTitle>
-            <InnerPageTitle className="page-title">Related datasets</InnerPageTitle>
+            <PageSubTitle className="page-sub-title">
+              Advocata ai suggestions
+            </PageSubTitle>
+            <InnerPageTitle className="page-title">
+              Related datasets
+            </InnerPageTitle>
           </div>
 
           <div className="mt-11 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -293,4 +381,3 @@ export default function PageTransparencyDashboard(): JSX.Element {
     </main>
   );
 }
-

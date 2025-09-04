@@ -1,7 +1,9 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import type { JSX } from "react";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
+
 import SearchField from "@/src/components/InputFields/SearchField";
 import Pagination from "@/src/components/Pagination";
 import DefaultDropdown from "@/src/components/Dropdowns/DefaultDropdown";
@@ -34,8 +36,7 @@ async function gql<T>(query: string): Promise<T> {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ query }),
-    // client component; skip caches to avoid stale taxonomies
-    cache: "no-store",
+    cache: "no-store", // client component; skip caches to avoid stale taxonomies
   });
   if (!res.ok) throw new Error(`GraphQL error: ${res.status}`);
   const json = await res.json();
@@ -89,7 +90,6 @@ query GetSOEPosts {
     }
   }
 }
-
   `);
 
   return (
@@ -104,7 +104,6 @@ query GetSOEPosts {
 }
 
 function sortYearsDesc(years: TaxNode[]): TaxNode[] {
-  // Robust sort: parse numeric if possible, else fallback to lexicographic
   return [...years].sort((a, b) => {
     const an = parseInt(a.name.replace(/\D/g, ""), 10);
     const bn = parseInt(b.name.replace(/\D/g, ""), 10);
@@ -117,6 +116,10 @@ function sortYearsDesc(years: TaxNode[]): TaxNode[] {
 // Component
 // ----------------------
 export default function PageStateOwnedDashboard(): JSX.Element {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+
   const [query, setQuery] = useState("");
   const [industry, setIndustry] = useState<string | null>(null);
   const [year, setYear] = useState<string | null>(null);
@@ -131,6 +134,17 @@ export default function PageStateOwnedDashboard(): JSX.Element {
   const [currentPostTitle, setCurrentPostTitle] = useState("");
 
   const pageSize = 10;
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Load defaults from URL (query params)
+  useEffect(() => {
+    const q = searchParams.get("q") || "";
+    const ind = searchParams.get("industry");
+    const yr = searchParams.get("year");
+    setQuery(q);
+    setIndustry(ind);
+    setYear(yr);
+  }, [searchParams]);
 
   // Load SOE data
   useEffect(() => {
@@ -147,8 +161,9 @@ export default function PageStateOwnedDashboard(): JSX.Element {
         setIndustryOptions(industriesRaw);
         setSoePosts(posts);
 
-        // ✅ Default to latest year and auto-pick the first industry's slug from the first post of that year
-        if (years.length > 0) {
+        const yearInUrl = !!searchParams.get("year");
+        const industryInUrl = !!searchParams.get("industry");
+        if (!year && !yearInUrl && years.length > 0) {
           const latestYearSlug = years[0].slug;
           setYear(latestYearSlug);
 
@@ -159,20 +174,20 @@ export default function PageStateOwnedDashboard(): JSX.Element {
           if (postsForLatestYear.length > 0) {
             const first = postsForLatestYear[0];
             const defaultIndustry = first.industries?.[0]?.slug ?? null;
-            if (defaultIndustry) setIndustry(defaultIndustry);
+            if (!industry && !industryInUrl && defaultIndustry) setIndustry(defaultIndustry);
             setCurrentCsvUrl(first.csvUrl ?? null);
             setCurrentPostTitle(first.title ?? "");
-          } else {
-            setCurrentCsvUrl(null);
-            setCurrentPostTitle("");
           }
         }
       } catch (e) {
         console.error(e);
+      } finally {
+        // Allow URL syncing after we complete initial data/default resolution
+        setIsInitialized(true);
       }
     }
     load();
-  }, []);
+  }, [year, industry, searchParams]);
 
   // Filter posts whenever inputs change
   useEffect(() => {
@@ -209,6 +224,34 @@ export default function PageStateOwnedDashboard(): JSX.Element {
     }
   }, [filteredPosts]);
 
+  // Debounced URL sync with query params: ?industry=..&year=..&q=..
+  const syncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (!isInitialized) return; // skip URL sync on first load to avoid 404s
+    if (syncTimer.current) clearTimeout(syncTimer.current);
+
+    syncTimer.current = setTimeout(() => {
+      const params = new URLSearchParams();
+      if (industry) params.set("industry", industry);
+      if (year) params.set("year", year);
+      const q = query.trim();
+      if (q) params.set("q", q);
+
+      const next = params.toString();
+      const current = searchParams.toString();
+      if (next !== current) {
+        router.replace(next ? `${pathname}?${next}` : `${pathname}`);
+      }
+    }, 250);
+
+    return () => {
+      if (syncTimer.current) {
+        clearTimeout(syncTimer.current);
+        syncTimer.current = null;
+      }
+    };
+  }, [query, industry, year, pathname, searchParams, router, isInitialized]);
+
   // Pagination slice
   const paginatedPosts = filteredPosts.slice(
     (currentPage - 1) * pageSize,
@@ -225,9 +268,30 @@ export default function PageStateOwnedDashboard(): JSX.Element {
             items={[
               { label: "Macro Economy", href: "#" },
               { label: "Government Fiscal Operations", href: "#" },
-              { label: "Transparency in government Institutions", href: "#" },
-              { label: "State Owned Enterprises", href: "#" },
+              {
+                label: "Transparency in government Institutions",
+                href: (() => {
+                  const params = new URLSearchParams();
+                  if (industry) params.set("industry", industry);
+                  if (year) params.set("year", year);
+                  if (query.trim()) params.set("q", query.trim());
+                  const qs = params.toString();
+                  return qs ? `/transparency-dashboard?${qs}` : "/transparency-dashboard";
+                })(),
+              },
+              {
+                label: "State Owned Enterprises",
+                href: (() => {
+                  const params = new URLSearchParams();
+                  if (industry) params.set("industry", industry);
+                  if (year) params.set("year", year);
+                  if (query.trim()) params.set("q", query.trim());
+                  const qs = params.toString();
+                  return qs ? `/state-owned-dashboard?${qs}` : "/state-owned-dashboard";
+                })(),
+              },
             ]}
+            activePath={pathname}
           />
         </div>
       </div>
