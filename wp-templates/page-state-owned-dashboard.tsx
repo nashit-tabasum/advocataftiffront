@@ -120,7 +120,9 @@ export default function PageStateOwnedDashboard(): JSX.Element {
   const searchParams = useSearchParams();
   const pathname = usePathname();
 
-  const [query, setQuery] = useState("");
+  // Search input vs applied search
+  const [queryInput, setQueryInput] = useState("");
+  const [appliedQuery, setAppliedQuery] = useState("");
   const [industry, setIndustry] = useState<string | null>(null);
   const [year, setYear] = useState<string | null>(null);
   const [openId, setOpenId] = useState<"one" | "two" | null>(null);
@@ -141,12 +143,13 @@ export default function PageStateOwnedDashboard(): JSX.Element {
     const q = searchParams.get("q") || "";
     const ind = searchParams.get("industry");
     const yr = searchParams.get("year");
-    setQuery(q);
+    setQueryInput(q);
+    setAppliedQuery(q);
     setIndustry(ind);
     setYear(yr);
   }, [searchParams]);
 
-  // Load SOE data
+  // Load SOE data once on mount; avoid re-fetching on query changes
   useEffect(() => {
     async function load() {
       try {
@@ -187,16 +190,12 @@ export default function PageStateOwnedDashboard(): JSX.Element {
       }
     }
     load();
-  }, [year, industry, searchParams]);
+  }, []);
 
-  // Filter posts whenever inputs change
+  // Filter posts whenever filters change (industry/year)
+  // Note: query is applied within the CSV table, not to dataset selection
   useEffect(() => {
     let results = soePosts;
-
-    if (query) {
-      const q = query.toLowerCase();
-      results = results.filter((p) => p.title.toLowerCase().includes(q));
-    }
 
     if (industry) {
       results = results.filter((p) =>
@@ -210,7 +209,7 @@ export default function PageStateOwnedDashboard(): JSX.Element {
 
     setFilteredPosts(results);
     setCurrentPage(1);
-  }, [query, industry, year, soePosts]);
+  }, [industry, year, soePosts]);
 
   // Pick current CSV from the first filtered post
   useEffect(() => {
@@ -224,7 +223,7 @@ export default function PageStateOwnedDashboard(): JSX.Element {
     }
   }, [filteredPosts]);
 
-  // Debounced URL sync with query params: ?industry=..&year=..&q=..
+  // Debounced URL sync with query params: ?industry=..&year=..
   const syncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     if (!isInitialized) return; // skip URL sync on first load to avoid 404s
@@ -234,13 +233,13 @@ export default function PageStateOwnedDashboard(): JSX.Element {
       const params = new URLSearchParams();
       if (industry) params.set("industry", industry);
       if (year) params.set("year", year);
-      const q = query.trim();
-      if (q) params.set("q", q);
 
       const next = params.toString();
       const current = searchParams.toString();
       if (next !== current) {
-        router.replace(next ? `${pathname}?${next}` : `${pathname}`);
+        router.replace(next ? `${pathname}?${next}` : `${pathname}`, {
+          scroll: false,
+        });
       }
     }, 250);
 
@@ -250,7 +249,7 @@ export default function PageStateOwnedDashboard(): JSX.Element {
         syncTimer.current = null;
       }
     };
-  }, [query, industry, year, pathname, searchParams, router, isInitialized]);
+  }, [industry, year, pathname, searchParams, router, isInitialized]);
 
   // Pagination slice
   const paginatedPosts = filteredPosts.slice(
@@ -274,7 +273,6 @@ export default function PageStateOwnedDashboard(): JSX.Element {
                   const params = new URLSearchParams();
                   if (industry) params.set("industry", industry);
                   if (year) params.set("year", year);
-                  if (query.trim()) params.set("q", query.trim());
                   const qs = params.toString();
                   return qs ? `/transparency-dashboard?${qs}` : "/transparency-dashboard";
                 })(),
@@ -285,7 +283,6 @@ export default function PageStateOwnedDashboard(): JSX.Element {
                   const params = new URLSearchParams();
                   if (industry) params.set("industry", industry);
                   if (year) params.set("year", year);
-                  if (query.trim()) params.set("q", query.trim());
                   const qs = params.toString();
                   return qs ? `/state-owned-dashboard?${qs}` : "/state-owned-dashboard";
                 })(),
@@ -310,8 +307,22 @@ export default function PageStateOwnedDashboard(): JSX.Element {
             {/* Search */}
             <div className="relative w-full xl:w-1/2">
               <SearchField
-                value={query}
-                onChange={setQuery}
+                value={queryInput}
+                onChange={(q) => {
+                  setQueryInput(q);
+                  // If the input was cleared on focus, also clear applied filter
+                  if (q === "" && appliedQuery !== "") {
+                    setAppliedQuery("");
+                    setCurrentPage(1);
+                  }
+                }}
+                onSubmit={(q) => {
+                  setAppliedQuery(q);
+                  setCurrentPage(1);
+                }}
+                clearOnFocus
+                showSubmitButton
+                submitLabel="Search"
                 placeholder="Search SOE..."
               />
             </div>
@@ -363,7 +374,7 @@ export default function PageStateOwnedDashboard(): JSX.Element {
 
           {/* CSV Table */}
           {currentCsvUrl ? (
-            <CsvTable csvUrl={currentCsvUrl} />
+            <CsvTable csvUrl={currentCsvUrl} filterQuery={appliedQuery} />
           ) : (
             <p className="text-gray-500">No dataset found for selection.</p>
           )}

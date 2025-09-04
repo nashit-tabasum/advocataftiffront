@@ -5,9 +5,11 @@ import Papa from "papaparse";
 
 interface CsvTableProps {
   csvUrl: string;
+  // Optional case-insensitive row filter; matches any cell
+  filterQuery?: string;
 }
 
-export default function CsvTable({ csvUrl }: CsvTableProps) {
+export default function CsvTable({ csvUrl, filterQuery }: CsvTableProps) {
   const [rows, setRows] = useState<string[][]>([]);
   const [error, setError] = useState<string | null>(null);
 
@@ -44,6 +46,14 @@ export default function CsvTable({ csvUrl }: CsvTableProps) {
 
   const headers = rows[0];
   const dataRows = rows.slice(1);
+
+  // Filter rows by query across all cells (case-insensitive)
+  const q = (filterQuery ?? "").trim().toLowerCase();
+  const visibleRows = q
+    ? dataRows.filter((row) =>
+        row.some((cell) => (cell ?? "").toString().toLowerCase().includes(q))
+      )
+    : dataRows;
 
   // Utility: format cell values
   const formatCell = (value: string): React.ReactNode => {
@@ -93,7 +103,17 @@ export default function CsvTable({ csvUrl }: CsvTableProps) {
                 </thead>
 
                 <tbody className="divide-y divide-gray-300">
-                  {dataRows.map((row, rowIndex) => (
+                  {visibleRows.length === 0 && (
+                    <tr>
+                      <td
+                        className="px-3 py-3.5 text-left text-base/6 font-medium font-family-sourcecodepro text-gray-500"
+                        colSpan={headers.length}
+                      >
+                        {q ? "No matching results." : "No data available."}
+                      </td>
+                    </tr>
+                  )}
+                  {visibleRows.map((row, rowIndex) => (
                     <tr key={rowIndex}>
                       {row.map((cell, cellIndex) => (
                         <td

@@ -10,6 +10,9 @@ type SearchFieldProps = {
   placeholder?: string;
   className?: string;
   autoFocus?: boolean;
+  clearOnFocus?: boolean; // optional: clear input when focused
+  showSubmitButton?: boolean; // optional: render a trailing submit button
+  submitLabel?: string; // label for the submit button
 };
 
 export default function SearchField({
@@ -20,6 +23,9 @@ export default function SearchField({
   placeholder = "Search...",
   className,
   autoFocus,
+  clearOnFocus = false,
+  showSubmitButton = false,
+  submitLabel = "Search",
 }: SearchFieldProps): JSX.Element {
   const inputRef = useRef<HTMLInputElement>(null);
   const isControlled = useMemo(() => typeof value === "string", [value]);
@@ -43,12 +49,11 @@ export default function SearchField({
   );
 
   const handleFocus = useCallback(() => {
-    // Auto-clear previous keyword, but keep the input focused + caret stable.
+    if (!clearOnFocus) return;
+    // Optionally auto-clear previous keyword, while preserving focus
     if (query && query.length > 0) {
       if (!isControlled) setInternal("");
       onChange?.("");
-
-      // Ensure focus is preserved after React re-render
       requestAnimationFrame(() => {
         const el = inputRef.current;
         if (el) {
@@ -57,7 +62,7 @@ export default function SearchField({
         }
       });
     }
-  }, [isControlled, onChange, query]);
+  }, [clearOnFocus, isControlled, onChange, query]);
 
   const handleBlur = useCallback(() => {
     // noop
@@ -71,7 +76,7 @@ export default function SearchField({
         id="search-plain"
         name="search"
         placeholder={placeholder}
-        className="search-input w-full rounded-full border border-gray-300 bg-white py-2.5 pl-12 pr-2.5 font-family-baskervville text-sm md:text-base text-slate-800 placeholder:text-slate-600/50 shadow-sm hover:border-brand-1-100 focus:border-brand-1-200 focus:outline-0 focus:ring-1 focus:ring-transparent"
+        className={`search-input w-full rounded-full border border-gray-300 bg-white py-2.5 pl-12 ${showSubmitButton ? "pr-28" : "pr-2.5"} font-family-baskervville text-sm md:text-base text-slate-800 placeholder:text-slate-600/50 shadow-sm hover:border-brand-1-100 focus:border-brand-1-200 focus:outline-0 focus:ring-1 focus:ring-transparent`}
         value={query}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
@@ -105,6 +110,16 @@ export default function SearchField({
           />
         </svg>
       </div>
+      {showSubmitButton && (
+        <button
+          type="button"
+          className="absolute inset-y-0 right-1 my-1 px-4 rounded-full bg-brand-1-700 text-white text-sm font-medium shadow-sm hover:bg-brand-1-600 focus:outline-none focus:ring-2 focus:ring-brand-1-200"
+          onClick={() => onSubmit?.(query)}
+          aria-label={submitLabel}
+        >
+          {submitLabel}
+        </button>
+      )}
     </div>
   );
 }
