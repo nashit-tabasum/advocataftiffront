@@ -151,8 +151,16 @@ export default function PageTransparencyDashboard(): JSX.Element {
         setIndustryOptions(industries);
         setPosts(posts);
 
-        if (!year && years.length > 0) setYear(years[0].slug);
-        if (!industry && industries.length > 0) setIndustry(industries[0].slug);
+        // ✅ Only set defaults if nothing is chosen in the URL
+        const yearInUrl = !!searchParams.get("year");
+        const industryInUrl = !!searchParams.get("industry");
+
+        if (!year && !yearInUrl && years.length > 0) {
+          setYear(years[0].slug);
+        }
+        if (!industry && !industryInUrl && industries.length > 0) {
+          setIndustry(industries[0].slug);
+        }
       } catch (e) {
         console.error(e);
       } finally {
