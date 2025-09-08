@@ -48,7 +48,7 @@ const CardType5: React.FC<CardType5Props> = ({
 }) => {
   const isoDate = toISOOrRaw(postDate);
 
-  return (
+  const Article = (
     <article
       className="relative h-full overflow-hidden rounded-lg border border-gray-300
                  transition-all duration-500 ease-in-out
@@ -80,18 +80,7 @@ const CardType5: React.FC<CardType5Props> = ({
           )}
 
           <h2 className="mt-3 text-xl md:text-2xl font-semibold font-family-montserrat text-slate-950 line-clamp-3">
-            {uri ? (
-              <Link
-                href={uri}
-                prefetch={false}
-                className="focus:outline-none"
-                aria-label={title}
-              >
-                {title}
-              </Link>
-            ) : (
-              title
-            )}
+            {title}
           </h2>
 
           {excerpt && (
@@ -113,6 +102,14 @@ const CardType5: React.FC<CardType5Props> = ({
         )}
       </div>
     </article>
+  );
+
+  return uri ? (
+    <Link href={uri} prefetch={false} aria-label={title} className="block h-full">
+      {Article}
+    </Link>
+  ) : (
+    Article
   );
 };
 
