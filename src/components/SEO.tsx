@@ -55,9 +55,12 @@ export default function SEO({ title, description, canonical, yoast, siteName, se
   const twDesc = (yoast?.twitterDescription ?? theDesc) || undefined;
   const twImage = yoast?.twitterImage?.sourceUrl || ogImage || undefined;
   const schemaRaw = yoast?.schema?.raw || undefined;
+  const favicon = (process.env.NEXT_PUBLIC_SITE_ICON_URL as string) || "/assets/images/favicon.png";
 
   return (
     <Head>
+      {/* Favicon */}
+      {favicon && <link rel="icon" type="image/png" href={favicon} />}
       {theTitle && <title>{theTitle}</title>}
       {theDesc && <meta name="description" content={theDesc} />}
       {theCanonical && <link rel="canonical" href={theCanonical} />}
