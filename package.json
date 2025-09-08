@@ -10,10 +10,12 @@
     "test:format": "prettier . --check"
   },
   "dependencies": {
+    "@algolia/autocomplete-js": "^1.19.3",
     "@apollo/client": "^3.13.8",
     "@faustwp/cli": "^3.2.3",
     "@faustwp/core": "^3.2.3",
     "@tailwindcss/postcss": "^4.1.12",
+    "algoliasearch": "^5.37.0",
     "clsx": "^2.1.1",
     "graphql": "^16.10.0",
     "html-react-parser": "^5.2.6",
