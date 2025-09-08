@@ -215,7 +215,11 @@ export default function PageHome({ data }: HomePageProps): JSX.Element {
 
   return (
     <div className="bg-gray-400 overflow-x-hidden">
-      <SEO yoast={data?.page?.seo as any} title={heroTitle} description={heroDescription} />
+      <SEO
+        yoast={data?.page?.seo as any}
+        title={data?.page?.title ?? heroTitle ?? "Home"}
+        description={heroDescription}
+      />
       {/* Hero section */}
       <div className="home-hero relative bg-cover bg-center bg-no-repeat text-white">
         <div>

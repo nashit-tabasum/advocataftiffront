@@ -143,7 +143,7 @@ const DatasetInnerPage: React.FC<SingleDatasetProps> = ({ data }) => {
 
   return (
     <main>
-      <SEO yoast={(dataset as any)?.seo} />
+      <SEO yoast={(dataset as any)?.seo} title={dataset.title ?? undefined} />
       {/* Hero */}
       <section className="bg-white">
         <div className="px-5 md:px-10 xl:px-16 py-12 md:py-16 xl:py-20 mx-auto w-full">
