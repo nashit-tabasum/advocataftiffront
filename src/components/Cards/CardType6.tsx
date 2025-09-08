@@ -52,24 +52,21 @@ const CardType6: React.FC<CardType6Props> = ({
           "card card-type-6",
         ].join(" ")}
       >
+        {uri && (
+          <Link
+            href={uri}
+            prefetch={false}
+            aria-label={title}
+            className="absolute inset-0 z-10"
+          >
+            <span className="sr-only">{title}</span>
+          </Link>
+        )}
         <div className="card-body flex flex-1 flex-col justify-between bg-white px-6 py-5">
           <div className="flex-1">
             <div>
               {/* Title with permalink only — mirrors CardType5 pattern */}
-              <h2 className="mt-2 cursor-pointer text-2xl leading-snug font-semibold font-family-montserrat text-slate-800 transition-colors duration-500 ease-in-out">
-                {uri ? (
-                  <Link
-                    href={uri}
-                    prefetch={false}
-                    className="cursor-pointer focus:outline-none"
-                    aria-label={title}
-                  >
-                    {title}
-                  </Link>
-                ) : (
-                  title
-                )}
-              </h2>
+              <h2 className="mt-2 cursor-pointer text-2xl leading-snug font-semibold font-family-montserrat text-slate-800 transition-colors duration-500 ease-in-out">{title}</h2>
 
               <div className="mt-2 text-base/6 font-normal font-family-sourcecodepro text-slate-600 line-clamp-3 transition-colors duration-500 ease-in-out">
                 {stripParagraphTags(excerpt)}
