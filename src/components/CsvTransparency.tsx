@@ -49,10 +49,19 @@ export default function CsvTransparency({
   const headers = rows[0];
   const dataRows = rows.slice(1);
 
-  const q = (filterQuery ?? "").trim().toLowerCase();
-  const visibleRows = q
+  // Normalize function: lowercase, collapse whitespace, replace NBSP
+  const norm = (s: string) =>
+    (s ?? "")
+      .toLowerCase()
+      .replace(/\u00a0/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+
+  // Tokenize query by spaces; require ALL tokens to match somewhere in the row
+  const tokens = norm(filterQuery ?? "").split(" ").filter(Boolean);
+  const visibleRows = tokens.length
     ? dataRows.filter((row) =>
-        row.some((cell) => (cell ?? "").toLowerCase().includes(q))
+        tokens.every((t) => row.some((cell) => norm(cell).includes(t)))
       )
     : dataRows;
 
@@ -149,7 +158,7 @@ export default function CsvTransparency({
                     className="px-3 py-3.5 text-left text-base/6 font-medium text-gray-500"
                     colSpan={headers.length}
                   >
-                    {q ? "No matching results." : "No data available."}
+                    {tokens.length ? "No matching results." : "No data available."}
                   </td>
                 </tr>
               )}

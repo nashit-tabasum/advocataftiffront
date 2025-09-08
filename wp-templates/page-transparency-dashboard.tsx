@@ -122,7 +122,6 @@ export default function PageTransparencyDashboard(): JSX.Element {
   const [seo, setSeo] = useState<any | null>(null);
 
   const [queryInput, setQueryInput] = useState("");
-  const [appliedQuery, setAppliedQuery] = useState("");
   const [industry, setIndustry] = useState<string | null>(null);
   const [year, setYear] = useState<string | null>(null);
   const [openId, setOpenId] = useState<"one" | "two" | null>(null);
@@ -143,7 +142,6 @@ export default function PageTransparencyDashboard(): JSX.Element {
     const ind = searchParams.get("industry");
     const yr = searchParams.get("year");
     setQueryInput(q);
-    setAppliedQuery(q);
     setIndustry(ind);
     setYear(yr);
   }, [searchParams]);
@@ -221,7 +219,6 @@ export default function PageTransparencyDashboard(): JSX.Element {
       const params = new URLSearchParams();
       if (industry) params.set("industry", industry);
       if (year) params.set("year", year);
-      if (appliedQuery) params.set("q", appliedQuery);
 
       const next = params.toString();
       const current = searchParams.toString();
@@ -235,15 +232,7 @@ export default function PageTransparencyDashboard(): JSX.Element {
     return () => {
       if (syncTimer.current) clearTimeout(syncTimer.current);
     };
-  }, [
-    industry,
-    year,
-    appliedQuery,
-    pathname,
-    router,
-    searchParams,
-    isInitialized,
-  ]);
+  }, [industry, year, pathname, router, searchParams, isInitialized]);
 
   const paginatedPosts = filteredPosts.slice(
     (currentPage - 1) * pageSize,
@@ -307,18 +296,8 @@ export default function PageTransparencyDashboard(): JSX.Element {
                 value={queryInput}
                 onChange={(q) => {
                   setQueryInput(q);
-                  if (q === "" && appliedQuery !== "") {
-                    setAppliedQuery("");
-                    setCurrentPage(1);
-                  }
-                }}
-                onSubmit={(q) => {
-                  setAppliedQuery(q);
                   setCurrentPage(1);
                 }}
-                clearOnFocus
-                showSubmitButton
-                submitLabel="Search"
                 placeholder="Search Transparency..."
               />
             </div>
@@ -375,7 +354,7 @@ export default function PageTransparencyDashboard(): JSX.Element {
           {currentCsvUrl ? (
             <CsvTableTransparency
               csvUrl={currentCsvUrl}
-              filterQuery={appliedQuery}
+              filterQuery={queryInput}
             />
           ) : (
             <p className="text-gray-500">No dataset found for selection.</p>

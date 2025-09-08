@@ -47,11 +47,18 @@ export default function CsvTable({ csvUrl, filterQuery }: CsvTableProps) {
   const headers = rows[0];
   const dataRows = rows.slice(1);
 
-  // Filter rows by query across all cells (case-insensitive)
-  const q = (filterQuery ?? "").trim().toLowerCase();
-  const visibleRows = q
+  // Normalize text and tokenize query for robust multi-word matching (AND across row)
+  const norm = (s: string) =>
+    (s ?? "")
+      .toString()
+      .toLowerCase()
+      .replace(/\u00a0/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  const tokens = norm(filterQuery ?? "").split(" ").filter(Boolean);
+  const visibleRows = tokens.length
     ? dataRows.filter((row) =>
-        row.some((cell) => (cell ?? "").toString().toLowerCase().includes(q))
+        tokens.every((t) => row.some((cell) => norm(cell).includes(t)))
       )
     : dataRows;
 
@@ -109,7 +116,7 @@ export default function CsvTable({ csvUrl, filterQuery }: CsvTableProps) {
                         className="px-3 py-3.5 text-left text-base/6 font-medium font-family-sourcecodepro text-gray-500"
                         colSpan={headers.length}
                       >
-                        {q ? "No matching results." : "No data available."}
+                        {tokens.length ? "No matching results." : "No data available."}
                       </td>
                     </tr>
                   )}

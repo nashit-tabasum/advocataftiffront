@@ -133,7 +133,6 @@ export default function PageStateOwnedDashboard(): JSX.Element {
 
   // Search input vs applied search
   const [queryInput, setQueryInput] = useState("");
-  const [appliedQuery, setAppliedQuery] = useState("");
   const [industry, setIndustry] = useState<string | null>(null);
   const [year, setYear] = useState<string | null>(null);
   const [openId, setOpenId] = useState<"one" | "two" | null>(null);
@@ -155,7 +154,6 @@ export default function PageStateOwnedDashboard(): JSX.Element {
     const ind = searchParams.get("industry");
     const yr = searchParams.get("year");
     setQueryInput(q);
-    setAppliedQuery(q);
     setIndustry(ind);
     setYear(yr);
   }, [searchParams]);
@@ -331,19 +329,8 @@ export default function PageStateOwnedDashboard(): JSX.Element {
                 value={queryInput}
                 onChange={(q) => {
                   setQueryInput(q);
-                  // If the input was cleared on focus, also clear applied filter
-                  if (q === "" && appliedQuery !== "") {
-                    setAppliedQuery("");
-                    setCurrentPage(1);
-                  }
-                }}
-                onSubmit={(q) => {
-                  setAppliedQuery(q);
                   setCurrentPage(1);
                 }}
-                clearOnFocus
-                showSubmitButton
-                submitLabel="Search"
                 placeholder="Search SOE..."
               />
             </div>
@@ -395,7 +382,7 @@ export default function PageStateOwnedDashboard(): JSX.Element {
 
           {/* CSV Table */}
           {currentCsvUrl ? (
-            <CsvTable csvUrl={currentCsvUrl} filterQuery={appliedQuery} />
+            <CsvTable csvUrl={currentCsvUrl} filterQuery={queryInput} />
           ) : (
             <p className="text-gray-500">No dataset found for selection.</p>
           )}
