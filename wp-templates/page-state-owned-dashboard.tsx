@@ -146,7 +146,6 @@ export default function PageStateOwnedDashboard(): JSX.Element {
   const [currentPostTitle, setCurrentPostTitle] = useState("");
 
   const pageSize = 10;
-  const [isInitialized, setIsInitialized] = useState(false);
 
   // Load defaults from URL (query params)
   useEffect(() => {
@@ -203,8 +202,7 @@ export default function PageStateOwnedDashboard(): JSX.Element {
       } catch (e) {
         console.error(e);
       } finally {
-        // Allow URL syncing after we complete initial data/default resolution
-        setIsInitialized(true);
+        // noop
       }
     }
     load();
@@ -241,33 +239,7 @@ export default function PageStateOwnedDashboard(): JSX.Element {
     }
   }, [filteredPosts]);
 
-  // Debounced URL sync with query params: ?industry=..&year=..
-  const syncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => {
-    if (!isInitialized) return; // skip URL sync on first load to avoid 404s
-    if (syncTimer.current) clearTimeout(syncTimer.current);
-
-    syncTimer.current = setTimeout(() => {
-      const params = new URLSearchParams();
-      if (industry) params.set("industry", industry);
-      if (year) params.set("year", year);
-
-      const next = params.toString();
-      const current = searchParams.toString();
-      if (next !== current) {
-        router.replace(next ? `${pathname}?${next}` : `${pathname}`, {
-          scroll: false,
-        });
-      }
-    }, 250);
-
-    return () => {
-      if (syncTimer.current) {
-        clearTimeout(syncTimer.current);
-        syncTimer.current = null;
-      }
-    };
-  }, [industry, year, pathname, searchParams, router, isInitialized]);
+  // URL syncing removed to keep dropdown interactions instant and jank-free
 
   // Pagination slice
   const paginatedPosts = filteredPosts.slice(

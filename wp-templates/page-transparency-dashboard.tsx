@@ -133,7 +133,7 @@ export default function PageTransparencyDashboard(): JSX.Element {
   const [filteredPosts, setFilteredPosts] = useState<TransparencyPost[]>([]);
   const [currentCsvUrl, setCurrentCsvUrl] = useState<string | null>(null);
 
-  const [isInitialized, setIsInitialized] = useState(false);
+  // removed URL syncing; no init gating
   const pageSize = 10;
 
   // Load defaults from URL
@@ -179,7 +179,7 @@ export default function PageTransparencyDashboard(): JSX.Element {
       } catch (e) {
         console.error(e);
       } finally {
-        setIsInitialized(true);
+        // noop
       }
     }
     load();
@@ -209,30 +209,7 @@ export default function PageTransparencyDashboard(): JSX.Element {
     }
   }, [filteredPosts]);
 
-  // Sync URL with filters
-  const syncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => {
-    if (!isInitialized) return;
-    if (syncTimer.current) clearTimeout(syncTimer.current);
-
-    syncTimer.current = setTimeout(() => {
-      const params = new URLSearchParams();
-      if (industry) params.set("industry", industry);
-      if (year) params.set("year", year);
-
-      const next = params.toString();
-      const current = searchParams.toString();
-      if (next !== current) {
-        router.replace(next ? `${pathname}?${next}` : `${pathname}`, {
-          scroll: false,
-        });
-      }
-    }, 250);
-
-    return () => {
-      if (syncTimer.current) clearTimeout(syncTimer.current);
-    };
-  }, [industry, year, pathname, router, searchParams, isInitialized]);
+  // URL syncing removed to avoid jank and re-renders
 
   const paginatedPosts = filteredPosts.slice(
     (currentPage - 1) * pageSize,
