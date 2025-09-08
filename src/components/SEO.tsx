@@ -23,16 +23,32 @@ type Props = {
   description?: string;
   canonical?: string;
   yoast?: YoastSEO;
+  siteName?: string; // optional override for site title
+  separator?: string; // optional title separator, default " | "
 };
 
-export default function SEO({ title, description, canonical, yoast }: Props) {
-  const theTitle = (yoast?.title ?? title) || undefined;
+function escapeRegExp(str: string) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+export default function SEO({ title, description, canonical, yoast, siteName, separator = " | " }: Props) {
+  // Determine base + sitename, and ensure "Page | Site"
+  const baseTitle = (yoast?.title ?? title) || undefined;
+  const computedSiteName = siteName || yoast?.opengraphSiteName || undefined;
+  let finalTitle = baseTitle;
+  if (baseTitle && computedSiteName) {
+    const sn = computedSiteName.trim();
+    const hasSite = new RegExp(`\\b${escapeRegExp(sn)}\\b`, "i").test(baseTitle);
+    if (!hasSite) finalTitle = `${baseTitle}${separator}${sn}`;
+  }
+
+  const theTitle = finalTitle;
   const theDesc = (yoast?.metaDesc ?? description) || undefined;
   const theCanonical = (yoast?.canonical ?? canonical) || undefined;
   const ogTitle = (yoast?.opengraphTitle ?? theTitle) || undefined;
   const ogDesc = (yoast?.opengraphDescription ?? theDesc) || undefined;
   const ogUrl = yoast?.opengraphUrl || theCanonical || undefined;
-  const ogSiteName = yoast?.opengraphSiteName || undefined;
+  const ogSiteName = computedSiteName || undefined;
   const ogImage = yoast?.opengraphImage?.sourceUrl || undefined;
   const twTitle = (yoast?.twitterTitle ?? theTitle) || undefined;
   const twDesc = (yoast?.twitterDescription ?? theDesc) || undefined;
