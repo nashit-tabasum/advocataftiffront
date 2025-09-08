@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useRef, useState, type JSX } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import SEO from "@/src/components/SEO";
 
 import SecondaryNav from "@/src/components/SecondaryNav";
 import HeroWhite from "@/src/components/HeroBlocks/HeroWhite";
@@ -40,6 +41,15 @@ async function gql<T>(query: string): Promise<T> {
   if (!res.ok) throw new Error(`GraphQL error: ${res.status}`);
   const json = await res.json();
   return json.data;
+}
+
+async function fetchPageSEOByUri(uri: string): Promise<any | null> {
+  const wpUri = uri.endsWith("/") ? uri : `${uri}/`;
+  const encoded = wpUri.replace(/"/g, '\\"');
+  const data = await gql<{ nodeByUri?: { __typename?: string; seo?: any } }>(
+    `query GetSeoByUri {\n  nodeByUri(uri: "${encoded}") {\n    __typename\n    ... on Page {\n      seo {\n        title\n        metaDesc\n        canonical\n        opengraphTitle\n        opengraphDescription\n        opengraphUrl\n        opengraphSiteName\n        opengraphImage { sourceUrl }\n        twitterTitle\n        twitterDescription\n        twitterImage { sourceUrl }\n        schema { raw }\n      }\n    }\n  }\n}`
+  );
+  return data?.nodeByUri && (data.nodeByUri as any).seo ? (data.nodeByUri as any).seo : null;
 }
 
 async function fetchTransparencyYears(): Promise<TaxNode[]> {
@@ -109,6 +119,7 @@ export default function PageTransparencyDashboard(): JSX.Element {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
+  const [seo, setSeo] = useState<any | null>(null);
 
   const [queryInput, setQueryInput] = useState("");
   const [appliedQuery, setAppliedQuery] = useState("");
@@ -141,6 +152,12 @@ export default function PageTransparencyDashboard(): JSX.Element {
   useEffect(() => {
     async function load() {
       try {
+        try {
+          const s = await fetchPageSEOByUri(pathname || "/transparency-dashboard/");
+          setSeo(s);
+        } catch (e) {
+          console.warn("SEO fetch failed", e);
+        }
         const [years, industries, posts] = await Promise.all([
           fetchTransparencyYears(),
           fetchTransparencyIndustries(),
@@ -235,6 +252,7 @@ export default function PageTransparencyDashboard(): JSX.Element {
 
   return (
     <main>
+      <SEO yoast={seo as any} title="Transparency in government Institutions" />
       {/* Secondary Navigation */}
       <div className="bg-white border-b border-slate-300">
         <div className="mx-auto max-w-7xl px-5 md:px-10 xl:px-16 py-4 lg:py-0">

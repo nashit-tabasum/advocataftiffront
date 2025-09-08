@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import type { JSX } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import SEO from "@/src/components/SEO";
 
 import SearchField from "@/src/components/InputFields/SearchField";
 import Pagination from "@/src/components/Pagination";
@@ -41,6 +42,15 @@ async function gql<T>(query: string): Promise<T> {
   if (!res.ok) throw new Error(`GraphQL error: ${res.status}`);
   const json = await res.json();
   return json.data;
+}
+
+async function fetchPageSEOByUri(uri: string): Promise<any | null> {
+  const wpUri = uri.endsWith("/") ? uri : `${uri}/`;
+  const encoded = wpUri.replace(/"/g, '\\"');
+  const data = await gql<{ nodeByUri?: { __typename?: string; seo?: any } }>(
+    `query GetSeoByUri {\n  nodeByUri(uri: "${encoded}") {\n    __typename\n    ... on Page {\n      seo {\n        title\n        metaDesc\n        canonical\n        opengraphTitle\n        opengraphDescription\n        opengraphUrl\n        opengraphSiteName\n        opengraphImage { sourceUrl }\n        twitterTitle\n        twitterDescription\n        twitterImage { sourceUrl }\n        schema { raw }\n      }\n    }\n  }\n}`
+  );
+  return data?.nodeByUri && (data.nodeByUri as any).seo ? (data.nodeByUri as any).seo : null;
 }
 
 async function fetchSOEYears(): Promise<TaxNode[]> {
@@ -119,6 +129,7 @@ export default function PageStateOwnedDashboard(): JSX.Element {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
+  const [seo, setSeo] = useState<any | null>(null);
 
   // Search input vs applied search
   const [queryInput, setQueryInput] = useState("");
@@ -153,6 +164,15 @@ export default function PageStateOwnedDashboard(): JSX.Element {
   useEffect(() => {
     async function load() {
       try {
+        // Fetch Yoast SEO for this page by URI
+        try {
+          const s = await fetchPageSEOByUri(pathname || "/state-owned-dashboard/");
+          setSeo(s);
+        } catch (e) {
+          // non-fatal if seo not available
+          console.warn("SEO fetch failed", e);
+        }
+
         const [yearsRaw, industriesRaw, posts] = await Promise.all([
           fetchSOEYears(),
           fetchSOEIndustries(),
@@ -259,6 +279,7 @@ export default function PageStateOwnedDashboard(): JSX.Element {
 
   return (
     <main>
+      <SEO yoast={seo as any} title="State Owned Enterprises" />
       {/* Secondary Navigation */}
       <div className="bg-white border-b border-slate-300">
         <div className="mx-auto max-w-7xl px-5 md:px-10 xl:px-16 py-4 lg:py-0">

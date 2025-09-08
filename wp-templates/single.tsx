@@ -2,6 +2,7 @@ import { gql } from "@apollo/client";
 import { useFaustQuery } from "@faustwp/core";
 import { GetStaticPropsContext } from "next"; // Import GetStaticPropsContext
 import Layout from "../src/components/Layout";
+import SEO from "@/src/components/SEO";
 import EntryHeader from "../src/components/EntryHeader";
 
 const POST_QUERY = gql`
@@ -10,6 +11,20 @@ const POST_QUERY = gql`
       title
       content
       date
+      seo {
+        title
+        metaDesc
+        canonical
+        opengraphTitle
+        opengraphDescription
+        opengraphUrl
+        opengraphSiteName
+        opengraphImage { sourceUrl }
+        twitterTitle
+        twitterDescription
+        twitterImage { sourceUrl }
+        schema { raw }
+      }
       author {
         node {
           name
@@ -24,6 +39,7 @@ interface PostData {
     title?: string;
     content?: string;
     date?: string;
+    seo?: any;
     author?: {
       node?: {
         name?: string;
@@ -53,6 +69,7 @@ export default function Component(props: SinglePageProps) {
   return (
     <Layout>
       <main className="max-w-6xl mx-auto px-4">
+        <SEO yoast={(contentQuery?.post as any)?.seo} title={title} />
         <EntryHeader title={title} date={date} author={author?.node?.name} />
         <div
           className="prose max-w-none"

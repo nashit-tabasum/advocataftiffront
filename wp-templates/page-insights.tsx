@@ -7,12 +7,27 @@ import CardType5 from "../src/components/Cards/CardType5";
 import HeroBasic from "../src/components/HeroBlocks/HeroBasic";
 import SearchField from "../src/components/InputFields/SearchField";
 import FilterCarousel from "../src/components/FilterCarousel";
+import SEO from "@/src/components/SEO";
 
 const PAGE_QUERY = gql`
   query GetInsightsPage($databaseId: ID!, $asPreview: Boolean = false) {
     page(id: $databaseId, idType: DATABASE_ID, asPreview: $asPreview) {
       title
       content
+      seo {
+        title
+        metaDesc
+        canonical
+        opengraphTitle
+        opengraphDescription
+        opengraphUrl
+        opengraphSiteName
+        opengraphImage { sourceUrl }
+        twitterTitle
+        twitterDescription
+        twitterImage { sourceUrl }
+        schema { raw }
+      }
     }
     insights(first: 100) {
       nodes {
@@ -48,7 +63,11 @@ const PAGE_QUERY = gql`
 
 interface InsightsPageProps {
   data?: {
-    page?: { title?: string | null; content?: string | null } | null;
+    page?: {
+      title?: string | null;
+      content?: string | null;
+      seo?: any | null;
+    } | null;
     insights?: {
       nodes?: Array<{
         id: string;
@@ -241,6 +260,7 @@ export default function InsightsPage({ data }: InsightsPageProps) {
 
   return (
     <main>
+      <SEO yoast={page?.seo as any} title={page?.title ?? undefined} />
       <HeroBasic
         bgUrl={insightBgPattern}
         title="Exploring Insights"

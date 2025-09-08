@@ -4,6 +4,7 @@ import React from "react";
 import Accordion from "../src/components/Accordion";
 import { PageSubTitle, PageTitle } from "@/src/components/Typography";
 import TextBlock from "../src/components/TextBlock";
+import SEO from "@/src/components/SEO";
 
 /** Page + sections data */
 export const PAGE_QUERY = gql`
@@ -11,6 +12,20 @@ export const PAGE_QUERY = gql`
     page(id: $databaseId, idType: DATABASE_ID, asPreview: $asPreview) {
       title
       content
+      seo {
+        title
+        metaDesc
+        canonical
+        opengraphTitle
+        opengraphDescription
+        opengraphUrl
+        opengraphSiteName
+        opengraphImage { sourceUrl }
+        twitterTitle
+        twitterDescription
+        twitterImage { sourceUrl }
+        schema { raw }
+      }
       aboutFaqSection {
         aboutFaqDetails {
           aboutFaqItemTitle
@@ -34,6 +49,7 @@ interface AboutPageProps {
     page?: {
       title?: string | null;
       content?: string | null; // Gutenberg HTML
+      seo?: any | null;
       aboutFaqSection?: {
         aboutFaqDetails?: Array<{
           aboutFaqItemTitle?: string | null;
@@ -130,6 +146,7 @@ const AboutPage: React.FC<AboutPageProps> = ({ data }) => {
 
   return (
     <main>
+      <SEO yoast={page?.seo as any} title={page?.title ?? undefined} />
       <div className="overflow-x-hidden">
         <AboutHero image={heroImage} />
 

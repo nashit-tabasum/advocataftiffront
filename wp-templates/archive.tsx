@@ -6,6 +6,7 @@ import Layout from "../src/components/Layout";
 import EntryHeader from "../src/components/EntryHeader";
 import { POST_LIST_FRAGMENT } from "../fragments/PostListFragment";
 import PostListItem from "../src/components/PostListItem";
+import SEO from "@/src/components/SEO";
 
 interface ArchivePageProps {
   __SEED_NODE__?: {
@@ -47,6 +48,20 @@ const ARCHIVE_QUERY = gql`
       archiveType: __typename
       ... on Category {
         name
+        seo {
+          title
+          metaDesc
+          canonical
+          opengraphTitle
+          opengraphDescription
+          opengraphUrl
+          opengraphSiteName
+          opengraphImage { sourceUrl }
+          twitterTitle
+          twitterDescription
+          twitterImage { sourceUrl }
+          schema { raw }
+        }
         posts(first: $first, after: $after) {
           pageInfo {
             hasNextPage
@@ -59,6 +74,20 @@ const ARCHIVE_QUERY = gql`
       }
       ... on Tag {
         name
+        seo {
+          title
+          metaDesc
+          canonical
+          opengraphTitle
+          opengraphDescription
+          opengraphUrl
+          opengraphSiteName
+          opengraphImage { sourceUrl }
+          twitterTitle
+          twitterDescription
+          twitterImage { sourceUrl }
+          schema { raw }
+        }
         posts(first: $first, after: $after) {
           pageInfo {
             hasNextPage
@@ -99,7 +128,7 @@ export default function ArchivePage(props: ArchivePageProps) {
     return <p>No posts have been published</p>;
   }
 
-  const { archiveType, name, posts } = data?.nodeByUri || {};
+  const { archiveType, name, posts, seo } = data?.nodeByUri || {};
 
   const loadMorePosts = async () => {
     await fetchMore({
@@ -130,6 +159,7 @@ export default function ArchivePage(props: ArchivePageProps) {
   return (
     <Layout>
       <main className="max-w-6xl mx-auto px-4">
+        <SEO yoast={seo as any} />
         <EntryHeader title={`Archive for ${archiveType}: ${name}`} />
 
         <div className="space-y-12">

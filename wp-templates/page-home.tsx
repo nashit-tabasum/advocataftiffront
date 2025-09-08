@@ -2,6 +2,7 @@ import React, { JSX } from "react";
 import { gql } from "@apollo/client";
 import type { GetStaticPropsContext } from "next";
 import { useRouter } from "next/router";
+import SEO from "@/src/components/SEO";
 
 // Components
 import CardType1 from "@/src/components/Cards/CardType1";
@@ -23,6 +24,20 @@ interface HomePageProps {
     page?: {
       title?: string | null;
       content?: string | null; // Gutenberg HTML
+      seo?: {
+        title?: string | null;
+        metaDesc?: string | null;
+        canonical?: string | null;
+        opengraphTitle?: string | null;
+        opengraphDescription?: string | null;
+        opengraphUrl?: string | null;
+        opengraphSiteName?: string | null;
+        opengraphImage?: { sourceUrl?: string | null } | null;
+        twitterTitle?: string | null;
+        twitterDescription?: string | null;
+        twitterImage?: { sourceUrl?: string | null } | null;
+        schema?: { raw?: string | null } | null;
+      } | null;
       homeAiSection?: {
         aiTitle?: string | null;
         aiDescription?: string | null;
@@ -75,6 +90,20 @@ const PAGE_QUERY = gql`
     page(id: $databaseId, idType: DATABASE_ID, asPreview: $asPreview) {
       title
       content
+      seo {
+        title
+        metaDesc
+        canonical
+        opengraphTitle
+        opengraphDescription
+        opengraphUrl
+        opengraphSiteName
+        opengraphImage { sourceUrl }
+        twitterTitle
+        twitterDescription
+        twitterImage { sourceUrl }
+        schema { raw }
+      }
       homeAiSection {
         aiTitle
         aiDescription
@@ -186,6 +215,7 @@ export default function PageHome({ data }: HomePageProps): JSX.Element {
 
   return (
     <div className="bg-gray-400 overflow-x-hidden">
+      <SEO yoast={data?.page?.seo as any} title={heroTitle} description={heroDescription} />
       {/* Hero section */}
       <div className="home-hero relative bg-cover bg-center bg-no-repeat text-white">
         <div>

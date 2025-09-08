@@ -7,6 +7,7 @@ import CardType6 from "../src/components/Cards/CardType6";
 import HeroBasic from "../src/components/HeroBlocks/HeroBasic";
 import SearchField from "../src/components/InputFields/SearchField";
 import FilterCarousel from "../src/components/FilterCarousel";
+import SEO from "@/src/components/SEO";
 
 /** Page + datasets + categories */
 export const PAGE_QUERY = gql`
@@ -14,6 +15,20 @@ export const PAGE_QUERY = gql`
     page(id: $databaseId, idType: DATABASE_ID, asPreview: $asPreview) {
       title
       content
+      seo {
+        title
+        metaDesc
+        canonical
+        opengraphTitle
+        opengraphDescription
+        opengraphUrl
+        opengraphSiteName
+        opengraphImage { sourceUrl }
+        twitterTitle
+        twitterDescription
+        twitterImage { sourceUrl }
+        schema { raw }
+      }
     }
     dataSets(first: 100) {
       nodes {
@@ -51,7 +66,7 @@ export const PAGE_QUERY = gql`
 
 interface DatasetsPageProps {
   data?: {
-    page?: { title?: string | null; content?: string | null } | null;
+    page?: { title?: string | null; content?: string | null; seo?: any | null } | null;
     dataSets?: {
       nodes?: Array<{
         id: string;
@@ -245,7 +260,8 @@ const DatasetsPage: React.FC<DatasetsPageProps> = ({ data }) => {
 
   return (
     <main>
-      <section className="dataset-hero relative">
+      <SEO yoast={data?.page?.seo as any} title={data?.page?.title ?? undefined} />
+      <section className="dataset-hero relative"> 
         <div className="absolute inset-0 -z-10" />
         <HeroBasic
           bgUrl={datasetBgPattern}

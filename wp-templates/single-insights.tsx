@@ -1,6 +1,7 @@
 import { gql } from "@apollo/client";
 import type { GetStaticPropsContext } from "next";
 import React from "react";
+import SEO from "@/src/components/SEO";
 import HeroBlack from "@/src/components/HeroBlocks/HeroBlack";
 import CardType5 from "@/src/components/Cards/CardType5";
 import { PageSubTitle, PageTitle } from "@/src/components/Typography";
@@ -16,6 +17,20 @@ export const SINGLE_INSIGHT_QUERY = gql`
       date
       uri
       slug
+      seo {
+        title
+        metaDesc
+        canonical
+        opengraphTitle
+        opengraphDescription
+        opengraphUrl
+        opengraphSiteName
+        opengraphImage { sourceUrl }
+        twitterTitle
+        twitterDescription
+        twitterImage { sourceUrl }
+        schema { raw }
+      }
       featuredImage {
         node {
           sourceUrl
@@ -125,6 +140,7 @@ const SingleInsight: React.FC<SingleInsightProps> = ({ data }) => {
 
   return (
     <main>
+      <SEO yoast={(insight as any)?.seo} />
       {/* Hero */}
       <HeroBlack
         title={insight.title ?? ""}

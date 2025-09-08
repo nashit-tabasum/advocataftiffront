@@ -1,5 +1,5 @@
 import { gql } from "@apollo/client";
-import Head from "next/head";
+import SEO from "@/src/components/SEO";
 import { GetStaticPropsContext } from "next";
 import EntryHeader from "../src/components/EntryHeader";
 
@@ -8,6 +8,20 @@ export const PAGE_QUERY = gql`
     page(id: $databaseId, idType: DATABASE_ID, asPreview: $asPreview) {
       title
       content
+      seo {
+        title
+        metaDesc
+        canonical
+        opengraphTitle
+        opengraphDescription
+        opengraphUrl
+        opengraphSiteName
+        opengraphImage { sourceUrl }
+        twitterTitle
+        twitterDescription
+        twitterImage { sourceUrl }
+        schema { raw }
+      }
     }
   }
 `;
@@ -17,6 +31,7 @@ interface SinglePageProps {
     page?: {
       title?: string | null;
       content?: string | null;
+      seo?: any | null;
     } | null;
   };
   loading?: boolean;
@@ -39,11 +54,8 @@ export default function SinglePage({ data, loading }: SinglePageProps) {
 
   return (
     <>
-      <Head>
-        <title>{safeTitle}</title>
-      </Head>
-
       <main className="max-w-6xl mx-auto px-4">
+        <SEO yoast={page?.seo as any} title={safeTitle} />
         <EntryHeader title={title ?? undefined} />
         <div
           className="prose max-w-none"

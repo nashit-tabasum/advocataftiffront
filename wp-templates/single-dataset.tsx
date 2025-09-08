@@ -5,6 +5,7 @@ import HeroWhite from "@/src/components/HeroBlocks/HeroWhite";
 import { WysiwygInner } from "@/src/components/WysiwygInner";
 import SecondaryButton from "@/src/components/Buttons/SecondaryBtn";
 import CardType6 from "@/src/components/Cards/CardType6";
+import SEO from "@/src/components/SEO";
 import {
   downloadCsvFile,
   downloadExcelFromCsv,
@@ -24,6 +25,20 @@ export const SINGLE_DATASET_QUERY = gql`
       uri
       slug
       excerpt
+      seo {
+        title
+        metaDesc
+        canonical
+        opengraphTitle
+        opengraphDescription
+        opengraphUrl
+        opengraphSiteName
+        opengraphImage { sourceUrl }
+        twitterTitle
+        twitterDescription
+        twitterImage { sourceUrl }
+        schema { raw }
+      }
       dataSetFields {
         dataSetFile {
           node {
@@ -128,6 +143,7 @@ const DatasetInnerPage: React.FC<SingleDatasetProps> = ({ data }) => {
 
   return (
     <main>
+      <SEO yoast={(dataset as any)?.seo} />
       {/* Hero */}
       <section className="bg-white">
         <div className="px-5 md:px-10 xl:px-16 py-12 md:py-16 xl:py-20 mx-auto w-full">
