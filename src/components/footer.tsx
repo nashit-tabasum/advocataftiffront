@@ -3,6 +3,7 @@
 import { useState, FormEvent, JSX } from "react";
 import { useQuery } from "@apollo/client";
 import { FOOTER_MENU_QUERY } from "@/queries/MenuQueries";
+import NewsletterForm from "./NewsletterForm";
 
 type FooterMenuItem = {
   id: string;
@@ -97,68 +98,7 @@ export default function Footer(): JSX.Element {
 
             {/* column 3 (desktop newsletter card) */}
             <div className="hidden xl:block">
-              <div className="rounded-lg p-8 border border-white/50 backdrop-blur-xl">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <svg
-                      className="w-5 h-4 text-brand-1-200"
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="20"
-                      viewBox="0 0 24 20"
-                      fill="none"
-                    >
-                      <path
-                        d="M2 4C2 2.89543 2.89543 2 4 2H20.4167C21.5212 2 22.4167 2.89543 22.4167 4V16.3333C22.4167 17.4379 21.5212 18.3333 20.4167 18.3333H4C2.89543 18.3333 2 17.4379 2 16.3333V4Z"
-                        stroke="currentColor"
-                        strokeWidth="2.04167"
-                        strokeLinejoin="round"
-                      />
-                      <path
-                        d="M20.7151 6.76392L13.0665 10.6615C12.8069 10.7821 12.5121 10.8456 12.2119 10.8456C11.9118 10.8456 11.617 10.7821 11.3574 10.6615L3.70117 6.76392"
-                        stroke="currentColor"
-                        strokeWidth="2.04167"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </div>
-                  <div>
-                    <span className="block w-10 border-t-4 border-brand-1-200" />
-                  </div>
-                </div>
-                <div className="mt-5">
-                  <h3 className="text-2xl/snug tracking-normal font-family-montserrat font-normal text-brand-white">
-                    Newsletter Subscription
-                  </h3>
-                  <p className="mt-3 text-lg/7 font-family-baskervville font-normal text-brand-white/80">
-                    Get exclusive economic insights and data analysis delivered
-                    to your inbox from Advocata&apos;s research team.
-                  </p>
-                </div>
-                <form className="mt-7 grid" onSubmit={onSubscribe}>
-                  <label htmlFor="email-address" className="sr-only">
-                    Email address
-                  </label>
-                  <input
-                    type="email"
-                    name="email-address"
-                    id="email-address"
-                    autoComplete="email"
-                    required
-                    className="footer-subscribe-input block w-full rounded-md shadow-sm bg-white px-3 py-3.5 text-base/6 text-gray-900 font-family-baskervville font-normal border border-gray-300 hover:border-gray-300 outline-0 outline-offset-0 outline-transparent placeholder:text-gray-500 focus:outline-2 focus:-outline-offset-2 focus:outline-brand-2-900 focus:ring-1 focus:ring-indigo-500"
-                    placeholder="Enter your email"
-                  />
-                  <div className="mt-3 sm:shrink-0">
-                    <button
-                      type="submit"
-                      className="flex w-full items-center justify-center rounded-md bg-brand-1-600 px-6 py-4 text-lg/7 font-medium text-brand-white font-family-sourcecodepro shadow-sm hover:bg-brand-1-900 transform focus-visible:outline-0 focus-visible:outline-offset-0 focus-visible:outline-transparent transition-colors duration-300 ease-in-out cursor-pointer"
-                    >
-                      Subscribe
-                    </button>
-                  </div>
-                </form>
-              </div>
+              <NewsletterForm listId={4} variant="desktop" />
             </div>
 
             {/* mobile dropdown menu - column 1 */}
@@ -247,68 +187,7 @@ export default function Footer(): JSX.Element {
 
             {/* mobile-only newsletter card */}
             <div className="xl:hidden">
-              <div className="rounded-lg p-7 border border-white/50 backdrop-blur-xl">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <svg
-                      className="w-5 h-4 text-brand-1-200"
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="20"
-                      viewBox="0 0 24 20"
-                      fill="none"
-                    >
-                      <path
-                        d="M2 4C2 2.89543 2.89543 2 4 2H20.4167C21.5212 2 22.4167 2.89543 22.4167 4V16.3333C22.4167 17.4379 21.5212 18.3333 20.4167 18.3333H4C2.89543 18.3333 2 17.4379 2 16.3333V4Z"
-                        stroke="currentColor"
-                        strokeWidth="2.04167"
-                        strokeLinejoin="round"
-                      />
-                      <path
-                        d="M20.7151 6.76392L13.0665 10.6615C12.8069 10.7821 12.5121 10.8456 12.2119 10.8456C11.9118 10.8456 11.617 10.7821 11.3574 10.6615L3.70117 6.76392"
-                        stroke="currentColor"
-                        strokeWidth="2.04167"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </div>
-                  <div>
-                    <span className="block w-10 border-t-4 border-brand-1-200" />
-                  </div>
-                </div>
-                <div className="mt-5">
-                  <h3 className="footer-heading text-xl/7">
-                    Newsletter Subscription
-                  </h3>
-                  <p className="mt-3 text-lg/7 font-family-baskervville font-normal text-brand-white/80">
-                    Get exclusive economic insights and data analysis delivered
-                    to your inbox from Advocata&apos;s research team.
-                  </p>
-                </div>
-                <form className="mt-7 grid" onSubmit={onSubscribe}>
-                  <label htmlFor="email-address-m" className="sr-only">
-                    Email address
-                  </label>
-                  <input
-                    type="email"
-                    name="email-address"
-                    id="email-address-m"
-                    autoComplete="email"
-                    required
-                    className="footer-subscribe-input block w-full rounded-md shadow-sm bg-white px-3 py-3.5 text-base/6 text-gray-900 font-family-baskervville font-normal border border-gray-300 hover:border-gray-300 outline-0 outline-offset-0 outline-transparent placeholder:text-gray-500 focus:outline-2 focus:-outline-offset-2 focus:outline-brand-2-900 focus:ring-1 focus:ring-indigo-500"
-                    placeholder="Enter your email"
-                  />
-                  <div className="mt-3 sm:shrink-0">
-                    <button
-                      type="submit"
-                      className="footer-subscribe-btn flex w-full items-center justify-center rounded-md bg-brand-1-900 px-6 py-4 text-lg/7 font-medium text-brand-white font-family-sourcecodepro shadow-sm hover:bg-brand-1-950 transform focus-visible:outline-0 focus-visible:outline-offset-0 focus-visible:outline-transparent transition-colors duration-300 ease-in-out cursor-pointer"
-                    >
-                      Subscribe
-                    </button>
-                  </div>
-                </form>
-              </div>
+              <NewsletterForm listId={4} variant="mobile" />
             </div>
           </div>
         </div>
