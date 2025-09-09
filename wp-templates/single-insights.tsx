@@ -140,7 +140,7 @@ const SingleInsight: React.FC<SingleInsightProps> = ({ data }) => {
 
   return (
     <main>
-      <SEO yoast={(insight as any)?.seo} />
+      <SEO yoast={(insight as any)?.seo} title={insight.title ?? undefined} />
       {/* Hero */}
       <HeroBlack
         title={insight.title ?? ""}

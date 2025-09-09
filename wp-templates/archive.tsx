@@ -129,6 +129,7 @@ export default function ArchivePage(props: ArchivePageProps) {
   }
 
   const { archiveType, name, posts, seo } = data?.nodeByUri || {};
+  const pageTitle = name ? `Archive for ${archiveType}: ${name}` : undefined;
 
   const loadMorePosts = async () => {
     await fetchMore({
@@ -159,8 +160,8 @@ export default function ArchivePage(props: ArchivePageProps) {
   return (
     <Layout>
       <main className="max-w-6xl mx-auto px-4">
-        <SEO yoast={seo as any} />
-        <EntryHeader title={`Archive for ${archiveType}: ${name}`} />
+        <SEO yoast={seo as any} title={pageTitle} />
+        <EntryHeader title={pageTitle} />
 
         <div className="space-y-12">
           {posts && posts.nodes && posts.nodes.length > 0 ? (

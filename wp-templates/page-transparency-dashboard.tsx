@@ -122,7 +122,6 @@ export default function PageTransparencyDashboard(): JSX.Element {
   const [seo, setSeo] = useState<any | null>(null);
 
   const [queryInput, setQueryInput] = useState("");
-  const [appliedQuery, setAppliedQuery] = useState("");
   const [industry, setIndustry] = useState<string | null>(null);
   const [year, setYear] = useState<string | null>(null);
   const [openId, setOpenId] = useState<"one" | "two" | null>(null);
@@ -134,7 +133,7 @@ export default function PageTransparencyDashboard(): JSX.Element {
   const [filteredPosts, setFilteredPosts] = useState<TransparencyPost[]>([]);
   const [currentCsvUrl, setCurrentCsvUrl] = useState<string | null>(null);
 
-  const [isInitialized, setIsInitialized] = useState(false);
+  // removed URL syncing; no init gating
   const pageSize = 10;
 
   // Load defaults from URL
@@ -143,7 +142,6 @@ export default function PageTransparencyDashboard(): JSX.Element {
     const ind = searchParams.get("industry");
     const yr = searchParams.get("year");
     setQueryInput(q);
-    setAppliedQuery(q);
     setIndustry(ind);
     setYear(yr);
   }, [searchParams]);
@@ -181,7 +179,7 @@ export default function PageTransparencyDashboard(): JSX.Element {
       } catch (e) {
         console.error(e);
       } finally {
-        setIsInitialized(true);
+        // noop
       }
     }
     load();
@@ -211,39 +209,7 @@ export default function PageTransparencyDashboard(): JSX.Element {
     }
   }, [filteredPosts]);
 
-  // Sync URL with filters
-  const syncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => {
-    if (!isInitialized) return;
-    if (syncTimer.current) clearTimeout(syncTimer.current);
-
-    syncTimer.current = setTimeout(() => {
-      const params = new URLSearchParams();
-      if (industry) params.set("industry", industry);
-      if (year) params.set("year", year);
-      if (appliedQuery) params.set("q", appliedQuery);
-
-      const next = params.toString();
-      const current = searchParams.toString();
-      if (next !== current) {
-        router.replace(next ? `${pathname}?${next}` : `${pathname}`, {
-          scroll: false,
-        });
-      }
-    }, 250);
-
-    return () => {
-      if (syncTimer.current) clearTimeout(syncTimer.current);
-    };
-  }, [
-    industry,
-    year,
-    appliedQuery,
-    pathname,
-    router,
-    searchParams,
-    isInitialized,
-  ]);
+  // URL syncing removed to avoid jank and re-renders
 
   const paginatedPosts = filteredPosts.slice(
     (currentPage - 1) * pageSize,
@@ -307,18 +273,8 @@ export default function PageTransparencyDashboard(): JSX.Element {
                 value={queryInput}
                 onChange={(q) => {
                   setQueryInput(q);
-                  if (q === "" && appliedQuery !== "") {
-                    setAppliedQuery("");
-                    setCurrentPage(1);
-                  }
-                }}
-                onSubmit={(q) => {
-                  setAppliedQuery(q);
                   setCurrentPage(1);
                 }}
-                clearOnFocus
-                showSubmitButton
-                submitLabel="Search"
                 placeholder="Search Transparency..."
               />
             </div>
@@ -375,7 +331,7 @@ export default function PageTransparencyDashboard(): JSX.Element {
           {currentCsvUrl ? (
             <CsvTableTransparency
               csvUrl={currentCsvUrl}
-              filterQuery={appliedQuery}
+              filterQuery={queryInput}
             />
           ) : (
             <p className="text-gray-500">No dataset found for selection.</p>

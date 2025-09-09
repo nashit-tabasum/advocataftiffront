@@ -23,31 +23,51 @@ type Props = {
   description?: string;
   canonical?: string;
   yoast?: YoastSEO;
+  siteName?: string; // optional override
+  separator?: string; // default " | "
 };
 
-export default function SEO({ title, description, canonical, yoast }: Props) {
-  const theTitle = (yoast?.title ?? title) || undefined;
+function escapeRegExp(str: string) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+export default function SEO({ title, description, canonical, yoast, siteName, separator = " | " }: Props) {
+  // Prefer explicit page title; fall back to Yoast title
+  const baseTitle = (title ?? yoast?.title) || undefined;
+  const computedSiteName = siteName || yoast?.opengraphSiteName || process.env.NEXT_PUBLIC_SITE_NAME || undefined;
+
+  let finalTitle = baseTitle;
+  if (baseTitle && computedSiteName) {
+    const sn = String(computedSiteName).trim();
+    const alreadyHas = new RegExp(`\\b${escapeRegExp(sn)}\\b`, "i").test(baseTitle);
+    if (!alreadyHas) finalTitle = `${baseTitle}${separator}${sn}`;
+  }
+
+  const theTitle = finalTitle;
   const theDesc = (yoast?.metaDesc ?? description) || undefined;
   const theCanonical = (yoast?.canonical ?? canonical) || undefined;
   const ogTitle = (yoast?.opengraphTitle ?? theTitle) || undefined;
   const ogDesc = (yoast?.opengraphDescription ?? theDesc) || undefined;
   const ogUrl = yoast?.opengraphUrl || theCanonical || undefined;
-  const ogSiteName = yoast?.opengraphSiteName || undefined;
+  const ogSiteName = computedSiteName || undefined;
   const ogImage = yoast?.opengraphImage?.sourceUrl || undefined;
   const twTitle = (yoast?.twitterTitle ?? theTitle) || undefined;
   const twDesc = (yoast?.twitterDescription ?? theDesc) || undefined;
   const twImage = yoast?.twitterImage?.sourceUrl || ogImage || undefined;
   const schemaRaw = yoast?.schema?.raw || undefined;
+  const favicon = (process.env.NEXT_PUBLIC_SITE_ICON_URL as string) || "/assets/images/favicon.png";
 
   return (
     <Head>
+      {/* Favicon */}
+      {favicon && <link rel="icon" type="image/png" href={favicon} />}
       {theTitle && <title>{theTitle}</title>}
       {theDesc && <meta name="description" content={theDesc} />}
       {theCanonical && <link rel="canonical" href={theCanonical} />}
 
       {/* Open Graph */}
       {ogTitle && <meta property="og:title" content={ogTitle} />}
-      {ogDesc && <meta property="og:description" content={ogDesc} />}      
+      {ogDesc && <meta property="og:description" content={ogDesc} />}
       {ogUrl && <meta property="og:url" content={ogUrl} />}
       {ogSiteName && <meta property="og:site_name" content={ogSiteName} />}
       {ogImage && <meta property="og:image" content={ogImage} />}
@@ -62,10 +82,7 @@ export default function SEO({ title, description, canonical, yoast }: Props) {
 
       {/* Yoast JSON-LD Schema */}
       {schemaRaw && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: schemaRaw }}
-        />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: schemaRaw }} />
       )}
     </Head>
   );
