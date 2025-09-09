@@ -21,8 +21,8 @@ const SidebarItem: React.FC<{
   icon: React.ReactNode;
   label: string;
 }> = ({ href = "#", icon, label }) => (
-  <a href={href} className="sidebar-item group">
-    <span className="sidebar-item-icon inline-flex mr-2">{icon}</span>
+  <a href={href} className="sidebar-item items-center flex gap-x-3 rounded-md py-2 px-2.5 text-sm/6 font-medium font-family-sourcecodepro text-slate-800 hover:text-slate-800 hover:bg-brand-1-50 focus:bg-brand-1-950 focus:text-white focus:outline-0 focus:ring-0 focus:ring-offset-0 focus:ring-offset-transparent focus:ring-transparent group">
+    <span className="sidebar-item-icon size-6 shrink-0">{icon}</span>
     {label}
   </a>
 );
@@ -445,8 +445,8 @@ const DashboardDropdown: React.FC<{ imageUrl: string; items?: MenuItem[] }> = ({
             <span className="text-slate-600 capitalize font-medium font-family-montserrat text-sm/5">
               dashboards
             </span>
-            <nav className="sidebar-fill pt-4" aria-label="Sidebar">
-              <ul role="list" className="space-y-1">
+            <nav className="sidebar-fill flex flex-1 flex-col" aria-label="Sidebar">
+              <ul role="list" className="-mx-2 space-y-2">
                 {items.map((item, index) => (
                   <li key={item.id}>
                     <SidebarItem
@@ -468,10 +468,9 @@ const DashboardDropdown: React.FC<{ imageUrl: string; items?: MenuItem[] }> = ({
               backgroundSize: "cover",
             }}
           >
-            <div className="text-3xl/10 font-family-playfair font-normal text-white">
+            <div className="text-3xl/10 font-family-montserrat font-normal text-white">
               <p>
                 Discover
-                <br />
                 Meaningful Connections
               </p>
             </div>
@@ -566,7 +565,7 @@ const MobileMenu: React.FC<{
       <div
         id="mobile-menu-panel"
         ref={ref}
-        className={`mobile-menu px-4 pb-6 space-y-4 grid overflow-y-scroll lg:hidden absolute inset-0 top-13 h-screen w-full bg-brand-black border-t border-gray-300 z-50 flex flex-col gap-4 px-6 py-6 ${open ? "" : "hidden"}`}
+        className={`mobile-menu space-y-4 overflow-y-scroll lg:hidden absolute inset-0 top-13 h-screen w-full bg-brand-black border-t border-gray-300 z-50 flex flex-col gap-4 px-6 py-6 ${open ? "" : "hidden"}`}
       >
         {topLevelItems.map((item) => (
           <a
@@ -604,7 +603,7 @@ const MobileMenu: React.FC<{
             </svg>
           </button>
           <div
-            className={`${dropdownOpen ? "" : "hidden"} dropdown-menu space-y-2 grid ml-4 px-4 py-2 left-0 mt-2 w-[96%] xl:w-full bg-white border-0 rounded-md shadow-lg`}
+            className={`${dropdownOpen ? "" : "hidden"} dropdown-menu absolute space-y-2 grid px-3 py-3 -left-60 mt-2 w-2xl bg-white border-0 rounded-md shadow-lg`}
           >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -612,7 +611,7 @@ const MobileMenu: React.FC<{
                   dashboards
                 </span>
                 <nav className="sidebar-fill pt-4" aria-label="Sidebar">
-                  <ul role="list" className="space-y-1">
+                  <ul role="list" className="-mx-2 space-y-2">
                     {dashboardItems.map((item, index) => (
                       <li key={item.id}>
                         <SidebarItem
@@ -634,10 +633,9 @@ const MobileMenu: React.FC<{
                   backgroundSize: "cover",
                 }}
               >
-                <div className="text-3xl/10 font-family-playfair font-normal text-white">
+                <div className="text-3xl/10 font-family-montserrat font-normal text-white">
                   <p>
                     Discover
-                    <br />
                     Meaningful Connections
                   </p>
                 </div>

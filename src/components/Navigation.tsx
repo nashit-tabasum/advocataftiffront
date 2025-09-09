@@ -33,7 +33,7 @@ export default function Navigation(): JSX.Element {
           <nav className="nav hidden lg:flex items-center space-x-2">
             <a
               href="#"
-              className="nav-link text-lg leading-snug font-family-sourcecodepro font-normal uppercase text-slate-50 opacity-60 py-2.5 px-3.5 rounded-md hover:bg-white/10 hover:text-brand-white hover:font-medium"
+              className="nav-link text-lg leading-snug font-family-sourcecodepro font-normal uppercase text-slate-50 opacity-[.6] py-2.5 px-3.5 rounded-md hover:bg-white/10 hover:text-brand-white hover:font-medium focus:font-medium focus:outline-none flex items-center hover:font-medium"
             >
               About
             </a>
@@ -93,7 +93,7 @@ export default function Navigation(): JSX.Element {
                         </ul>
                       </nav>
                     </div>
-                    <div className="px-3 py-5 rounded bg-no-repeat bg-center bg-cover text-white text-3xl/10 font-family-playfair font-normal">
+                    <div className="px-3 py-5 rounded bg-no-repeat bg-center bg-cover text-white text-3xl/10 font-family-montserrat font-normal">
                       <p>Discover Meaningful Connections</p>
                     </div>
                   </div>
@@ -103,13 +103,13 @@ export default function Navigation(): JSX.Element {
 
             <a
               href="#"
-              className="nav-link text-lg leading-snug font-family-sourcecodepro font-normal uppercase text-slate-50 opacity-60 py-2.5 px-3.5 rounded-md hover:bg-white/10 hover:text-brand-white"
+              className="nav-link text-lg leading-snug font-family-sourcecodepro font-normal uppercase text-slate-50 opacity-[.6] py-2.5 px-3.5 rounded-md hover:bg-white/10 hover:text-brand-white hover:font-medium focus:font-medium focus:outline-none flex items-center"
             >
               Insights
             </a>
             <a
               href="#"
-              className="nav-link text-lg leading-snug font-family-sourcecodepro font-normal uppercase text-slate-50 opacity-60 py-2.5 px-3.5 rounded-md hover:bg-white/10 hover:text-brand-white"
+              className="nav-link text-lg leading-snug font-family-sourcecodepro font-normal uppercase text-slate-50 opacity-[.6] py-2.5 px-3.5 rounded-md hover:bg-white/10 hover:text-brand-white hover:font-medium focus:font-medium focus:outline-none flex items-center"
             >
               Datasets
             </a>
@@ -223,19 +223,19 @@ export default function Navigation(): JSX.Element {
         <div className="mobile-menu lg:hidden absolute inset-0 top-13 h-screen w-full border-t border-gray-300 z-50 flex flex-col gap-4 px-6 py-6 bg-white">
           <a
             href="#"
-            className="nav-link text-lg uppercase text-slate-800 py-2.5 px-3.5"
+            className="nav-link text-lg leading-snug font-family-sourcecodepro font-normal uppercase text-slate-50 opacity-[.6] py-2.5 px-3.5 rounded-md hover:bg-white/10 hover:text-brand-white hover:font-medium focus:font-medium focus:outline-none flex items-center"
           >
             About
           </a>
           <a
             href="#"
-            className="nav-link text-lg uppercase text-slate-800 py-2.5 px-3.5"
+            className="nav-link text-lg leading-snug font-family-sourcecodepro font-normal uppercase text-slate-50 opacity-[.6] py-2.5 px-3.5 rounded-md hover:bg-white/10 hover:text-brand-white hover:font-medium focus:font-medium focus:outline-none flex items-center"
           >
             Insights
           </a>
           <a
             href="#"
-            className="nav-link text-lg uppercase text-slate-800 py-2.5 px-3.5"
+            className="nav-link text-lg leading-snug font-family-sourcecodepro font-normal uppercase text-slate-50 opacity-[.6] py-2.5 px-3.5 rounded-md hover:bg-white/10 hover:text-brand-white hover:font-medium focus:font-medium focus:outline-none flex items-center"
           >
             Datasets
           </a>
