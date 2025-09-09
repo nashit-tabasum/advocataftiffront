@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useQuery } from "@apollo/client";
 import { HEADER_MENU_QUERY } from "@/queries/MenuQueries";
+import searchClient from "../lib/algolia";
 
 export type HeaderNavProps = {
   /** Brand logo URL */
@@ -31,17 +32,13 @@ const SearchForm: React.FC<{
   initialHidden?: boolean;
   widthClass?: string;
   alignClass?: string;
-  onSubmit?: (query: string) => void;
-}> = ({
-  id,
-  initialHidden = true,
-  widthClass = "w-64",
-  alignClass = "",
-  onSubmit,
-}) => {
+}> = ({ id, initialHidden = true, widthClass = "w-64", alignClass = "" }) => {
   const [open, setOpen] = useState(!initialHidden);
-  const [q, setQ] = useState("");
-  const ref = useRef<HTMLFormElement>(null);
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<any[]>([]);
+  const ref = useRef<HTMLDivElement>(null);
+
+  const indexName = "wp_searchsearchable_posts";
 
   // Close when clicking outside
   useEffect(() => {
@@ -53,8 +50,29 @@ const SearchForm: React.FC<{
     return () => document.removeEventListener("click", handle);
   }, []);
 
+  // 🔎 Algolia search
+  useEffect(() => {
+    if (!query.trim()) {
+      setResults([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      try {
+        const { hits } = await searchClient.searchSingleIndex({
+          indexName,
+          searchParams: { query, hitsPerPage: 5 },
+        });
+        setResults(hits as any[]);
+      } catch (err) {
+        console.error("Algolia search error:", err);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [query]);
+
   return (
-    <div className="relative">
+    <div ref={ref} className="relative w-full">
       <button
         aria-expanded={open}
         aria-controls={id}
@@ -90,52 +108,68 @@ const SearchForm: React.FC<{
         </svg>
       </button>
 
+      {/* Search box */}
       <form
         id={id}
-        ref={ref}
         role="search"
-        className={`${alignClass} search-form ${open ? "" : "hidden"}`}
-        onSubmit={(e) => {
-          e.preventDefault();
-          onSubmit?.(q);
-        }}
+        className={`${alignClass} ${open ? "" : "hidden"} absolute`}
+        onSubmit={(e) => e.preventDefault()}
       >
-        <input
-          className={`${widthClass} search-input pr-10 px-4`}
-          type="search"
-          name="s"
-          placeholder="Search..."
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-        />
-        <button
-          type="submit"
-          className="absolute right-2.5 top-1/2 -translate-y-1/2"
-        >
-          <svg
-            className="w-5 h-5 text-gray-800"
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
+        <div className="relative">
+          <input
+            className={`${widthClass} pr-10 px-4 py-2 rounded-full bg-white text-gray-800 placeholder-gray-400 border border-gray-300 shadow-sm 
+      focus:border-[#9B195F] focus:outline-none focus:ring-1 focus:ring-[#9B195F]`}
+            type="search"
+            name="s"
+            placeholder="Search..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+
+          <button
+            type="submit"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
           >
-            <path
-              d="M11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19Z"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M21 21L16.65 16.65"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </button>
+            <svg
+              className="w-5 h-5"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+            >
+              <path
+                d="M11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19Z"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M21 21L16.65 16.65"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+
+          {/* Dropdown results */}
+          {results.length > 0 && (
+            <ul className="absolute top-full left-0 mt-2 w-full max-h-60 overflow-y-auto shadow-lg rounded-md z-50 bg-brand-black text-white">
+              {results.map((hit) => (
+                <li
+                  key={hit.objectID}
+                  className="p-3 border-b border-gray-700 hover:bg-gray-800"
+                >
+                  <a href={hit.permalink} className="block text-white">
+                    <strong>{hit.post_title}</strong>
+                    <p className="text-sm text-gray-400">{hit.post_excerpt}</p>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </form>
     </div>
   );
@@ -700,7 +734,6 @@ const HeaderNav: React.FC<HeaderNavProps> = ({
               id="search-form-desktop"
               initialHidden
               alignClass="absolute -left-60 mt-2"
-              onSubmit={onSearch}
             />
           </div>
         </div>
