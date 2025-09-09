@@ -33,7 +33,7 @@ export default function Navigation(): JSX.Element {
           <nav className="nav hidden lg:flex items-center space-x-2">
             <a
               href="#"
-              className="nav-link text-lg leading-snug font-family-sourcecodepro font-normal uppercase text-slate-50 opacity-[.6] py-2.5 px-3.5 rounded-md hover:bg-white/10 hover:text-brand-white hover:font-medium focus:font-medium focus:outline-none flex items-center hover:font-medium"
+              className="nav-link text-lg leading-snug font-family-sourcecodepro font-normal uppercase text-slate-50 opacity-[.6] py-2.5 px-3.5 rounded-md hover:bg-white/10 hover:text-brand-white focus:font-medium focus:outline-none flex items-center hover:font-medium"
             >
               About
             </a>
