@@ -296,6 +296,8 @@ export default function PageHome({ data }: HomePageProps): JSX.Element {
       )}
 
 
+
+{/* my changes */}
       {/* Dashboards */}
       <div className="bg-white pb-24 sm:pb-32 -mt-18">
         <div className="mx-auto max-w-7xl px-5 md:px-10 xl:px-16">
